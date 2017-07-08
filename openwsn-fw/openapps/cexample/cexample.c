@@ -15,11 +15,18 @@
 #include "idmanager.h"
 #include "IEEE802154E.h"
 
+/*
+	added for solar sensor
+*/
+#include "adc_sensor.h"
+#include "sensors.h"
+
+
 //=========================== defines =========================================
 
 /// inter-packet period (in ms)
 #define CEXAMPLEPERIOD  10000
-#define PAYLOADLEN      2
+#define PAYLOADLEN      14
 
 const uint8_t cexample_path0[] = "ex";
 
@@ -50,6 +57,11 @@ void cexample_init() {
    cexample_vars.desc.discoverable         = TRUE;
    cexample_vars.desc.callbackRx           = &cexample_receive;
    cexample_vars.desc.callbackSendDone     = &cexample_sendDone;
+
+   /*
+		init sensors
+   */
+   sensors_init();
    
    
    opencoap_register(&cexample_vars.desc);
@@ -77,10 +89,10 @@ void cexample_task_cb() {
    owerror_t            outcome;
    uint8_t              i;
    
-   uint16_t             x_int       = 0;
-   uint16_t             sum         = 0;
-   uint16_t             avg         = 0;
-   uint8_t              N_avg       = 10;
+   uint16_t             sensor_read_solar          = 0;
+   uint16_t             sensor_read_photosynthetic = 0;
+   uint16_t             solar_lx				   = 0;
+   uint16_t             photosynthetic_lx		   = 0;
    
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
@@ -90,12 +102,18 @@ void cexample_task_cb() {
       opentimers_stop(cexample_vars.timerId);
       return;
    }
-   
-   for (i = 0; i < N_avg; i++) {
-      sum += 1;
-   }
-   avg = 0xABCD;
-   //실제 패킷안에 들어가는 값
+
+   /*   2017.07.06
+        modified by Yoo DongHwa
+		get raw adc value from light sensors
+   */
+   sensor_read_solar		  = adc_sens_read_total_solar();
+   sensor_read_photosynthetic = adc_sens_read_photosynthetic();
+
+   // from raw adc_value to lux in unsigned 16bit
+   // size problem happened 48622 bytes without under 2lines
+  // solar_lx			 = (uint16_t)(2.5 * (sensor_read_solar / 4096) * 6250);
+  // photosynthetic_lx = (uint16_t)(1.5 * (sensor_read_solar / 4096) * 1000);
 
    // create a CoAP RD packet
    pkt = openqueue_getFreePacketBuffer(COMPONENT_CEXAMPLE);
@@ -117,9 +135,36 @@ void cexample_task_cb() {
    for (i=0;i<PAYLOADLEN;i++) {
       pkt->payload[i]             = i;
    }
+   /*
+                           packet format(sequence in payload)
+    ////////////////////////////////////////////////////////////////////////////////
+	/  sensor_read_solar  sensor_read_photosynthetic  solar_lx  photosynthetic_lx  /
+	/   raw adc value            raw adc value                                     /
+	/     adc12mem5                adc12mem4            lux            lux         /
+	////////////////////////////////////////////////////////////////////////////////
+   */
    
-   pkt->payload[0]                = (avg>>8)&0xff;
-   pkt->payload[1]                = (avg>>0)&0xff;
+   pkt->payload[0]                = (sensor_read_solar>>8)&0xff;
+   pkt->payload[1]                = (sensor_read_solar>>0)&0xff;
+
+   pkt->payload[2]				  = 0x20;
+   pkt->payload[3]                = 0x20;
+
+   pkt->payload[4]                = (sensor_read_photosynthetic >> 8) & 0xff;
+   pkt->payload[5]                = (sensor_read_photosynthetic >> 0) & 0xff;
+
+   pkt->payload[6]                = 0x20;
+   pkt->payload[7]                = 0x20;
+
+   pkt->payload[8]                = (solar_lx >> 8) & 0xff;
+   pkt->payload[9]                = (solar_lx >> 0) & 0xff;
+
+   pkt->payload[10]               = 0x20;
+   pkt->payload[11]               = 0x20;
+
+   pkt->payload[12]               = (photosynthetic_lx >> 8) & 0xff;
+   pkt->payload[13]               = (photosynthetic_lx >> 0) & 0xff;
+
    ////패킷 내용 담는 부분
    packetfunctions_reserveHeaderSize(pkt,1);
    pkt->payload[0] = COAP_PAYLOAD_MARKER;
