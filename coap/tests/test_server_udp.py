@@ -110,5 +110,8 @@ if __name__ == "__main__":
         print("print payload in decimal")
         print_type = "dec"
 
+    # server receives packet from
+    # openwsn-sw/software/openvisualizer/openvisualizer/eventBus/eventBusClient.py L178
+
     server = SocketServer.UDPServer((HOST, PORT), UDPHandler)
     server.serve_forever()
