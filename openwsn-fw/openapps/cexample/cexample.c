@@ -75,7 +75,12 @@ void cexample_init() {
 owerror_t cexample_receive(OpenQueueEntry_t* msg,
                       coap_header_iht* coap_header,
                       coap_option_iht* coap_options) {
-
+	/*
+		created by Yoo DongHwa
+		2017-07-10
+		interacting with coap
+		coap/tests/test_client_coap.py
+	*/
 	owerror_t outcome;
 	uint8_t PUT_flag = E_FAIL;
 
