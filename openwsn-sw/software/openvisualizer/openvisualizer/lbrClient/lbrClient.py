@@ -5,7 +5,7 @@
 # https://openwsn.atlassian.net/wiki/display/OW/License
 import logging
 log = logging.getLogger('lbrClient')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.info)
 log.addHandler(logging.NullHandler())
 
 import copy
@@ -127,6 +127,7 @@ class lbrClient(threading.Thread):
         
         # log
         log.info("connecting to {2}@{0}:{1}".format(lbrAddr,lbrPort,netname))
+        print "connecting to {2}@{0}:{1}".format(lbrAddr,lbrPort,netname)
         
         #test source routing:
         #self.timer = threading.Timer(20,self._testSourceRouting)

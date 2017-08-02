@@ -20,6 +20,7 @@
 */
 #include "adc_sensor.h"
 #include "sensors.h"
+#include "sht11.h"
 
 
 //=========================== defines =========================================
@@ -75,7 +76,74 @@ void cexample_init() {
 owerror_t cexample_receive(OpenQueueEntry_t* msg,
                       coap_header_iht* coap_header,
                       coap_option_iht* coap_options) {
-   return E_FAIL;
+	/*
+		created by Yoo DongHwa
+		2017-07-10
+		interacting with coap
+		coap/tests/test_client_coap.py
+	*/
+	owerror_t outcome;
+	uint8_t PUT_flag = E_FAIL;
+
+	switch (coap_header->Code) {
+		case COAP_CODE_REQ_GET:
+			msg->payload = &(msg->packet[127]);
+			msg->length = 0;
+
+			packetfunctions_reserveHeaderSize(msg, 9);
+			msg->payload[0] = COAP_PAYLOAD_MARKER;
+
+			msg->payload[1] = 'e';
+			msg->payload[2] = 'x';
+			msg->payload[3] = ' ';
+			msg->payload[4] = 'g';
+			msg->payload[5] = 'e';
+			msg->payload[6] = 't';
+			msg->payload[7] = ' ';
+
+			if (sht11_is_present() == 1) {
+				msg->payload[8] = 'o';
+			}
+			else {
+				msg->payload[8] = 'x';
+			}
+			
+			coap_header->Code = COAP_CODE_RESP_CONTENT;
+
+			outcome = E_SUCCESS;
+			break;
+
+		case COAP_CODE_REQ_PUT:
+			if (msg->payload[0] == '7') {
+				PUT_flag = E_SUCCESS;
+			}
+
+			if (PUT_flag == E_SUCCESS) {
+				msg->payload = &(msg->packet[127]);
+				msg->length = 0;
+
+				packetfunctions_reserveHeaderSize(msg, 7);
+				msg->payload[0] = COAP_PAYLOAD_MARKER;
+
+				msg->payload[1] = 'e';
+				msg->payload[2] = 'x';
+				msg->payload[3] = ' ';
+				msg->payload[4] = 'p';
+				msg->payload[5] = 'u';
+				msg->payload[6] = 't';
+
+				coap_header->Code = COAP_CODE_RESP_CONTENT;
+
+				outcome = E_SUCCESS;
+				break;
+			}
+
+		default:
+			outcome = E_FAIL;
+			break;
+	}
+
+   return outcome;
 }
 
 //timer fired, but we don't want to execute task in ISR mode
@@ -91,8 +159,8 @@ void cexample_task_cb() {
    
    uint16_t             sensor_read_solar          = 0;
    uint16_t             sensor_read_photosynthetic = 0;
-   uint16_t             solar_lx				   = 0;
-   uint16_t             photosynthetic_lx		   = 0;
+   uint16_t             sensor_read_temperature	   = 0;
+   uint16_t             sensor_read_humidity	   = 0;
    
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
@@ -109,11 +177,11 @@ void cexample_task_cb() {
    */
    sensor_read_solar		  = adc_sens_read_total_solar();
    sensor_read_photosynthetic = adc_sens_read_photosynthetic();
+   sensor_read_temperature    = sensors_getCallbackRead(SENSOR_TEMPERATURE);
+   sensor_read_humidity       = sensors_getCallbackRead(SENSOR_HUMIDITY);
 
-   // from raw adc_value to lux in unsigned 16bit
-   // size problem happened 48622 bytes without under 2lines
   // solar_lx			 = (uint16_t)(2.5 * (sensor_read_solar / 4096) * 6250);
-  // photosynthetic_lx = (uint16_t)(1.5 * (sensor_read_solar / 4096) * 1000);
+  // photosynthetic_lx   = (uint16_t)(1.5 * (sensor_read_photosynthetic / 4096) * 1000);
 
    // create a CoAP RD packet
    pkt = openqueue_getFreePacketBuffer(COMPONENT_CEXAMPLE);
@@ -137,11 +205,11 @@ void cexample_task_cb() {
    }
    /*
                            packet format(sequence in payload)
-    ////////////////////////////////////////////////////////////////////////////////
-	/  sensor_read_solar  sensor_read_photosynthetic  solar_lx  photosynthetic_lx  /
-	/   raw adc value            raw adc value                                     /
-	/     adc12mem5                adc12mem4            lux            lux         /
-	////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+	/  sensor_read_solar  sensor_read_photosynthetic  sensor_read_temp  sensor_read_humidity  /
+	/   raw adc value            raw adc value          raw adc value      raw adc value      /
+	/     adc12mem5                adc12mem4                                                  /
+	///////////////////////////////////////////////////////////////////////////////////////////
    */
    
    pkt->payload[0]                = (sensor_read_solar>>8)&0xff;
@@ -156,16 +224,15 @@ void cexample_task_cb() {
    pkt->payload[6]                = 0x20;
    pkt->payload[7]                = 0x20;
 
-   pkt->payload[8]                = (solar_lx >> 8) & 0xff;
-   pkt->payload[9]                = (solar_lx >> 0) & 0xff;
+   pkt->payload[8]                = (sensor_read_temperature >> 8) & 0xff;
+   pkt->payload[9]                = (sensor_read_temperature >> 0) & 0xff;
 
    pkt->payload[10]               = 0x20;
    pkt->payload[11]               = 0x20;
 
-   pkt->payload[12]               = (photosynthetic_lx >> 8) & 0xff;
-   pkt->payload[13]               = (photosynthetic_lx >> 0) & 0xff;
+   pkt->payload[12]               = (sensor_read_humidity >> 8) & 0xff;
+   pkt->payload[13]               = (sensor_read_humidity >> 0) & 0xff;
 
-   ////패킷 내용 담는 부분
    packetfunctions_reserveHeaderSize(pkt,1);
    pkt->payload[0] = COAP_PAYLOAD_MARKER;
    
@@ -200,8 +267,6 @@ void cexample_task_cb() {
    pkt->l3_destinationAdd.addr_128b[13] = 0x00;
    pkt->l3_destinationAdd.addr_128b[14] = 0x00;
    pkt->l3_destinationAdd.addr_128b[15] = 0x01;
-
-
 
    //memcpy(&pkt->l3_destinationAdd.addr_128b[0],&ipAddr_ringmaster,16);
    

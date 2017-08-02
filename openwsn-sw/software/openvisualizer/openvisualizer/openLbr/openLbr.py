@@ -166,6 +166,13 @@ class OpenLbr(eventBusClient.eventBusClient):
                     'signal'   : 'udp', #only to data (any), not status nor error
                     'callback' : self._check_Packet, 
                 },
+                #'''
+                #{
+                #    'sender'   : self.WILDCARD, #signal when a pkt from the mesh arrives and has to be forwarded to Internet (or local)
+                #    'signal'   : ((187, 187, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1), 'udp', 5683), #only to data (any), not status nor error
+                #    'callback' : self._check_Packet, 
+                #},
+                #'''
             ]
         )
         
@@ -257,6 +264,13 @@ class OpenLbr(eventBusClient.eventBusClient):
         
         This function dispatches the IPv6 packet with signal 'according to the destination address, protocol_type and port'.
         '''
+        
+        # print '_meshToV6_notif\n'
+        # print 'sender : ' + str(sender) + '\n'
+        # print 'signal : ' + str(signal) + '\n' 
+        # print 'data   : ' + str(data)   + '\n' 
+        
+
         try:
             ipv6dic={}
             #build lowpan dictionary from the data

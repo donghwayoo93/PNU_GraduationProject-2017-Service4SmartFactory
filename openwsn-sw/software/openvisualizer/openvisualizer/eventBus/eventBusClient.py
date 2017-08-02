@@ -168,6 +168,11 @@ class eventBusClient(object):
               signal       = signal,
               data         = data,
         )
+
+        # print '_dispatchProtocol\n'
+        # print 'signal : ' + str(signal) + '\n'
+        # print 'data   : ' + str(data)   + '\n'
+
         for (function,returnVal) in temp:
             if returnVal is not None:
                 if log.isEnabledFor(logging.DEBUG):
