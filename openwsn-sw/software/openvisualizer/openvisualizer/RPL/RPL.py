@@ -203,39 +203,49 @@ class RPL(eventBusClient.eventBusClient):
             output               += ['- dao :         {0}'.format(u.formatBuf(dao))]
             output                = '\n'.join(output)
             log.debug(output)
-        
+
+        # DAO example
+        # Upper Part
+        # [0, 64, 0, 0, 187, 187, 0, 0, 0, 0, 0, 0, 20, 21, 146, 204, 0, 0, 0, 1,
+        # Downer Part
+        # 6, 20, 0, 0, 11, 170, 187, 187, 0, 0, 0, 0, 0, 0, 20, 21, 146, 204, 0, 0, 0, 1]
+
         # retrieve DAO header
         dao_header                = {}
         dao_transit_information   = {}
         dao_target_information    = {}
         
         try:
+            # Upper Part
             # RPL header
-            dao_header['RPL_InstanceID']    = dao[0]
-            dao_header['RPL_flags']         = dao[1]
-            dao_header['RPL_Reserved']      = dao[2]
-            dao_header['RPL_DAO_Sequence']  = dao[3]
+            dao_header['RPL_InstanceID']    = dao[0]   # 0
+            dao_header['RPL_flags']         = dao[1]   # 64 => D flag set
+            dao_header['RPL_Reserved']      = dao[2]   # 0
+            dao_header['RPL_DAO_Sequence']  = dao[3]   # 0
             # DODAGID
-            dao_header['DODAGID']           = dao[4:20]
-           
+            dao_header['DODAGID']           = dao[4:20] # Mote ip ex) bbbb::1415:92cc:0:1
+
+            # Downer Part
             dao                             = dao[20:]
             # retrieve transit information header and parents
             parents                         = []
             children                        = []
-                          
+
             while len(dao)>0:
+                # in case, dao[0] = 0x06
                 if   dao[0]==self._TRANSIT_INFORMATION_TYPE: 
                     # transit information option
-                    dao_transit_information['Transit_information_type']             = dao[0]
-                    dao_transit_information['Transit_information_length']           = dao[1]
-                    dao_transit_information['Transit_information_flags']            = dao[2]
-                    dao_transit_information['Transit_information_path_control']     = dao[3]
-                    dao_transit_information['Transit_information_path_sequence']    = dao[4]
-                    dao_transit_information['Transit_information_path_lifetime']    = dao[5]
+                    dao_transit_information['Transit_information_type']             = dao[0]  # 0x06
+                    dao_transit_information['Transit_information_length']           = dao[1]  #  20
+                    dao_transit_information['Transit_information_flags']            = dao[2]  #   0
+                    dao_transit_information['Transit_information_path_control']     = dao[3]  #   0
+                    dao_transit_information['Transit_information_path_sequence']    = dao[4]  #  11
+                    dao_transit_information['Transit_information_path_lifetime']    = dao[5]  # 170
                     # address of the parent
-                    prefix        =  dao[6:14]
-                    parents      += [dao[14:22]]
-                    dao           = dao[22:]
+                    prefix        =  dao[6:14]                                                # bbbb::
+                    parents      += [dao[14:22]]                                              # 1415:92cc:0:1
+                    dao           = dao[22:]                                                  #
+                # in case, dao[0] = 0x05
                 elif dao[0]==self._TARGET_INFORMATION_TYPE:
                     dao_target_information['Target_information_type']               = dao[0]
                     dao_target_information['Target_information_length']             = dao[1]
@@ -266,6 +276,17 @@ class RPL(eventBusClient.eventBusClient):
         if log.isEnabledFor(logging.DEBUG):
             log.debug(output)
         print output
+
+        # Here!!
+        # Check Who sent the DAO and Where the Leaf Node is attached
+        # ex) bbbb::1415:92cc:0:3 => leaf node
+        #     bbbb::1415:92cc:0:2 => sub-root
+        #     bbbb::1415:92cc:0:1 => root
+
+        #     received DAO from bbbb::1415:92cc:0:3
+        #     - parents:
+        #        bbbb:1415:92cc:0:2
+        #     => Node 3 is child of Node 2
         
         # if you get here, the DAO was parsed correctly
         
