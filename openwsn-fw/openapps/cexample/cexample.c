@@ -20,7 +20,7 @@
 */
 #include "adc_sensor.h"
 #include "sensors.h"
-#include "sht11.h"
+//#include "sht11.h"
 
 
 //=========================== defines =========================================
@@ -177,8 +177,8 @@ void cexample_task_cb() {
    */
    sensor_read_solar		  = adc_sens_read_total_solar();
    sensor_read_photosynthetic = adc_sens_read_photosynthetic();
-   sensor_read_temperature    = sensors_getCallbackRead(SENSOR_TEMPERATURE);
-   sensor_read_humidity       = sensors_getCallbackRead(SENSOR_HUMIDITY);
+   //sensor_read_temperature    = sensors_getCallbackRead(SENSOR_TEMPERATURE);
+   //sensor_read_humidity       = sensors_getCallbackRead(SENSOR_HUMIDITY);
 
   // solar_lx			 = (uint16_t)(2.5 * (sensor_read_solar / 4096) * 6250);
   // photosynthetic_lx   = (uint16_t)(1.5 * (sensor_read_photosynthetic / 4096) * 1000);
