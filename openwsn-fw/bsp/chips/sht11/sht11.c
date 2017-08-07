@@ -5,9 +5,6 @@
  *         Pedro Henrique Gomes <pedrohenriquegomes@gmail.com>
  */
 
-#include "stdint.h"
-#include "stdbool.h"
-
 #include "i2c.h"
 #include "sht11.h"
 
@@ -18,7 +15,7 @@
 // port Data(P2.0), SCK(P2.1)
 #define SHT11_DATA_OUT(x) {if (x != 0) P2DIR |= 0x01; else P2DIR &= ~0x01;}
 #define SHT11_DATA_IN (((P2IN & 0x01) != 0) ? 1 : 0)
-#define SHT_SCK(x) {if(x != 0) P2OUT |= 0x02; else P2OUT &= ~0x02;}
+#define SHT11_SCK(x) {if(x != 0) P2OUT |= 0x02; else P2OUT &= ~0x02;}
 
 #define NOACK 0
 #define ACK   1
@@ -49,11 +46,11 @@ const unsigned char crc_lut[] = {
 
 //=========================== prototypes =======================================
 
-uint8_t sht11_write_byte(uint8_t value)
-uint8_t sht11_read_byte(uint8_t ack)
-void sht11_trans_start(void)
-void sht11_connection_reset(void)
-uint8_t sht11_softreset(void)
+uint8_t sht11_write_byte(uint8_t value);
+uint8_t sht11_read_byte(uint8_t ack);
+void sht11_trans_start(void);
+void sht11_connection_reset(void);
+uint8_t sht11_softreset(void);
 
 uint8_t sht11_measure_start(uint8_t mode);
 uint8_t sht11_measure_test_done(void);
@@ -111,69 +108,69 @@ uint8_t sht11_write_byte(uint8_t value){
 
 	for (i=0x80;i>0;i>>=1){             	//shift bit for masking
 		if (i & value){
-			SHT_DATA_OUT(0);		//masking value with i , write to SENSI-BUS
+			SHT11_DATA_OUT(0);		//masking value with i , write to SENSI-BUS
 		 }
     	else{
-    		SHT_DATA_OUT(1);
+    		SHT11_DATA_OUT(1);
     	}
-		SHT_SCK(1);                          //clk for SENSI-BUS
+		SHT11_SCK(1);                          //clk for SENSI-BUS
 		delay_us(5);						//pulswith approx. 5 us
-		SHT_SCK(0);
+		SHT11_SCK(0);
   	}
-	SHT_DATA_OUT(0);                       //release DATA-line
-	SHT_SCK(1);                            //clk #9 for ack
-	error=SHT_DATA_IN;                    //check ack (DATA will be pulled down by SHT11)
-	SHT_SCK(0);
+	SHT11_DATA_OUT(0);                       //release DATA-line
+	SHT11_SCK(1);                            //clk #9 for ack
+	error=SHT11_DATA_IN;                    //check ack (DATA will be pulled down by SHT11)
+	SHT11_SCK(0);
 	return error;                     	//error=1 in case of no acknowledge
 }
 
 /* reads a byte from bus and gives the ACK if "ack=1" */
 uint8_t sht11_read_byte(uint8_t ack){
 	uint8_t i,val=0;
-	SHT_DATA_OUT(0);             			//release DATA-line
+	SHT11_DATA_OUT(0);             			//release DATA-line
 	for (i=0x80;i>0;i>>=1){             	//shift bit for masking
-		SHT_SCK(1);          				//clk for SENSI-BUS
-		if (SHT_DATA_IN){
+		SHT11_SCK(1);          				//clk for SENSI-BUS
+		if (SHT11_DATA_IN){
 			val=(val | i);   	            //read bit
 		}
-		SHT_SCK(0);
+		SHT11_SCK(0);
   	}
-	SHT_DATA_OUT(ack);               		//in case of "ack==1" pull down DATA-Line
-	SHT_SCK(1);                            //clk #9 for ack
+	SHT11_DATA_OUT(ack);               		//in case of "ack==1" pull down DATA-Line
+	SHT11_SCK(1);                            //clk #9 for ack
 	delay_us(5);         					//pulswith approx. 5 us
-	SHT_SCK(0);
-	SHT_DATA_OUT(0);                 		//release DATA-line
+	SHT11_SCK(0);
+	SHT11_DATA_OUT(0);                 		//release DATA-line
 	return val;
 }
 
 /* generates the transmission start */
 void sht11_trans_start(void){
-	SHT_DATA_OUT(0);
-	SHT_SCK(0);                   //Initial state
+	SHT11_DATA_OUT(0);
+	SHT11_SCK(0);                   //Initial state
 	delay_us(1);
-	SHT_SCK(1);
+	SHT11_SCK(1);
 	delay_us(1);
-	SHT_DATA_OUT(1);
+	SHT11_DATA_OUT(1);
 	delay_us(1);
-	SHT_SCK(0);
+	SHT11_SCK(0);
 	delay_us(5);
-	SHT_SCK(1);
+	SHT11_SCK(1);
 	delay_us(1);
-	SHT_DATA_OUT(0);
+	SHT11_DATA_OUT(0);
 	delay_us(1);
-	SHT_SCK(0);
+	SHT11_SCK(0);
 }
 
 /* communication reset */
 void sht11_connection_reset(void){
 	uint8_t i;
-	SHT_DATA_OUT(0); 
-	SHT_SCK(0);     	//Initial state
+	SHT11_DATA_OUT(0); 
+	SHT11_SCK(0);     	//Initial state
 	//for(i=0;i<9;i++)                  //9 SCK cycles
 	for(i=9;i!=0;i--){                  //9 SCK cycles (detecting 0 is easier - says TI)
-		SHT_SCK(1);
+		SHT11_SCK(1);
 		delay_us(1);
-		SHT_SCK(0);
+		SHT11_SCK(0);
 	}
 	sht11_trans_start();                   //transmission start
 }
@@ -204,7 +201,7 @@ uint8_t sht11_measure_start(uint8_t mode){
 
 /* test measurement done */
 uint8_t sht11_measure_test_done(void){
-	if(SHT_DATA_IN == 0){
+	if(SHT11_DATA_IN == 0){
 		return 1;
 	}
 	return 0;
@@ -241,7 +238,7 @@ uint8_t sht11_measure(uint8_t *p_value, uint8_t *p_checksum, uint8_t mode){
 }
 
 /* calculate crc */
-uint8_t sht11_crc(uint8_t *data, uint8_t *dlen){
+uint8_t sht11_crc(uint8_t *data, uint8_t dlen){
 	uint8_t crc = 0, ret = 0;
 	uint8_t i;
 

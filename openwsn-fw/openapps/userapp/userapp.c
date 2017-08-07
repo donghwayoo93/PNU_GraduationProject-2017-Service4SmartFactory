@@ -27,7 +27,7 @@
 
 /// inter-packet period (in ms)
 #define USERAPPPERIOD  10000
-#define PAYLOADLEN      14
+#define PAYLOADLEN     14
 
 const uint8_t userapp_path0[] = "app";
 
@@ -82,6 +82,8 @@ owerror_t userapp_receive(OpenQueueEntry_t* msg,
 		interacting with coap
 		coap/tests/test_client_coap.py
 	*/
+
+   /*
 	owerror_t outcome;
 	uint8_t PUT_flag = E_FAIL;
 
@@ -138,6 +140,8 @@ owerror_t userapp_receive(OpenQueueEntry_t* msg,
 	}
 
    return outcome;
+
+   */
 }
 
 //timer fired, but we don't want to execute task in ISR mode
@@ -169,7 +173,7 @@ void userapp_task_cb() {
         modified by Yoo DongHwa
 		get raw adc value from light sensors
    */
-   sensor_read_solar		  = adc_sens_read_total_solar();
+   sensor_read_solar		      = adc_sens_read_total_solar();
    sensor_read_photosynthetic = adc_sens_read_photosynthetic();
    sensor_read_temperature    = sht11_read_temperature();
    sensor_read_humidity       = sht11_read_humidity();

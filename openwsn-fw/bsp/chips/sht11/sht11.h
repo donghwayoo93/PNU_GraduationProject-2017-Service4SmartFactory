@@ -8,6 +8,8 @@
 #ifndef __SHT11_H__
 #define __SHT11_H__
 
+#include "board_info.h"
+
 // measurement mode enumeration
 enum {TEMP,HUMI};
 
