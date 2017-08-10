@@ -820,11 +820,18 @@ void icmpv6rpl_setDIOPeriod(uint16_t dioPeriod){
    uint32_t        dioPeriodRandom;
    
    icmpv6rpl_vars.dioPeriod = dioPeriod;
+   /*
    dioPeriodRandom = icmpv6rpl_vars.dioPeriod - 0x80 + (openrandom_get16b()&0xff);
    opentimers_setPeriod(
        icmpv6rpl_vars.timerIdDIO,
        TIME_MS,
        dioPeriodRandom
+   );
+   */
+    opentimers_setPeriod(
+       icmpv6rpl_vars.timerIdDIO,
+       TIME_MS,
+       dioPeriod
    );
 }
 
@@ -832,10 +839,17 @@ void icmpv6rpl_setDAOPeriod(uint16_t daoPeriod){
    uint32_t        daoPeriodRandom;
    
    icmpv6rpl_vars.daoPeriod = daoPeriod;
+   /*
    daoPeriodRandom = icmpv6rpl_vars.daoPeriod - 0x80 + (openrandom_get16b()&0xff);
    opentimers_setPeriod(
        icmpv6rpl_vars.timerIdDAO,
        TIME_MS,
        daoPeriodRandom
    );
+   */
+    opentimers_setPeriod(
+       icmpv6rpl_vars.timerIdDAO,
+       TIME_MS,
+       daoPeriod
+   );   
 }

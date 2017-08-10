@@ -30,11 +30,12 @@ class testResource(coapResource.coapResource):
         
         return (respCode,respOptions,respPayload)
 
-    def PUT(self,srcip, options=[],payload=None):
+    def PUT(self,options=[],payload=None):
 
-        payload_str  = ''
-        json_str     = ''
-        sensor_value = ''
+        payload_str   = ''
+        json_str      = ''
+        sensor_value  = ''
+        ip_suffix_len = 0
 
         for i in payload:
             str_i = str(i)
@@ -45,14 +46,18 @@ class testResource(coapResource.coapResource):
             else:
                 payload_str += str_i
 
-        sensor_arr = payload_str.split('  ')
+        sensor_arr = payload_str.split(' ')
+
+        ip_suffix_len = len(sensor_arr[0])
+        for i in range(0, 4-ip_suffix_len):
+            sensor_arr[0] = '0' + str(sensor_arr[0])
 
         sensor_value = {
-                        'ipaddr' : str(srcip),
-                        'solar' : str(sensor_arr[0]),
-                        'photosynthetic' : str(sensor_arr[1]),
-                        'temperature' : str(sensor_arr[2]), 
-                        'humidity' : str(sensor_arr[3])
+                        'ipaddr' : str(sensor_arr[0]),
+                        'solar' : str(sensor_arr[1]),
+                        'photosynthetic' : str(sensor_arr[2]),
+                        'temperature' : str(sensor_arr[3]), 
+                        'humidity' : str(sensor_arr[4])
                         }
 
         json_str = json.dumps(sensor_value)

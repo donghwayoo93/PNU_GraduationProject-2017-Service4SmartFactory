@@ -26,6 +26,8 @@ from openvisualizer.eventBus import eventBusClient
 import SourceRoute
 import openvisualizer.openvisualizer_utils as u
 
+from coap import coap
+
 class RPL(eventBusClient.eventBusClient):
     
     _TARGET_INFORMATION_TYPE           = 0x05
@@ -49,6 +51,14 @@ class RPL(eventBusClient.eventBusClient):
     PRF_DIO_A                          = 1<<2
     PRF_DIO_B                          = 1<<1
     PRF_DIO_C                          = 1<<0
+
+    # added
+    URI_PREFIX                         = 'coap://'
+    IPV6_PREFIX                        = 'bbbb::'
+    # WORKER_DEVICE                      = '1415:9200:1826:e94'
+    WORKER_DEVICE                      = '1415:92cc:0:3'
+    C                                  = ''
+    DAO_PERIOD                         = 1
     
     def __init__(self):
         
@@ -87,11 +97,15 @@ class RPL(eventBusClient.eventBusClient):
         self.dagRootEui64         = None
         self.sourceRoute          = SourceRoute.SourceRoute()
         self.latencyStats         = {}
+
+        # self.C = coap.coap()
+        # print 'RPL coap object created'
     
     #======================== public ==========================================
     
     def close(self):
         # nothing to do
+        # self.C.close()
         pass
     
     #======================== private =========================================
@@ -174,6 +188,85 @@ class RPL(eventBusClient.eventBusClient):
     def _getSourceRoute_notif(self,sender,signal,data):
         destination = data
         return self.sourceRoute.getSourceRoute(destination)
+
+
+    #===== added
+
+    def _adjust_DIODAO_Period(self, Dest, input_uri, dio_period, dao_period):
+        uri = self.URI_PREFIX + '[' + self.IPV6_PREFIX + Dest + ']/' + input_uri
+
+        payload_str  = '1=' + str(dio_period)
+        payload_str += '2=' + str(dao_period)
+        payload_str += '!'
+
+        response = self.C.PUT(
+                uri,
+                payload=[payload_str]
+        )
+
+        print_str = 'response : '
+
+        for b in response:
+            print_str += chr(b)
+
+        print print_str
+
+    def _adjust_DIO_Period(self, Dest, input_uri, dio_period):
+        c = coap.coap()
+        uri = self.URI_PREFIX + '[' + self.IPV6_PREFIX + Dest + ']/' + input_uri
+        print 'dio : ' + uri
+
+        payload_str  = '1=' + str(dio_period)
+        payload_str += '!'
+
+        print payload_str
+
+        response = c.PUT(
+                uri,
+                payload=[payload_str]
+        )
+
+        print_str = 'response : '
+
+        for b in response:
+            print_str += chr(b)
+
+        print print_str
+        c.close()
+
+    def _adjust_DAO_Period(self, Dest, input_uri, dao_period):
+        C = coap.coap()
+
+        uri = self.URI_PREFIX + '[' + self.IPV6_PREFIX + Dest + ']/' + input_uri
+        # uri = 'coap://[bbbb::1415:92cc:0000:0003]/ex'
+
+        print 'dao : ' + uri
+
+        payload_str  = '2=' + str(dao_period)
+        payload_str += '!'
+
+        print uri
+        # print payload_str
+
+        response = C.PUT(
+                uri,
+                payload=[payload_str]
+        )
+
+        # response = C.GET(uri)
+
+        print_str = 'response : '
+
+        for b in response:
+            print_str += chr(b)
+
+        print print_str
+
+    def _compareIpv6Addr(self, ipv6_addr, parent):
+
+        if(ipv6_addr == self.WORKER_DEVICE):
+            print ipv6_addr + ' attached to ' + parent
+            return True
     
     #===== receive DAO
     
@@ -191,6 +284,7 @@ class RPL(eventBusClient.eventBusClient):
             if len(source)>8: 
                 source=source[len(source)-8:]
             dao                   = tup[1]
+
         except IndexError:
             log.warning("DAO too short ({0} bytes), no space for destination and source".format(len(dao)))
             return
@@ -203,6 +297,10 @@ class RPL(eventBusClient.eventBusClient):
             output               += ['- dao :         {0}'.format(u.formatBuf(dao))]
             output                = '\n'.join(output)
             log.debug(output)
+
+        # to compare DAO source addr and Worker device ipv6 addr
+        source_suffix_ipv6 = '{0}'.format(u.formatIPv6Addr(source))
+        # print source_suffix_ipv6
 
         # DAO example
         # Upper Part
@@ -262,6 +360,13 @@ class RPL(eventBusClient.eventBusClient):
             log.warning("DAO too short ({0} bytes), no space for DAO header".format(len(dao)))
             return
         
+        parent_suffix_ipv6 = ''
+        # added
+        for p in parents:
+            parent_suffix_ipv6 += '{0}'.format(u.formatIPv6Addr(p))    
+        
+        # print parent_suffix_ipv6
+        
         # log
         output               = []
         output              += ['']
@@ -289,6 +394,12 @@ class RPL(eventBusClient.eventBusClient):
         #     => Node 3 is child of Node 2
         
         # if you get here, the DAO was parsed correctly
+
+        if(self._compareIpv6Addr(source_suffix_ipv6, parent_suffix_ipv6) == True):
+           # self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 9)
+           # self._adjust_DIO_Period(parent_suffix_ipv6, 'ex', 8)
+           print str(parent_suffix_ipv6[len(parent_suffix_ipv6)-4:len(parent_suffix_ipv6)])
+
         
         # update parents information with parents collected -- calls topology module.
         self.dispatch(          

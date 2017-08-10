@@ -15,11 +15,13 @@
 #include "idmanager.h"
 #include "IEEE802154E.h"
 
+#include "icmpv6rpl.h"
+
 /*
 	added for solar sensor
 */
-#include "adc_sensor.h"
-#include "sensors.h"
+//#include "adc_sensor.h"
+//#include "sensors.h"
 //#include "sht11.h"
 
 
@@ -62,7 +64,7 @@ void cexample_init() {
    /*
 		init sensors
    */
-   sensors_init();
+   //sensors_init();
    
    
    opencoap_register(&cexample_vars.desc);
@@ -84,6 +86,8 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 	*/
 	owerror_t outcome;
 	uint8_t PUT_flag = E_FAIL;
+   uint8_t i = 0;
+   uint16_t new_dioPeriod = 0, new_daoPeriod = 0;
 
 	switch (coap_header->Code) {
 		case COAP_CODE_REQ_GET:
@@ -101,7 +105,7 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 			msg->payload[6] = 't';
 			msg->payload[7] = ' ';
 
-			if (sht11_is_present() == 1) {
+			if (/*sht11_is_present()*/1 == 1) {
 				msg->payload[8] = 'o';
 			}
 			else {
@@ -114,9 +118,38 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 			break;
 
 		case COAP_CODE_REQ_PUT:
-			if (msg->payload[0] == '7') {
-				PUT_flag = E_SUCCESS;
-			}
+			
+         for(i = 0; i < msg->length; i++){
+            if((msg->payload[i] == DIO_PERIOD) &&
+               (msg->payload[i+1] == CEXAMPLE_SEPERATOR)){
+               // SET DIO Period
+               new_dioPeriod = (msg->payload[i+2] - 48) * 1000;
+               //icmpv6rpl_setDIOPeriod(new_dioPeriod); // void (uint16_t dioPeriod)
+               i+=2;
+            }
+            else if((msg->payload[i] == DAO_PERIOD) &&
+               (msg->payload[i+1] == CEXAMPLE_SEPERATOR)){
+               // SET DAO Period
+               new_daoPeriod = (msg->payload[i+2] - 48) * 1000;
+               //icmpv6rpl_setDIOPeriod(new_daoPeriod); // void (uint16_t daoPeriod)
+               i+=2;
+            }
+            else if(msg->payload[i] == MARKER_END){
+               PUT_flag = E_SUCCESS;
+               break;
+            }
+         }
+
+         uint8_t a1 = ' ', a2 = ' ';
+         a1 = (new_dioPeriod / 1000) + 48;
+         a2 = (new_daoPeriod / 1000) + 48;
+
+         openserial_printError(
+            COMPONENT_CEXAMPLE,
+            ERR_NEIGHBORS_FULL,
+            (errorparameter_t)0,
+            (errorparameter_t)0
+         );
 
 			if (PUT_flag == E_SUCCESS) {
 				msg->payload = &(msg->packet[127]);
@@ -125,8 +158,8 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 				packetfunctions_reserveHeaderSize(msg, 7);
 				msg->payload[0] = COAP_PAYLOAD_MARKER;
 
-				msg->payload[1] = 'e';
-				msg->payload[2] = 'x';
+				msg->payload[1] = a1;
+				msg->payload[2] = a2;
 				msg->payload[3] = ' ';
 				msg->payload[4] = 'p';
 				msg->payload[5] = 'u';
@@ -155,12 +188,13 @@ void cexample_timer_cb(opentimer_id_t id){
 void cexample_task_cb() {
    OpenQueueEntry_t*    pkt;
    owerror_t            outcome;
+   uint8_t              my_suffix_1, my_suffix_2;
    uint8_t              i;
    
    uint16_t             sensor_read_solar          = 0;
    uint16_t             sensor_read_photosynthetic = 0;
    uint16_t             sensor_read_temperature	   = 0;
-   uint16_t             sensor_read_humidity	   = 0;
+   uint16_t             sensor_read_humidity	      = 0;
    
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
@@ -175,13 +209,16 @@ void cexample_task_cb() {
         modified by Yoo DongHwa
 		get raw adc value from light sensors
    */
-   sensor_read_solar		  = adc_sens_read_total_solar();
-   sensor_read_photosynthetic = adc_sens_read_photosynthetic();
+   //sensor_read_solar		  = adc_sens_read_total_solar();
+   //sensor_read_photosynthetic = adc_sens_read_photosynthetic();
    //sensor_read_temperature    = sensors_getCallbackRead(SENSOR_TEMPERATURE);
    //sensor_read_humidity       = sensors_getCallbackRead(SENSOR_HUMIDITY);
 
   // solar_lx			 = (uint16_t)(2.5 * (sensor_read_solar / 4096) * 6250);
   // photosynthetic_lx   = (uint16_t)(1.5 * (sensor_read_photosynthetic / 4096) * 1000);
+
+   my_suffix_1 = idmanager_getMyID(ADDR_64B)->addr_64b[6];
+   my_suffix_2 = idmanager_getMyID(ADDR_64B)->addr_64b[7];
 
    // create a CoAP RD packet
    pkt = openqueue_getFreePacketBuffer(COMPONENT_CEXAMPLE);
@@ -211,23 +248,25 @@ void cexample_task_cb() {
 	/     adc12mem5                adc12mem4                                                  /
 	///////////////////////////////////////////////////////////////////////////////////////////
    */
+
+   pkt->payload[0]                = (my_suffix_1)&0xff;
+   pkt->payload[1]                = (my_suffix_2)&0xff;
+
+   pkt->payload[2]                = 0x20;
    
-   pkt->payload[0]                = (sensor_read_solar>>8)&0xff;
-   pkt->payload[1]                = (sensor_read_solar>>0)&0xff;
+   pkt->payload[3]                = (sensor_read_solar>>8)&0xff;
+   pkt->payload[4]                = (sensor_read_solar>>0)&0xff;
 
-   pkt->payload[2]				  = 0x20;
-   pkt->payload[3]                = 0x20;
+   pkt->payload[5]				    = 0x20;
 
-   pkt->payload[4]                = (sensor_read_photosynthetic >> 8) & 0xff;
-   pkt->payload[5]                = (sensor_read_photosynthetic >> 0) & 0xff;
+   pkt->payload[6]                = (sensor_read_photosynthetic >> 8) & 0xff;
+   pkt->payload[7]                = (sensor_read_photosynthetic >> 0) & 0xff;
 
-   pkt->payload[6]                = 0x20;
-   pkt->payload[7]                = 0x20;
+   pkt->payload[8]                = 0x20;
 
-   pkt->payload[8]                = (sensor_read_temperature >> 8) & 0xff;
-   pkt->payload[9]                = (sensor_read_temperature >> 0) & 0xff;
+   pkt->payload[9]                = (sensor_read_temperature >> 8) & 0xff;
+   pkt->payload[10]                = (sensor_read_temperature >> 0) & 0xff;
 
-   pkt->payload[10]               = 0x20;
    pkt->payload[11]               = 0x20;
 
    pkt->payload[12]               = (sensor_read_humidity >> 8) & 0xff;

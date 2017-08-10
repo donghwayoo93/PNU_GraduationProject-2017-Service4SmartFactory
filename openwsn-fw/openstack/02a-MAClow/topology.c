@@ -51,11 +51,47 @@ topology.
 \return FALSE if the packet should be silently dropped.
 */
 bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
-#ifdef FORCETOPOLOGY
+//#ifdef FORCETOPOLOGY
    bool returnVal;
    
    returnVal=FALSE;
    switch (idmanager_getMyID(ADDR_64B)->addr_64b[7]) {
+      case 0xec:
+         if (
+               ieee802514_header->src.addr_64b[7]==0x94
+            ){
+            returnVal=FALSE;
+         }
+         else{
+            returnVal=TRUE;
+         }
+         break;
+      case 0x94:
+         if (
+               ieee802514_header->src.addr_64b[7]==0xec
+            ){
+            returnVal=FALSE;
+         }
+         else{
+            returnVal=TRUE;
+         }
+         break;
+      case 0xbd:
+         if (
+               ieee802514_header->src.addr_64b[7]==0xec ||
+               ieee802514_header->src.addr_64b[7]==0x94
+            ){
+            returnVal=TRUE;
+         }
+         break;
+      case 0x3c:
+         if (
+               ieee802514_header->src.addr_64b[7]==0xec ||
+               ieee802514_header->src.addr_64b[7]==0x94
+            ){
+            returnVal=TRUE;
+         }
+         break;
       case 0xdf:
          if (
                ieee802514_header->src.addr_64b[7]==0x66
@@ -77,12 +113,15 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
             ) {
             returnVal=TRUE;
          }
-         break;   
+         break;
+      default:
+         returnVal=TRUE;
+         break;
    }
    return returnVal;
-#else
-   return TRUE;
-#endif
+//#else
+//   return TRUE;
+//#endif
 }
 
 //=========================== private =========================================

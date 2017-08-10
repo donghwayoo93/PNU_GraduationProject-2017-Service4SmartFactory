@@ -10,7 +10,10 @@ import os
 # openwsn-fw/openapps/cleds/cleds.c
 # openwsn-fw/openapps/cexample/cexample.c
 
-uri = 'coap://[bbbb::1415:9200:13e1:b83c]/'
+# uri = 'coap://[bbbb::1415:9200:13e1:b83c]/'
+# uri = 'coap://[bbbb::1415:9200:1826:0e94]/'
+uri = 'coap://[bbbb::1415:92cc:0000:0003]/'
+
 moteip = ''
 input_uri = ''
 uri_path_available = 0
@@ -98,7 +101,7 @@ while True:
             to_send = raw_input('input a byte to send (7 = working)\n')
             response = c.PUT(
                 uri+input_uri,
-                payload=[ord(to_send)]
+                payload=[to_send]
             )
 
             print_str = 'response : '

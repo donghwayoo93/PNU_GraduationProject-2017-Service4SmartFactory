@@ -253,7 +253,6 @@ class coap(object):
                         )
                     elif message['code']==d.METHOD_PUT:
                         (respCode,respOptions,respPayload) = resource.PUT(
-                            srcIp, # added part
                             options=message['options'],
                             payload=message['payload']
                         )
@@ -281,7 +280,7 @@ class coap(object):
 
                 # build response packets
                 response = m.buildMessage(
-                    msgtype             = responseType,
+                    msgtype          = responseType,
                     token            = message['token'],
                     code             = respCode,
                     messageId        = message['messageId'],

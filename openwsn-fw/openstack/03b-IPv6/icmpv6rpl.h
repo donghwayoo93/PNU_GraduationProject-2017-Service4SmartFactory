@@ -183,6 +183,7 @@ void     icmpv6rpl_updateMyDAGrankAndParentSelection(void);              // new 
 void     icmpv6rpl_indicateRxDIO(OpenQueueEntry_t* msg);                 // new DB
 
 
+
 /**
 \}
 \}
