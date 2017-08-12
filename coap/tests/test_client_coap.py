@@ -11,8 +11,8 @@ import os
 # openwsn-fw/openapps/cexample/cexample.c
 
 # uri = 'coap://[bbbb::1415:9200:13e1:b83c]/'
-# uri = 'coap://[bbbb::1415:9200:1826:0e94]/'
-uri = 'coap://[bbbb::1415:92cc:0000:0003]/'
+uri = 'coap://[bbbb::1415:9200:1826:0e94]/'
+# uri = 'coap://[bbbb::1415:92cc:0000:0003]/'
 
 moteip = ''
 input_uri = ''
@@ -101,7 +101,7 @@ while True:
             to_send = raw_input('input a byte to send (7 = working)\n')
             response = c.PUT(
                 uri+input_uri,
-                payload=[to_send]
+                payload=[ord(b) for n in to_send]
             )
 
             print_str = 'response : '

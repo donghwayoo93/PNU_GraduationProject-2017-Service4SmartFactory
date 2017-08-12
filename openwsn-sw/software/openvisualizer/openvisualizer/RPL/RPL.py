@@ -26,7 +26,9 @@ from openvisualizer.eventBus import eventBusClient
 import SourceRoute
 import openvisualizer.openvisualizer_utils as u
 
-from coap import coap
+import socket
+import json
+import RPL_MASK as MASK
 
 class RPL(eventBusClient.eventBusClient):
     
@@ -52,13 +54,10 @@ class RPL(eventBusClient.eventBusClient):
     PRF_DIO_B                          = 1<<1
     PRF_DIO_C                          = 1<<0
 
-    # added
-    URI_PREFIX                         = 'coap://'
-    IPV6_PREFIX                        = 'bbbb::'
-    # WORKER_DEVICE                      = '1415:9200:1826:e94'
-    WORKER_DEVICE                      = '1415:92cc:0:3'
-    C                                  = ''
-    DAO_PERIOD                         = 1
+    # IPC Socket RPL.py <-> test_server_json.py
+    IPC_HOST                           = 'localhost'
+    IPC_PORT                           = 25800
+    IPC_SOCKET                         = ''
     
     def __init__(self):
         
@@ -98,14 +97,14 @@ class RPL(eventBusClient.eventBusClient):
         self.sourceRoute          = SourceRoute.SourceRoute()
         self.latencyStats         = {}
 
-        # self.C = coap.coap()
-        # print 'RPL coap object created'
+        # IPC Socket Create
+        self.IPC_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
     #======================== public ==========================================
     
     def close(self):
         # nothing to do
-        # self.C.close()
+        self.IPC_SOCKET.close()
         pass
     
     #======================== private =========================================
@@ -191,82 +190,28 @@ class RPL(eventBusClient.eventBusClient):
 
 
     #===== added
+    def _adjust_DIO_Period(self, Src, Dest, input_uri, dio_period):
+        send_data = {'type' : 'DIO', 'src_addr' : str(Src), 'dst_addr' : str(Dest), 'uri' : str(input_uri), 'period' : str(dio_period)}
+        self.IPC_SOCKET.sendto(json.dumps(send_data), (self.IPC_HOST, self.IPC_PORT))
 
-    def _adjust_DIODAO_Period(self, Dest, input_uri, dio_period, dao_period):
-        uri = self.URI_PREFIX + '[' + self.IPV6_PREFIX + Dest + ']/' + input_uri
-
-        payload_str  = '1=' + str(dio_period)
-        payload_str += '2=' + str(dao_period)
-        payload_str += '!'
-
-        response = self.C.PUT(
-                uri,
-                payload=[payload_str]
-        )
-
-        print_str = 'response : '
-
-        for b in response:
-            print_str += chr(b)
-
-        print print_str
-
-    def _adjust_DIO_Period(self, Dest, input_uri, dio_period):
-        c = coap.coap()
-        uri = self.URI_PREFIX + '[' + self.IPV6_PREFIX + Dest + ']/' + input_uri
-        print 'dio : ' + uri
-
-        payload_str  = '1=' + str(dio_period)
-        payload_str += '!'
-
-        print payload_str
-
-        response = c.PUT(
-                uri,
-                payload=[payload_str]
-        )
-
-        print_str = 'response : '
-
-        for b in response:
-            print_str += chr(b)
-
-        print print_str
-        c.close()
+        print ''
+        print 'IPC : DIO ADJUSTMENT MSG SENT'
+        print ''
 
     def _adjust_DAO_Period(self, Dest, input_uri, dao_period):
-        C = coap.coap()
+        send_data = {'type' : 'DAO', 'src_addr' : str(Dest), 'dst_addr' : str(Dest), 'uri' : str(input_uri), 'period' : str(dao_period)}
+        self.IPC_SOCKET.sendto(json.dumps(send_data), (self.IPC_HOST, self.IPC_PORT))
 
-        uri = self.URI_PREFIX + '[' + self.IPV6_PREFIX + Dest + ']/' + input_uri
-        # uri = 'coap://[bbbb::1415:92cc:0000:0003]/ex'
-
-        print 'dao : ' + uri
-
-        payload_str  = '2=' + str(dao_period)
-        payload_str += '!'
-
-        print uri
-        # print payload_str
-
-        response = C.PUT(
-                uri,
-                payload=[payload_str]
-        )
-
-        # response = C.GET(uri)
-
-        print_str = 'response : '
-
-        for b in response:
-            print_str += chr(b)
-
-        print print_str
+        print ''
+        print 'IPC : DAO ADJUSTMENT MSG SENT'
+        print ''
 
     def _compareIpv6Addr(self, ipv6_addr, parent):
-
-        if(ipv6_addr == self.WORKER_DEVICE):
+        if(ipv6_addr == MASK.WORKER_DEVICE_ADDR):
             print ipv6_addr + ' attached to ' + parent
             return True
+        else:
+            return False
     
     #===== receive DAO
     
@@ -298,9 +243,11 @@ class RPL(eventBusClient.eventBusClient):
             output                = '\n'.join(output)
             log.debug(output)
 
+
         # to compare DAO source addr and Worker device ipv6 addr
         source_suffix_ipv6 = '{0}'.format(u.formatIPv6Addr(source))
         # print source_suffix_ipv6
+
 
         # DAO example
         # Upper Part
@@ -360,12 +307,13 @@ class RPL(eventBusClient.eventBusClient):
             log.warning("DAO too short ({0} bytes), no space for DAO header".format(len(dao)))
             return
         
+
+        # DAO Parent Information
         parent_suffix_ipv6 = ''
-        # added
         for p in parents:
             parent_suffix_ipv6 += '{0}'.format(u.formatIPv6Addr(p))    
-        
         # print parent_suffix_ipv6
+
         
         # log
         output               = []
@@ -395,11 +343,10 @@ class RPL(eventBusClient.eventBusClient):
         
         # if you get here, the DAO was parsed correctly
 
+        # 
         if(self._compareIpv6Addr(source_suffix_ipv6, parent_suffix_ipv6) == True):
-           # self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 9)
-           # self._adjust_DIO_Period(parent_suffix_ipv6, 'ex', 8)
-           print str(parent_suffix_ipv6[len(parent_suffix_ipv6)-4:len(parent_suffix_ipv6)])
-
+           self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 9)
+           self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 8)
         
         # update parents information with parents collected -- calls topology module.
         self.dispatch(          

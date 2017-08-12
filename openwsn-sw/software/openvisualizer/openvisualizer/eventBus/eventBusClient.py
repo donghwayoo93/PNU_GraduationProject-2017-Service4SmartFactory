@@ -183,7 +183,7 @@ class eventBusClient(object):
         ############## added to get bbbb::1:5683 packet
 
         # filter bbbb::1 addr and port # == 5683 
-        if((str(signal[0]) == '(187, 187, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)') & (signal[2] == 5683)):
+        # if((str(signal[0]) == '(187, 187, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)') & (signal[2] == 5683)):
 
             # filter packet from motes
             # destination to bbbb::1 with port # = 5683 (CoAP)
@@ -192,6 +192,7 @@ class eventBusClient(object):
             # destination to localhost with port # = 25800 (UDP)
 
             # make a socket
+            '''
             if(self.ForwardingEventFlag == 0):
                 self.ForwardingSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.ForwardingEventFlag = 1
@@ -207,6 +208,7 @@ class eventBusClient(object):
             self.ForwardingSocket.sendto(json.dumps(sendData), (self.ForwardingHOST, self.ForwardingPORT))           
            
             return False
+            '''
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug("returning false as nobody is subscribed to signal {0}, {1}".format(signal,temp))
