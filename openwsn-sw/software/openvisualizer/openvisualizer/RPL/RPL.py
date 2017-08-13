@@ -58,6 +58,10 @@ class RPL(eventBusClient.eventBusClient):
     IPC_HOST                           = 'localhost'
     IPC_PORT                           = 25800
     IPC_SOCKET                         = ''
+
+    # leaf movement check
+    CURRENT_PARENT_ADDR                = ''
+    FORMER_PARENT_ADDR                 = ''
     
     def __init__(self):
         
@@ -212,6 +216,15 @@ class RPL(eventBusClient.eventBusClient):
             return True
         else:
             return False
+
+    def _checkParentChanged(self):
+        if(self.CURRENT_PARENT_ADDR == self.FORMER_PARENT_ADDR):
+            return False
+        else:
+            print 'former parent : ' + self.FORMER_PARENT_ADDR + '\n'
+            print 'current parent : ' + self.CURRENT_PARENT_ADDR + '\n'
+            self.FORMER_PARENT_ADDR = self.CURRENT_PARENT_ADDR
+            return True
     
     #===== receive DAO
     
@@ -345,8 +358,10 @@ class RPL(eventBusClient.eventBusClient):
 
         # 
         if(self._compareIpv6Addr(source_suffix_ipv6, parent_suffix_ipv6) == True):
-           self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 9)
-           self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 8)
+            self.CURRENT_PARENT_ADDR = parent_suffix_ipv6
+            if(self._checkParentChanged()):
+                self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 7)
+                self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 6)
         
         # update parents information with parents collected -- calls topology module.
         self.dispatch(          

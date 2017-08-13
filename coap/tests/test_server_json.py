@@ -42,6 +42,8 @@ class testResource(coapResource.coapResource):
 
         if(len(my_suffix_1) == 1):
             my_suffix_1 = '0' + my_suffix_1
+        if(len(my_suffix_2) == 1):
+            my_suffix_2 = '0' + my_suffix_2
 
         for i in payload:
             str_i = str(i)
@@ -54,7 +56,7 @@ class testResource(coapResource.coapResource):
 
         sensor_arr = payload_str.split(' ')
         sensor_arr[0] = str(my_suffix_1) + str(my_suffix_2)
-        
+
         sensor_value = {
                         'ipaddr' : str(sensor_arr[0]),
                         'solar' : str(sensor_arr[1]),
