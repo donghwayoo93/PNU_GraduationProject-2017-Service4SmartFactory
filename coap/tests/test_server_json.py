@@ -32,7 +32,7 @@ class testResource(coapResource.coapResource):
         return (respCode,respOptions,respPayload)
 
     def PUT(self,options=[],payload=None):
-
+        # sem.acquire()
         payload_str   = ''
         json_str      = ''
         sensor_value  = ''
@@ -75,7 +75,7 @@ class testResource(coapResource.coapResource):
         respOptions = []
         respPayload = []
         # respPayload = [ord(b) for b in self.listmotes()]
-
+        # sem.release()
         return (respCode, respOptions, respPayload)
 
 
@@ -138,10 +138,12 @@ class UDP_IPC(SocketServer.BaseRequestHandler):
         link        = 'coap://[bbbb::' + str(Dest) + ']/' + str(uri)
         payload_str = '1=' + str(period) + '!'
 
+        sem.acquire()
         response = c.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
+        sem.release()
 
         print_str = ''
         for r in response:
@@ -154,10 +156,12 @@ class UDP_IPC(SocketServer.BaseRequestHandler):
         link        = 'coap://[bbbb::' + str(Dest) + ']/' + str(uri)
         payload_str = '2=' + str(period) + '!'
 
+        sem.acquire()
         response = c.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
+        sem.release()
 
         print_str = ''
         for r in response:
@@ -186,6 +190,7 @@ class UDP_IPC(SocketServer.BaseRequestHandler):
 thread_index = 0
 c            = coap.coap()
 server       = 0
+sem = threading.Semaphore(1)
 
 if __name__ == "__main__":
 

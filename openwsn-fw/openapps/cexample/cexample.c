@@ -90,7 +90,7 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 	owerror_t outcome;
 	uint8_t PUT_flag = E_FAIL;
    uint8_t i = 0;
-   uint16_t new_dioPeriod = 0, new_daoPeriod = 0;
+   uint32_t new_dioPeriod = 0, new_daoPeriod = 0;
 
 	switch (coap_header->Code) {
 		case COAP_CODE_REQ_GET:
@@ -126,8 +126,7 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
             (msg->payload[1] == CEXAMPLE_SEPERATOR)) {               // SET DIO Period
             new_dioPeriod = (msg->payload[2] - 48);
             if(msg->payload[3] == MARKER_END){
-               new_dioPeriod = new_dioPeriod * 10000;
-               icmpv6rpl_setDIOPeriod(new_dioPeriod);                 // void (uint16_t dioPeriod)
+               icmpv6rpl_setDIOPeriod(new_dioPeriod*10000);                 // void (uint32_t dioPeriod)
                PUT_flag = E_SUCCESS;
             }
          }
@@ -135,8 +134,7 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
             (msg->payload[1] == CEXAMPLE_SEPERATOR)) {               // SET DAO Period
             new_daoPeriod = (msg->payload[2] - 48);
             if(msg->payload[3] == MARKER_END){
-               new_daoPeriod = new_daoPeriod * 10000;
-               icmpv6rpl_setDAOPeriod(new_daoPeriod);                 // void (uint16_t daoPeriod)
+               icmpv6rpl_setDAOPeriod(new_daoPeriod*10000);                 // void (uint32_t daoPeriod)
                PUT_flag = E_SUCCESS;
             }
          }
