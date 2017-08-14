@@ -126,7 +126,8 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
             (msg->payload[1] == CEXAMPLE_SEPERATOR)) {               // SET DIO Period
             new_dioPeriod = (msg->payload[2] - 48);
             if(msg->payload[3] == MARKER_END){
-               icmpv6rpl_setDIOPeriod(new_dioPeriod*10000);                 // void (uint16_t dioPeriod)
+               new_dioPeriod = new_dioPeriod * 10000;
+               icmpv6rpl_setDIOPeriod(new_dioPeriod);                 // void (uint16_t dioPeriod)
                PUT_flag = E_SUCCESS;
             }
          }
@@ -134,7 +135,8 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
             (msg->payload[1] == CEXAMPLE_SEPERATOR)) {               // SET DAO Period
             new_daoPeriod = (msg->payload[2] - 48);
             if(msg->payload[3] == MARKER_END){
-               icmpv6rpl_setDIOPeriod(new_daoPeriod*10000);                 // void (uint16_t daoPeriod)
+               new_daoPeriod = new_daoPeriod * 10000;
+               icmpv6rpl_setDAOPeriod(new_daoPeriod);                 // void (uint16_t daoPeriod)
                PUT_flag = E_SUCCESS;
             }
          }

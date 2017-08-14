@@ -195,8 +195,9 @@ class RPL(eventBusClient.eventBusClient):
 
     #===== added
     def _adjust_DIO_Period(self, Src, Dest, input_uri, dio_period):
-        send_data = {'type' : 'DIO', 'src_addr' : str(Src), 'dst_addr' : str(Dest), 'uri' : str(input_uri), 'period' : str(dio_period)}
-        self.IPC_SOCKET.sendto(json.dumps(send_data), (self.IPC_HOST, self.IPC_PORT))
+        if(Dest != ''):
+            send_data = {'type' : 'DIO', 'src_addr' : str(Src), 'dst_addr' : str(Dest), 'uri' : str(input_uri), 'period' : str(dio_period)}
+            self.IPC_SOCKET.sendto(json.dumps(send_data), (self.IPC_HOST, self.IPC_PORT))
 
         print ''
         print 'IPC : DIO ADJUSTMENT MSG SENT'
@@ -212,6 +213,7 @@ class RPL(eventBusClient.eventBusClient):
 
     def _compareIpv6Addr(self, ipv6_addr, parent):
         if(ipv6_addr == MASK.WORKER_DEVICE_ADDR):
+            print ''
             print ipv6_addr + ' attached to ' + parent
             return True
         else:
@@ -221,8 +223,9 @@ class RPL(eventBusClient.eventBusClient):
         if(self.CURRENT_PARENT_ADDR == self.FORMER_PARENT_ADDR):
             return False
         else:
-            print 'former parent : ' + self.FORMER_PARENT_ADDR + '\n'
-            print 'current parent : ' + self.CURRENT_PARENT_ADDR + '\n'
+            print ''
+            print ' Former parent : ' + self.FORMER_PARENT_ADDR
+            print 'Current parent : ' + self.CURRENT_PARENT_ADDR + '\n'
             self.FORMER_PARENT_ADDR = self.CURRENT_PARENT_ADDR
             return True
     
@@ -360,8 +363,12 @@ class RPL(eventBusClient.eventBusClient):
         if(self._compareIpv6Addr(source_suffix_ipv6, parent_suffix_ipv6) == True):
             self.CURRENT_PARENT_ADDR = parent_suffix_ipv6
             if(self._checkParentChanged()):
+                # to current leaf node : set dao period loosely
                 self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 7)
+                # to current leaf node's parent : set dio period loosely
                 self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 6)
+                # to current leaf node's ex-parent : reset dio period to default
+                self._adjust_DIO_Period(source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'ex', 1)
         
         # update parents information with parents collected -- calls topology module.
         self.dispatch(          

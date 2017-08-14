@@ -845,10 +845,6 @@ void icmpv6rpl_setDAOPeriod(uint32_t daoPeriod){
    
    icmpv6rpl_vars.daoPeriod = daoPeriod;
 
-   openserial_printError(COMPONENT_ICMPv6RPL,ERR_NO_FREE_PACKET_BUFFER,
-                      (errorparameter_t)daoPeriod,
-                      (errorparameter_t)daoPeriod);
-
    /*
    daoPeriodRandom = icmpv6rpl_vars.daoPeriod - 0x80 + (openrandom_get16b()&0xff);
    opentimers_setPeriod(
