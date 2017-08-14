@@ -192,6 +192,7 @@ class eventBusClient(object):
             # destination to localhost with port # = 25800 (UDP)
 
             # make a socket
+            '''
             if(self.ForwardingEventFlag == 0):
                 self.ForwardingSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.ForwardingEventFlag = 1
@@ -204,7 +205,8 @@ class eventBusClient(object):
             sendData = { 'moteipv6Addr' : str(data[0]), 'moteDataStr' : str(data[1]) }
 
             # send to localhost server port # is 25800
-            self.ForwardingSocket.sendto(json.dumps(sendData), (self.ForwardingHOST, self.ForwardingPORT))           
+            self.ForwardingSocket.sendto(json.dumps(sendData), (self.ForwardingHOST, self.ForwardingPORT))    
+            '''       
            
             return False
 

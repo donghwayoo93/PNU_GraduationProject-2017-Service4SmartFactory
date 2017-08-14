@@ -3,7 +3,7 @@
 */
 
 #include "opendefs.h"
-#include "cexample.h"
+#include "userapp.h"
 #include "opencoap.h"
 #include "opentimers.h"
 #include "openqueue.h"
@@ -26,38 +26,38 @@
 //=========================== defines =========================================
 
 /// inter-packet period (in ms)
-#define CEXAMPLEPERIOD  10000
+#define USERAPPPERIOD  10000
 #define PAYLOADLEN      14
 
-const uint8_t cexample_path0[] = "ex";
+const uint8_t userapp_path0[] = "app";
 
 //=========================== variables =======================================
 
-cexample_vars_t cexample_vars;
+userapp_vars_t userapp_vars;
 
 //=========================== prototypes ======================================
 
-owerror_t cexample_receive(OpenQueueEntry_t* msg,
+owerror_t userapp_receive(OpenQueueEntry_t* msg,
                     coap_header_iht*  coap_header,
                     coap_option_iht*  coap_options);
-void    cexample_timer_cb(opentimer_id_t id);
-void    cexample_task_cb(void);
-void    cexample_sendDone(OpenQueueEntry_t* msg,
+void    userapp_timer_cb(opentimer_id_t id);
+void    userapp_task_cb(void);
+void    userapp_sendDone(OpenQueueEntry_t* msg,
                        owerror_t error);
 
 //=========================== public ==========================================
 
-void cexample_init() {
+void userapp_init() {
    
    // prepare the resource descriptor for the /ex path
-   cexample_vars.desc.path0len             = sizeof(cexample_path0)-1;
-   cexample_vars.desc.path0val             = (uint8_t*)(&cexample_path0);
-   cexample_vars.desc.path1len             = 0;
-   cexample_vars.desc.path1val             = NULL;
-   cexample_vars.desc.componentID          = COMPONENT_CEXAMPLE;
-   cexample_vars.desc.discoverable         = TRUE;
-   cexample_vars.desc.callbackRx           = &cexample_receive;
-   cexample_vars.desc.callbackSendDone     = &cexample_sendDone;
+   userapp_vars.desc.path0len             = sizeof(userapp_path0)-1;
+   userapp_vars.desc.path0val             = (uint8_t*)(&userapp_path0);
+   userapp_vars.desc.path1len             = 0;
+   userapp_vars.desc.path1val             = NULL;
+   userapp_vars.desc.componentID          = COMPONENT_USERAPP;
+   userapp_vars.desc.discoverable         = TRUE;
+   userapp_vars.desc.callbackRx           = &userapp_receive;
+   userapp_vars.desc.callbackSendDone     = &userapp_sendDone;
 
    /*
 		init sensors
@@ -65,15 +65,15 @@ void cexample_init() {
    //sensors_init();
    
    
-   opencoap_register(&cexample_vars.desc);
-   cexample_vars.timerId    = opentimers_start(CEXAMPLEPERIOD,
+   opencoap_register(&userapp_vars.desc);
+   userapp_vars.timerId    = opentimers_start(USERAPPPERIOD,
                                                 TIMER_PERIODIC,TIME_MS,
-                                                cexample_timer_cb);
+                                                userapp_timer_cb);
 }
 
 //=========================== private =========================================
 
-owerror_t cexample_receive(OpenQueueEntry_t* msg,
+owerror_t userapp_receive(OpenQueueEntry_t* msg,
                       coap_header_iht* coap_header,
                       coap_option_iht* coap_options) {
 	/*
@@ -148,11 +148,11 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 
 //timer fired, but we don't want to execute task in ISR mode
 //instead, push task to scheduler with COAP priority, and let scheduler take care of it
-void cexample_timer_cb(opentimer_id_t id){
-   scheduler_push_task(cexample_task_cb,TASKPRIO_COAP);
+void userapp_timer_cb(opentimer_id_t id){
+   scheduler_push_task(userapp_task_cb,TASKPRIO_COAP);
 }
 
-void cexample_task_cb() {
+void userapp_task_cb() {
    OpenQueueEntry_t*    pkt;
    owerror_t            outcome;
    uint8_t              i;
@@ -167,7 +167,7 @@ void cexample_task_cb() {
    
    // don't run on dagroot
    if (idmanager_getIsDAGroot()) {
-      opentimers_stop(cexample_vars.timerId);
+      opentimers_stop(userapp_vars.timerId);
       return;
    }
 
@@ -184,10 +184,10 @@ void cexample_task_cb() {
   // photosynthetic_lx   = (uint16_t)(1.5 * (sensor_read_photosynthetic / 4096) * 1000);
 
    // create a CoAP RD packet
-   pkt = openqueue_getFreePacketBuffer(COMPONENT_CEXAMPLE);
+   pkt = openqueue_getFreePacketBuffer(COMPONENT_USERAPP);
    if (pkt==NULL) {
       openserial_printError(
-         COMPONENT_CEXAMPLE,
+         COMPONENT_USERAPP,
          ERR_NO_FREE_PACKET_BUFFER,
          (errorparameter_t)0,
          (errorparameter_t)0
@@ -196,8 +196,8 @@ void cexample_task_cb() {
       return;
    }
    // take ownership over that packet
-   pkt->creator                   = COMPONENT_CEXAMPLE;
-   pkt->owner                     = COMPONENT_CEXAMPLE;
+   pkt->creator                   = COMPONENT_USERAPP;
+   pkt->owner                     = COMPONENT_USERAPP;
    // CoAP payload
    packetfunctions_reserveHeaderSize(pkt,PAYLOADLEN);
    for (i=0;i<PAYLOADLEN;i++) {
@@ -215,7 +215,7 @@ void cexample_task_cb() {
    pkt->payload[0]                = (sensor_read_solar>>8)&0xff;
    pkt->payload[1]                = (sensor_read_solar>>0)&0xff;
 
-   pkt->payload[2]				  = 0x20;
+   pkt->payload[2]				    = 0x20;
    pkt->payload[3]                = 0x20;
 
    pkt->payload[4]                = (sensor_read_photosynthetic >> 8) & 0xff;
@@ -242,10 +242,10 @@ void cexample_task_cb() {
                                     | 1;
    pkt->payload[1]                = COAP_MEDTYPE_APPOCTETSTREAM;
    // location-path option
-   packetfunctions_reserveHeaderSize(pkt,sizeof(cexample_path0)-1);
-   memcpy(&pkt->payload[0],cexample_path0,sizeof(cexample_path0)-1);
+   packetfunctions_reserveHeaderSize(pkt,sizeof(userapp_path0)-1);
+   memcpy(&pkt->payload[0],userapp_path0,sizeof(userapp_path0)-1);
    packetfunctions_reserveHeaderSize(pkt,1);
-   pkt->payload[0]                = ((COAP_OPTION_NUM_URIPATH) << 4) | (sizeof(cexample_path0)-1);
+   pkt->payload[0]                = ((COAP_OPTION_NUM_URIPATH) << 4) | (sizeof(userapp_path0)-1);
    
    // metadata
    pkt->l4_destination_port       = WKP_UDP_COAP;
@@ -276,7 +276,7 @@ void cexample_task_cb() {
       COAP_TYPE_NON,
       COAP_CODE_REQ_PUT,
       1,
-      &cexample_vars.desc
+      &userapp_vars.desc
    );
    
    // avoid overflowing the queue if fails
@@ -287,6 +287,6 @@ void cexample_task_cb() {
    return;
 }
 
-void cexample_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
+void userapp_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    openqueue_freePacketBuffer(msg);
 }
