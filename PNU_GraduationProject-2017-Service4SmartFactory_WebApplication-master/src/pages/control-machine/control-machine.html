@@ -1,0 +1,55 @@
+<ion-header>
+    <ion-navbar>
+        <button ion-button [menuToggle]="activeMenu">
+		<ion-icon name="menu"></ion-icon>
+	</button>
+        <ion-title>ControlMachine</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+<ion-content padding>
+    <div class="test">
+
+    </div>
+    <div class="machine-list-container">
+
+        <!--
+		<ion-scroll scrollX="true">
+			<div class="scroll-item" *ngFor="let machine of machines">
+				<img src="assets/images/{{machine}}">
+				<figcaption>{{machine}}</figcaption>
+			</div>
+		</ion-scroll>
+		-->
+        <ion-card>
+            <ion-card-header>
+                <h1>설비 정보</h1>
+            </ion-card-header>
+            <ion-card-content>
+                <ion-list>
+                    <ion-item *ngFor="let machineData of machineDatas">
+                        <span item-start>{{machineData.title}}</span>
+                        <span item-end>{{machineData.content}}</span>
+                    </ion-item>
+                </ion-list>
+            </ion-card-content>
+        </ion-card>
+    </div>
+    <div class="machine-view">
+        <ion-card>
+            <ion-card-header>
+                <h1>지시사항</h1>
+            </ion-card-header>
+            <ion-card-content>
+                <ion-list>
+                    <ion-item *ngFor="let manual of manuals">
+                        <span item-start>{{manual}}</span>
+                        <span item-end><ion-radio></ion-radio></span>
+                    </ion-item>
+                </ion-list>
+            </ion-card-content>
+        </ion-card>
+    </div>
+    <button ion-button block (click)="refreshPage()">조회하기</button>
+</ion-content>

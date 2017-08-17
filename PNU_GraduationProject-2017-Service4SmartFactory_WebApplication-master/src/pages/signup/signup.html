@@ -1,0 +1,53 @@
+<ion-header>
+
+    <ion-navbar color="secondary">
+        <ion-title>Create Account</ion-title>
+    </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+    <ion-row class="account-form">
+        <ion-col>
+            <ion-list inset>
+
+                <ion-item>
+                    <ion-label floating>
+                        <ion-icon name="mail"> Email</ion-icon>
+                    </ion-label>
+                    <ion-input [(ngModel)]="email" type="email"></ion-input>
+                </ion-item>
+
+                <ion-item>
+                    <ion-label floating>
+                        <ion-icon name="lock"> Password</ion-icon>
+                    </ion-label>
+                    <ion-input [(ngModel)]="password" type="password"></ion-input>
+                </ion-item>
+                <!--
+                <ion-item>
+                    <ion-label floating>Role</ion-label>
+                    <ion-select [(ngModel)]="role">
+                        <ion-option value="reader">Reader</ion-option>
+                        <ion-option value="creator">Creator</ion-option>
+                        <ion-option value="editor">Editor</ion-option>
+                    </ion-select>
+                </ion-item>
+-->
+                <ion-item>
+                    <ion-label floating>Access Level</ion-label>
+                    <ion-select [(ngModel)]="accessLevel">
+                        <ion-option value="1">level 1</ion-option>
+                        <ion-option value="2">level 2</ion-option>
+                        <ion-option value="3">level 3</ion-option>
+                    </ion-select>
+                </ion-item>
+            </ion-list>
+
+            <button ion-button (click)="register()" class="continue-button">Register</button>
+        </ion-col>
+    </ion-row>
+
+</ion-content>

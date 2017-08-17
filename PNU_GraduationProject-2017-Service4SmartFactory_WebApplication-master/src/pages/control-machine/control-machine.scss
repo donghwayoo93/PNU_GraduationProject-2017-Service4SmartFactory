@@ -1,0 +1,27 @@
+page-control-machine {
+    ion-scroll[scrollX] {
+        white-space: nowrap;
+        height: 180px;
+        overflow: hidden;
+    }
+    /* Hide ion-content scrollbar */
+     ::-webkit-scrollbar {
+        display: none;
+    }
+    .machine-list-container img {
+        width: 80px;
+        height: 80px;
+        border-radius: 5rem;
+        border: 2px solid color($colors, light);
+        margin: 10px;
+        figcaption {
+            display: block;
+        }
+    }
+    div .scroll-item {
+        vertical-align: top;
+        display: inline-block;
+        text-align: center;
+        width: 120px;
+    }
+}
