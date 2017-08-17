@@ -29,7 +29,7 @@
 
 /// inter-packet period (in ms)
 #define CEXAMPLEPERIOD  30000
-#define PAYLOADLEN      14
+#define PAYLOADLEN      16
 
 const uint8_t cexample_path0[] = "ex";
 
@@ -251,28 +251,34 @@ void cexample_task_cb() {
 	///////////////////////////////////////////////////////////////////////////////////////////
    */
 
-   pkt->payload[0]                = (my_suffix_1)&0xff;
-   pkt->payload[1]                = (my_suffix_2)&0xff;
+   pkt->payload[0]                = 'S';
 
-   pkt->payload[2]                = 0x20;
+   pkt->payload[1]                = 0x20;
+
+   pkt->payload[2]                = (my_suffix_1)&0xff;
+   pkt->payload[3]                = (my_suffix_2)&0xff;
+
+   pkt->payload[4]                = 0x20;
    
-   pkt->payload[3]                = (sensor_read_solar>>8)&0xff;
-   pkt->payload[4]                = (sensor_read_solar>>0)&0xff;
+   pkt->payload[5]                = (sensor_read_solar>>8)&0xff;
+   pkt->payload[6]                = (sensor_read_solar>>0)&0xff;
 
-   pkt->payload[5]				    = 0x20;
+   pkt->payload[7]				    = 0x20;
 
-   pkt->payload[6]                = (sensor_read_photosynthetic >> 8) & 0xff;
-   pkt->payload[7]                = (sensor_read_photosynthetic >> 0) & 0xff;
+   pkt->payload[8]                = (sensor_read_photosynthetic >> 8) & 0xff;
+   pkt->payload[9]                = (sensor_read_photosynthetic >> 0) & 0xff;
 
-   pkt->payload[8]                = 0x20;
+   pkt->payload[10]                = 0x20;
 
-   pkt->payload[9]                = (sensor_read_temperature >> 8) & 0xff;
-   pkt->payload[10]                = (sensor_read_temperature >> 0) & 0xff;
+   pkt->payload[11]                = (sensor_read_temperature >> 8) & 0xff;
+   pkt->payload[12]                = (sensor_read_temperature >> 0) & 0xff;
 
-   pkt->payload[11]               = 0x20;
+   pkt->payload[13]               = 0x20;
 
-   pkt->payload[12]               = (sensor_read_humidity >> 8) & 0xff;
-   pkt->payload[13]               = (sensor_read_humidity >> 0) & 0xff;
+   pkt->payload[14]               = (sensor_read_humidity >> 8) & 0xff;
+   pkt->payload[15]               = (sensor_read_humidity >> 0) & 0xff;
+
+
 
    packetfunctions_reserveHeaderSize(pkt,1);
    pkt->payload[0] = COAP_PAYLOAD_MARKER;

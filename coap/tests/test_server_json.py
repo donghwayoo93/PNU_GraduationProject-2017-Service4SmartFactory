@@ -33,41 +33,50 @@ class testResource(coapResource.coapResource):
 
     def PUT(self,options=[],payload=None):
         # sem.acquire()
-        payload_str   = ''
-        json_str      = ''
-        sensor_value  = ''
 
-        my_suffix_1 = format(payload[0], 'x')
-        my_suffix_2 = format(payload[1], 'x')
+        # In case Server Receives Sensor Value Packet
+        if(unichr(payload[0]) == 'S'):
 
-        if(len(my_suffix_1) == 1):
-            my_suffix_1 = '0' + my_suffix_1
-        if(len(my_suffix_2) == 1):
-            my_suffix_2 = '0' + my_suffix_2
+            payload = payload[2:]
+            payload_str   = ''
+            json_str      = ''
+            sensor_value  = ''
 
-        for i in payload:
-            str_i = str(i)
-            if(str_i == '32'):
-                payload_str += ' '
-            elif(str_i == '0'):
-                payload_str += ''
-            else:
-                payload_str += str_i
+            my_suffix_1 = format(payload[0], 'x')
+            my_suffix_2 = format(payload[1], 'x')
 
-        sensor_arr = payload_str.split(' ')
-        sensor_arr[0] = str(my_suffix_1) + str(my_suffix_2)
+            if(len(my_suffix_1) == 1):
+                my_suffix_1 = '0' + my_suffix_1
+            if(len(my_suffix_2) == 1):
+                my_suffix_2 = '0' + my_suffix_2
 
-        sensor_value = {
-                        'ipaddr' : str(sensor_arr[0]),
-                        'solar' : str(sensor_arr[1]),
-                        'photosynthetic' : str(sensor_arr[2]),
-                        'temperature' : str(sensor_arr[3]), 
-                        'humidity' : str(sensor_arr[4])
-                        }
+            for i in payload:
+                str_i = str(i)
+                if(str_i == '32'):
+                    payload_str += ' '
+                elif(str_i == '0'):
+                    payload_str += ''
+                else:
+                    payload_str += str_i
 
-        json_str = json.dumps(sensor_value)
+            sensor_arr = payload_str.split(' ')
+            sensor_arr[0] = str(my_suffix_1) + str(my_suffix_2)
 
-        print json_str
+            sensor_value = {
+                            'ipaddr' : str(sensor_arr[0]),
+                            'solar' : str(sensor_arr[1]),
+                            'photosynthetic' : str(sensor_arr[2]),
+                            'temperature' : str(sensor_arr[3]), 
+                            'humidity' : str(sensor_arr[4])
+                            }
+
+            json_str = json.dumps(sensor_value)
+
+            print json_str
+
+        # In case Server Receives Instruction Packet
+        elif(unichr(payload[0]) == 'I'):
+            print ' '
 
         #print 'PUT RECEIVED, payload :' + asciipayload
 
