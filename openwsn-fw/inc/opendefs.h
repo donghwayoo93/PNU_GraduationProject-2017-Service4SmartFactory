@@ -86,7 +86,9 @@ enum {
    WKP_TCP_HTTP                        =      80,
    WKP_TCP_ECHO                        =       7,
    //UDP
-   WKP_UDP_COAP                        =    5683,
+   WKP_UDP_COAP_ROUTE                  =    5683,
+   WKP_UDP_COAP                        =    5684,
+   WKP_UDP_COAP_INST                   =    5685,
    WKP_UDP_ECHO                        =       7,
    WKP_UDP_INJECT                      =   61617,// 0xf0b1
    WKP_UDP_RINGMASTER                  =   15000,

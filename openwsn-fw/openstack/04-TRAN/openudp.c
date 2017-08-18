@@ -124,7 +124,10 @@ owerror_t openudp_send(OpenQueueEntry_t* msg) {
 void openudp_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
    msg->owner = COMPONENT_OPENUDP;
    switch(msg->l4_sourcePortORicmpv6Type) {
-      case WKP_UDP_COAP:
+      case WKP_UDP_COAP:                            // coap:5684
+         opencoap_sendDone(msg,error);
+         break;
+      case WKP_UDP_COAP_ROUTE:                      // coap:5683
          opencoap_sendDone(msg,error);
          break;
       case WKP_UDP_ECHO:
@@ -193,9 +196,12 @@ void openudp_receive(OpenQueueEntry_t* msg) {
    }
    
    switch(msg->l4_destination_port) {
-      case WKP_UDP_COAP:
+      case WKP_UDP_COAP:              // coap:5684
          opencoap_receive(msg);
          break;
+      case WKP_UDP_COAP_ROUTE:        // coap:5683
+          opencoap_receive(msg);
+          break;
       case WKP_UDP_RINGMASTER:
          if (msg->l4_payload[0] > 90) {
             rrt_sendCoAPMsg('B', NULL);

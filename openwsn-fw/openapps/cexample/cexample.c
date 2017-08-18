@@ -90,7 +90,7 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 	owerror_t outcome;
 	uint8_t PUT_flag = E_FAIL;
    uint8_t i = 0;
-   uint32_t new_dioPeriod = 0, new_daoPeriod = 0;
+   uint32_t new_Period = 0;
 
 	switch (coap_header->Code) {
 		case COAP_CODE_REQ_GET:
@@ -121,51 +121,49 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 			break;
       //------------------------------------------case GET
 		case COAP_CODE_REQ_PUT:
-         
-         if((msg->payload[0] == DIO_PERIOD) &&
-            (msg->payload[1] == CEXAMPLE_SEPERATOR)) {               // SET DIO Period
-            new_dioPeriod = (msg->payload[2] - 48);
-            if(msg->payload[3] == MARKER_END){
-               icmpv6rpl_setDIOPeriod(new_dioPeriod*10000);                 // void (uint32_t dioPeriod)
+         if(msg->l4_destination_port == WKP_UDP_COAP_ROUTE){    // Destination UDP Port #5683
+            if((msg->payload[0] == DIO_PERIOD) &&
+               (msg->payload[1] == CEXAMPLE_SEPERATOR) &&
+               (msg->payload[3] == MARKER_END)) {               // SET DIO Period
+               new_Period = (msg->payload[2] - 48);
+               icmpv6rpl_setDIOPeriod(new_Period*10000);                 // void (uint32_t dioPeriod)
                PUT_flag = E_SUCCESS;
             }
-         }
-         else if((msg->payload[0] == DAO_PERIOD) &&
-            (msg->payload[1] == CEXAMPLE_SEPERATOR)) {               // SET DAO Period
-            new_daoPeriod = (msg->payload[2] - 48);
-            if(msg->payload[3] == MARKER_END){
-               icmpv6rpl_setDAOPeriod(new_daoPeriod*10000);                 // void (uint32_t daoPeriod)
+            else if((msg->payload[0] == DAO_PERIOD) &&
+               (msg->payload[1] == CEXAMPLE_SEPERATOR) &&
+               (msg->payload[3] == MARKER_END)) {               // SET DAO Period
+               new_Period = (msg->payload[2] - 48);
+               icmpv6rpl_setDAOPeriod(new_Period*10000);                 // void (uint32_t daoPeriod)
                PUT_flag = E_SUCCESS;
             }
-         }
-         else{                                                       // Received Undefined VALUE
-            PUT_flag = E_FAIL;
-         }
+            else{                                                       // Received Undefined VALUE
+               PUT_flag = E_FAIL;
+            }
 
-         msg->payload = &(msg->packet[127]);
-         msg->length = 0;
+            msg->payload = &(msg->packet[127]);
+            msg->length = 0;
 
-			if (PUT_flag == E_SUCCESS) {                                // Response with changed Value
-				packetfunctions_reserveHeaderSize(msg, 7);
-				msg->payload[0] = COAP_PAYLOAD_MARKER;
+   			if (PUT_flag == E_SUCCESS) {                                // Response with changed Value
+   				packetfunctions_reserveHeaderSize(msg, 6);
+   				msg->payload[0] = COAP_PAYLOAD_MARKER;
 
-				msg->payload[1] = new_dioPeriod + 48;
-				msg->payload[2] = new_daoPeriod + 48;
-				msg->payload[3] = ' ';
-				msg->payload[4] = 'p';
-				msg->payload[5] = 'u';
-				msg->payload[6] = 't';
-			}
-         else if(PUT_flag == E_FAIL){                                // Response with error
-            packetfunctions_reserveHeaderSize(msg, 7);
-            msg->payload[0] = COAP_PAYLOAD_MARKER;
+   				msg->payload[1] = new_Period + 48;
+   				msg->payload[2] = ' ';
+   				msg->payload[3] = 'p';
+   				msg->payload[4] = 'u';
+   				msg->payload[5] = 't';
+   			}
+            else if(PUT_flag == E_FAIL){                                // Response with error
+               packetfunctions_reserveHeaderSize(msg, 7);
+               msg->payload[0] = COAP_PAYLOAD_MARKER;
 
-            msg->payload[1] = 'e';
-            msg->payload[2] = 'x';
-            msg->payload[3] = ' ';
-            msg->payload[4] = 'e';
-            msg->payload[5] = 'r';
-            msg->payload[6] = 'r';
+               msg->payload[1] = 'e';
+               msg->payload[2] = 'x';
+               msg->payload[3] = ' ';
+               msg->payload[4] = 'e';
+               msg->payload[5] = 'r';
+               msg->payload[6] = 'r';
+            }
          }
 
          coap_header->Code = COAP_CODE_RESP_CONTENT;
