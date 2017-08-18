@@ -1,10 +1,12 @@
 <ion-header>
-    <ion-navbar>
-        <ion-title>Shared Todos</ion-title>
+    <ion-navbar color="primary">
+        <ion-title>
+            <h2>작업자 지원 서비스</h2>
+        </ion-title>
     </ion-navbar>
 </ion-header>
 
-<ion-content>
+<ion-content padding>
 
     <ion-row class="login-form">
         <ion-col>
@@ -26,7 +28,8 @@
 
             </ion-list>
 
-            <button ion-button full (click)="login()" color="primary" class="login-button">Login</button>
+            <button ion-button block (click)="new_login()" color="primary" class="login-button">새 로그인</button>
+            <button ion-button block (click)="old_Login()" color="primary" class="login-button">옛날 로그인</button>
 
         </ion-col>
     </ion-row>

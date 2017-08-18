@@ -1,4 +1,13 @@
 page-login {
+    ion-title {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 0 90px 1px;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+    }
     ion-content {
         background-color: map-get($colors, secondary);
     }
@@ -35,7 +44,6 @@ page-login {
     .login-button {
         color: #000;
         border-radius: 30px;
-        font-size: 0.9em;
         background-color: transparent;
         border: 1px solid #fff;
     }

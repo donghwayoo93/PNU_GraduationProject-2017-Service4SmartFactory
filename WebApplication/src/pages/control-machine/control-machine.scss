@@ -1,27 +1,17 @@
 page-control-machine {
-    ion-scroll[scrollX] {
-        white-space: nowrap;
-        height: 180px;
-        overflow: hidden;
-    }
-    /* Hide ion-content scrollbar */
-     ::-webkit-scrollbar {
-        display: none;
-    }
-    .machine-list-container img {
-        width: 80px;
-        height: 80px;
-        border-radius: 5rem;
-        border: 2px solid color($colors, light);
-        margin: 10px;
-        figcaption {
-            display: block;
-        }
-    }
-    div .scroll-item {
-        vertical-align: top;
-        display: inline-block;
+    ion-title {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 0 90px 1px;
+        width: 100%;
+        height: 100%;
         text-align: center;
-        width: 120px;
+    }
+    .refresh-button {
+        color: #000;
+        border-radius: 30px;
+        background-color: transparent;
+        border: 1px solid #fff;
     }
 }

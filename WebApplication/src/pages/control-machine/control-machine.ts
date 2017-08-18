@@ -1,14 +1,14 @@
 import { Component } from '@angular/core';
 import { Http } from '@angular/http';
 import { NavController, NavParams } from 'ionic-angular';
-import { MachinesProvider } from '../../providers/machines/machines'
+import { MachinesProvider } from '../../providers/machines/machines';
 
 @Component({
 	selector: 'page-control-machine',
 	templateUrl: 'control-machine.html',
 })
 export class ControlMachinePage {
-	filePath = 'assets/tempData.json';
+	filePath = 'assets/machineData.json';
 	machineID: any;
 	manualNum: any;
 
@@ -25,6 +25,10 @@ export class ControlMachinePage {
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, private http: Http) {
+	}
+
+	requestRefreshPage() {
+
 	}
 
 	refreshPage(page) {

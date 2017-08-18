@@ -1,55 +1,52 @@
 <ion-header>
-    <ion-navbar>
+    <ion-navbar color="primary">
         <button ion-button [menuToggle]="activeMenu">
-		<ion-icon name="menu"></ion-icon>
-	</button>
-        <ion-title>ControlMachine</ion-title>
+					<ion-icon name="menu"></ion-icon>
+				</button>
+
+        <ion-title>
+            <h2>작업자 지원 서비스</h2>
+        </ion-title>
+
+        <ion-buttons end>
+            <button ion-button (click)="refreshPage()">
+						<ion-icon name="refresh"></ion-icon>
+					</button>
+        </ion-buttons>
     </ion-navbar>
 
 </ion-header>
 
 <ion-content padding>
-    <div class="test">
 
-    </div>
-    <div class="machine-list-container">
+    <button ion-button block class="refresh-button" (click)="requestRefreshPage()">요청</button>
+    <button ion-button block class="refresh-button" (click)="refreshPage()">refresh</button>
+    <ion-card>
+        <ion-card-header>
+            <h1>설비 정보</h1>
+        </ion-card-header>
+        <ion-card-content>
+            <ion-list>
+                <ion-item *ngFor="let machineData of machineDatas">
+                    <span item-start>{{machineData.title}}</span>
+                    <span item-end>{{machineData.content}}</span>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
 
-        <!--
-		<ion-scroll scrollX="true">
-			<div class="scroll-item" *ngFor="let machine of machines">
-				<img src="assets/images/{{machine}}">
-				<figcaption>{{machine}}</figcaption>
-			</div>
-		</ion-scroll>
-		-->
-        <ion-card>
-            <ion-card-header>
-                <h1>설비 정보</h1>
-            </ion-card-header>
-            <ion-card-content>
-                <ion-list>
-                    <ion-item *ngFor="let machineData of machineDatas">
-                        <span item-start>{{machineData.title}}</span>
-                        <span item-end>{{machineData.content}}</span>
-                    </ion-item>
-                </ion-list>
-            </ion-card-content>
-        </ion-card>
-    </div>
-    <div class="machine-view">
-        <ion-card>
-            <ion-card-header>
-                <h1>지시사항</h1>
-            </ion-card-header>
-            <ion-card-content>
-                <ion-list>
-                    <ion-item *ngFor="let manual of manuals">
-                        <span item-start>{{manual}}</span>
-                        <span item-end><ion-radio></ion-radio></span>
-                    </ion-item>
-                </ion-list>
-            </ion-card-content>
-        </ion-card>
-    </div>
-    <button ion-button block (click)="refreshPage()">조회하기</button>
+    <ion-card>
+        <ion-card-header>
+            <h1>지시사항</h1>
+        </ion-card-header>
+        <ion-card-content>
+            <ion-list>
+                <ion-item *ngFor="let manual of manuals">
+                    <span item-start>{{manual}}</span>
+                    <span item-end><ion-radio></ion-radio></span>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
+
 </ion-content>
