@@ -12,27 +12,6 @@ export class AuthProvider {
     //console.log('Hello AuthProvider Provider');
   }
 
-  /*
-  checkAuthentication() {
-    return new Promise((resolve, reject) => {
-      //Load token if exists
-      this.storage.get('token').then((value) => {
-        this.token = value;
-
-        let headers = new Headers();
-        headers.append('Authorization', this.token);
-
-        this.http.get('http://localhost:8080/api/auto/protected', { headers: headers })
-          .subscribe(res => {
-            resolve(res);
-          }, (err) => {
-            reject(err);
-          });
-      });
-    });
-  }
-  */
-
   oldLogin(credentials) {
     return new Promise((resolve, reject) => {
       let headers = new Headers();
@@ -41,13 +20,12 @@ export class AuthProvider {
       this.http.post('http://localhost:8080/api/auth/login', JSON.stringify(credentials), { headers: headers })
         .subscribe(res => {
           let data = res.json();
-          console.log(typeof (data.user))
-          console.log(data.user);
-          console.log(data.accessLevel);
+          console.log(data);
           this.token = data.token;
           this.storage.set('token', data.token);
           this.storage.set('email', data.user.email)
           this.storage.set('accessLevel', data.user.accessLevel)
+
           resolve(data);
 
           resolve(res.json());
@@ -66,10 +44,10 @@ export class AuthProvider {
         .subscribe(res => {
           let data = res.json();
           console.log(data)
-          //this.token = data.token;
-          //this.storage.set('token', data.token);
-          //this.storage.set('email', data.user.email)
-          //this.storage.set('accessLevel', data.user.accessLevel)
+          this.token = data.token;
+          this.storage.set('token', data.token);
+          this.storage.set('email', data.user.email)
+          this.storage.set('accessLevel', data.user.accessLevel)
           resolve(data);
 
           resolve(res.json());
@@ -81,6 +59,8 @@ export class AuthProvider {
 
   logout() {
     this.storage.set('token', '');
+    this.storage.set('email', '');
+    this.storage.set('accessLevel', '');
   }
 
   createAccount(details) {
@@ -94,8 +74,8 @@ export class AuthProvider {
         .subscribe(res => {
 
           let data = res.json();
-          //this.token = data.token;
-          //this.storage.set('token', data.token);
+          this.token = data.token;
+          this.storage.set('token', data.token);
           resolve(data);
 
         }, (err) => {

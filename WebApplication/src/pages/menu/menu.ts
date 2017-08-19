@@ -1,8 +1,9 @@
-import { Component,ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { Nav, NavController, NavParams } from 'ionic-angular';
 
 import { ControlMachinePage } from '../control-machine/control-machine';
 import { LoginPage } from '../login/login'
+import { Storage } from '@ionic/storage';
 
 import { AuthProvider } from '../../providers/auth/auth'
 
@@ -13,18 +14,24 @@ import { AuthProvider } from '../../providers/auth/auth'
 export class MenuPage {
   @ViewChild(Nav) nav: Nav;
 
-  user: string;
   rootPage: any = ControlMachinePage;
 
-  pages: Array<{title: string, component: any}>;
+  user: string;
+  accessLevel: string;
+
+  pages: Array<{ title: string, component: any }>;
 
   constructor(public navCtrl: NavController, public navParams: NavParams,
-  public authService: AuthProvider) {// used for an example of ngFor and navigation
+    public authService: AuthProvider, public storage: Storage) {// used for an example of ngFor and navigation
+
+  }
+
+  ionViewDidLoad() {
     this.pages = [
       { title: '관제', component: ControlMachinePage }
     ];
-    this.user = this.getUser();
-    console.log(localStorage.getItem('email'))
+    this.getUser();
+    this.getAccessLevel();
   }
 
   openPage(page) {
@@ -40,9 +47,13 @@ export class MenuPage {
   }
 
   getUser() {
-    return JSON.parse(localStorage.getItem('email'))
+    this.storage.get('email').then(email => {
+      this.user = email;
+    });
   }
   getAccessLevel() {
-    return JSON.parse(localStorage.getItem('accessLevel'))
+    this.storage.get('accessLevel').then(accessLevel => {
+      this.accessLevel = accessLevel;
+    });
   }
 }

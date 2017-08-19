@@ -7,7 +7,7 @@ import 'rxjs/add/operator/map';
 export class MachinesProvider {
 
   constructor(public http: Http, public authService: AuthProvider) {
-    console.log('Hello MachinesProvider Provider');
+    //console.log('Hello MachinesProvider Provider');
   }
 
   getMachineData(option) {

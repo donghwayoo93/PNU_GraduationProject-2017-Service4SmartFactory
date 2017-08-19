@@ -5,7 +5,6 @@ import { IonicApp, IonicErrorHandler, IonicModule } from 'ionic-angular';
 import { IonicStorageModule } from '@ionic/storage';
 
 import { MyApp } from './app.component';
-import { HomePage } from '../pages/home/home';
 import { LoginPage } from '../pages/login/login'
 import { SignupPage } from '../pages/signup/signup'
 import { MenuPage } from '../pages/menu/menu'
@@ -14,14 +13,12 @@ import { ControlMachinePage } from '../pages/control-machine/control-machine';
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { AuthProvider } from '../providers/auth/auth';
-import { TodosProvider } from '../providers/todos/todos';
 import { MachinesProvider } from '../providers/machines/machines';
 
 
 @NgModule({
   declarations: [
     MyApp,
-    HomePage,
     LoginPage,
     SignupPage,
     MenuPage,
@@ -33,13 +30,12 @@ import { MachinesProvider } from '../providers/machines/machines';
     IonicModule.forRoot(MyApp),
     IonicStorageModule.forRoot({
       name: '__mydb',
-      driverOrder: ['indexeddb','sqllite','websql']
+      driverOrder: ['indexeddb', 'sqllite', 'websql']
     })
   ],
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    HomePage,
     LoginPage,
     SignupPage,
     MenuPage,
@@ -48,10 +44,9 @@ import { MachinesProvider } from '../providers/machines/machines';
   providers: [
     StatusBar,
     SplashScreen,
-    {provide: ErrorHandler, useClass: IonicErrorHandler},
+    { provide: ErrorHandler, useClass: IonicErrorHandler },
     AuthProvider,
-    TodosProvider,
     MachinesProvider
   ]
 })
-export class AppModule {}
+export class AppModule { }

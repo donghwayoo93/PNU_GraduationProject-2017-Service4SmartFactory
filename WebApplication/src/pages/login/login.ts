@@ -22,19 +22,6 @@ export class LoginPage {
   }
 
   ionViewDidLoad() {
-    /**
-    this.showLoader();
-
-    //Check if already authenticated
-    this.authService.checkAuthentication().then((res) => {
-      console.log("Already authorized");
-      this.loading.dismiss();
-      this.navCtrl.setRoot(MenuPage);
-    }, (err) => {
-      console.log("Not already authorized");
-      this.loading.dismiss();
-    });
-    */
   }
 
   new_login() {
@@ -72,16 +59,15 @@ export class LoginPage {
     });
   }
 
-  launchSignup() {
-    this.navCtrl.push(SignupPage);
-  }
-
-
   showLoader() {
     this.loading = this.loadingCtrl.create({
       content: 'Authentication...'
     });
 
     this.loading.present();
+  }
+
+  launchSignup() {
+    this.navCtrl.push(SignupPage);
   }
 }

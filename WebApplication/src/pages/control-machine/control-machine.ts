@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Http } from '@angular/http';
-import { NavController, NavParams } from 'ionic-angular';
+import { NavController, NavParams, LoadingController } from 'ionic-angular';
 import { MachinesProvider } from '../../providers/machines/machines';
 
 @Component({
@@ -11,6 +11,7 @@ export class ControlMachinePage {
 	filePath = 'assets/machineData.json';
 	machineID: any;
 	manualNum: any;
+	loading: any;
 
 	machineDatas = [
 		{
@@ -24,14 +25,35 @@ export class ControlMachinePage {
 	];
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
-		public machineService: MachinesProvider, private http: Http) {
+		public machineService: MachinesProvider, private http: Http,
+		public loadingCtrl: LoadingController) {
 	}
 
-	requestRefreshPage() {
+	new_refreshPage(page) {
+		//this.postData();
+		this.showLoader();
+		let credentials = {
+			email: 'a'
+		};
 
+		this.machineService.getMachineData(credentials).then((result) => {
+			this.loading.dismiss();
+			console.log(result);
+		}, (err) => {
+			this.loading.dismiss();
+			console.log(err);
+		});
 	}
 
-	refreshPage(page) {
+	showLoader() {
+		this.loading = this.loadingCtrl.create({
+			content: 'Authentication...'
+		});
+
+		this.loading.present();
+	}
+
+	old_refreshPage(page) {
 		return this.http.get(this.filePath)
 			.map((res) => {
 				return res.json()

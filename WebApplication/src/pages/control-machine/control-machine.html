@@ -9,7 +9,7 @@
         </ion-title>
 
         <ion-buttons end>
-            <button ion-button (click)="refreshPage()">
+            <button ion-button (click)="old_refreshPage()">
 						<ion-icon name="refresh"></ion-icon>
 					</button>
         </ion-buttons>
@@ -19,8 +19,8 @@
 
 <ion-content padding>
 
-    <button ion-button block class="refresh-button" (click)="requestRefreshPage()">요청</button>
-    <button ion-button block class="refresh-button" (click)="refreshPage()">refresh</button>
+    <button ion-button block class="refresh-button" (click)="new_refreshPage()">요청</button>
+    <button ion-button block class="refresh-button" (click)="old_refreshPage()">refresh</button>
     <ion-card>
         <ion-card-header>
             <h1>설비 정보</h1>

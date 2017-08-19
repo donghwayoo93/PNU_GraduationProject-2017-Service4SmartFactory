@@ -15,10 +15,10 @@
                     <!--<img src="assets/images/avatar-ts-woody.png" />-->
                     <ion-icon name="person" id="personIcon"></ion-icon>
                 </ion-avatar>
-                <h2>{{user}}</h2>
-                <p></p>
+                {{user}}
+                <p>level {{accessLevel}}</p>
                 <button ion-button item-end (click)="logout()">
-                    logout 
+                    logout
                     <ion-icon name="log-out"  ></ion-icon>
                 </button>
             </ion-item>
