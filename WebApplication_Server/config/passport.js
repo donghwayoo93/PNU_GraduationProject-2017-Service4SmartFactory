@@ -10,35 +10,25 @@ var localOptions = {
 };
 
 var localLogin = new LocalStrategy(localOptions, function(email, password, done) {
-
     User.findOne({
         email: email
     }, function(err, user) {
-
         if (err) {
             return done(err);
         }
-
         if (!user) {
             return done(null, false, { error: 'Login failed. Please try again.' });
         }
-
         user.comparePassword(password, function(err, isMatch) {
-
             if (err) {
                 return done(err);
             }
-
             if (!isMatch) {
                 return done(null, false, { error: 'Login failed. Please try again.' });
             }
-
             return done(null, user);
-
         });
-
     });
-
 });
 
 var jwtOptions = {

@@ -25,7 +25,6 @@ export class LoginPage {
   }
 
   new_login() {
-    //this.postData();
     this.showLoader();
     let credentials = {
       email: this.email,
@@ -34,11 +33,11 @@ export class LoginPage {
 
     this.authService.requestLogin(credentials).then((result) => {
       this.loading.dismiss();
-      console.log(result);
+      //console.log(result);
       this.navCtrl.setRoot(MenuPage);
     }, (err) => {
       this.loading.dismiss();
-      console.log(err);
+      //console.log(err);
     });
   }
 
@@ -51,11 +50,11 @@ export class LoginPage {
 
     this.authService.oldLogin(credentials).then((result) => {
       this.loading.dismiss();
-      console.log(result);
+      //console.log(result);
       this.navCtrl.setRoot(MenuPage);
     }, (err) => {
       this.loading.dismiss();
-      console.log(err);
+      //console.log(err);
     });
   }
 

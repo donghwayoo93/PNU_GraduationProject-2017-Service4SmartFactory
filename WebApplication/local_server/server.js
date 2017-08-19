@@ -14,7 +14,7 @@ app.use(cors());
 // Routes
 
 app.post('/api/requestLogin', function(req, res) {
-    console.log(req.body);
+    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -24,9 +24,16 @@ app.post('/api/requestLogin', function(req, res) {
     };
     pythonShell.run('test.py', options, function(err, results) {
         if (err) throw err;
-        results = JSON.parse(results);
-        console.log('results: %j', results);
-        res.send(results);
+        if (results == 'Unauthorized') {
+            //console.log('Unauthorized 확인');
+            //console.log(results);
+            res.status(401).send(results);
+        } else {
+            results = JSON.parse(results);
+            //console.log('results: %j', results);
+            res.send(results);
+        }
+
     });
 
 });

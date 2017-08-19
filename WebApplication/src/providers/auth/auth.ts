@@ -43,7 +43,7 @@ export class AuthProvider {
       this.http.post('http://localhost:9999/api/requestLogin', JSON.stringify(credentials), { headers: headers })
         .subscribe(res => {
           let data = res.json();
-          console.log(data)
+          //console.log(data)
           this.token = data.token;
           this.storage.set('token', data.token);
           this.storage.set('email', data.user.email)
