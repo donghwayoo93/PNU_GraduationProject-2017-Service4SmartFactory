@@ -168,7 +168,9 @@ class eventBusClient(object):
               signal       = signal,
               data         = data,
         )
-
+        ########################################################
+        # check on the raspberry side what packet is coming in #
+        ########################################################
         # print '_dispatchProtocol\n'
         # print 'signal : ' + str(signal) + '\n'
         # print 'data   : ' + str(data)   + '\n'

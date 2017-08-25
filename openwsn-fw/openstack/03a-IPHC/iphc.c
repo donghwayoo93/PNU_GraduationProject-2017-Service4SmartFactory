@@ -253,8 +253,7 @@ void iphc_receive(OpenQueueEntry_t* msg) {
                 msg,
                 rpi_length
             );
-        }
-      
+        }      
         // send up the stack
         forwarding_receive(
             msg,

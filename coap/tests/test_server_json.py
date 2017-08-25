@@ -11,6 +11,7 @@ from   coap   import    coap,                    \
 #import logging_setup
 import json
 import SocketServer
+import time
 
 class SENSORResource(coapResource.coapResource):
     
@@ -100,20 +101,23 @@ class INSTResource(coapResource.coapResource):
                 'ACK_2' : 0
     }
 
-    SYN      = 0
-    FIN      = 0
-    ACK      = 0
-    FRAG_1   = 0
-    FRAG_N   = 0
+    link      = 'coap://[bbbb::2]/client'
 
-    index    = 0
-    c        = ''
+    SYN       = 0
+    FIN       = 0
+    ACK       = 0
+    FRAG_1    = 0
+    FRAG_N    = 0
+
+    index     = 0
+    work_flag = False
+    c         = ''
     
     def __init__(self, index):
         # initialize parent class
         coapResource.coapResource.__init__(
             self,
-            path = 'ex',
+            path = 'inst',
         )
         self.SYN      = 128
         self.FIN      = 64
@@ -122,13 +126,18 @@ class INSTResource(coapResource.coapResource):
         self.FRAG_N   = 28
         self.index    = index
 
-    def sendInstructionData(self):
+    def _sendInstructionData(self):
         # read data from DB
-        data_str       = ''
-        data_size      = len(data_str)
-        data_offset    = 1
-        link           = 'coap://[bbbb::2]/data'
-        payload_str    = 'I'
+        data_str         = 'Five drinks in on Friday night We only came to dry your eyes And get you out of your room'
+        data_str += ' Now this bar has closed its doors I found my hand is holding yours Do you wanna go home so soon '
+        data_str += 'Or maybe we shpuld take a ride Through the night and sing along to every song Thats on the radio In the back of a Taxi cab'
+        data_str += 'in Brooklyn no no no The sun should rise Burning all the street lamps out at 3AM So DJ play it again'
+        data_str += 'Until the night turns into morning You ll be in my arms And just keep driving Along the boulevard'
+        data_str += 'And if I kiss you darling Please dont be alone its just start of everything if you want A new Love In New York' 
+        data_size        = len(data_str)
+        data_offset      = 1
+        data_start_index = 0
+        payload_str      = 'I'
 
         tag_sem.acquire()
         data_tag += 1
@@ -141,26 +150,42 @@ class INSTResource(coapResource.coapResource):
         elif(self.index == 5688):
             self.c = c_5688
 
+        # first Fragmented Packet Format
+        # read first 50 bytes from data string
         payload_str += str(chr(self.FRAG_1)) + str(chr(data_size)) + str(chr(data_tag))
-        payload_str += # 읽어온 데이터
+        payload_str += data_str[0:50]
 
         self.c.PUT(
-            link,
+            self.link,
             payload=[ord(b) for b in payload_str]
         )
 
+        # Second to Nth Fragmented Packet Format
+        # read remain bytes, 49 bytes each
         payload_str = 'I'
+        data_start_index = 50
 
         while(data_str != ''):
 
             payload_str += str(chr(self.FRAG_N)) + str(chr(data_size)) + str(chr(data_tag)) + str(chr(data_offset))
-            payload_str += # 읽어온 데이터
+            payload_str += data_str[data_start_index : (data_start_index + 49)]
 
             self.c.PUT(
-                link,
+                self.link,
                 payload=[ord(b) for b in payload_str]
             )
-            data_offset += 1
+            data_offset = data_offset + 1
+
+    def _checkDB(self):
+        max_timeout = 300
+        # timer start
+        print 'check the DataBase with certain period, is condition set which certificates right adjustment'
+
+        # in time, work have done
+        work_flag = True
+
+        # time out, work haven't done
+        # work_flag = False
 
 
     def PUT(self, srcIP, options=[],payload=None):
@@ -188,11 +213,41 @@ class INSTResource(coapResource.coapResource):
             elif((payload[0] == self.ACK) &
                  (self.SYN_dict['ACK'] == 0)):
                 self.SYN_dict['ACK'] = 1
-                self.sendInstructionData()
+                self._sendInstructionData()
+                self._checkDB()
 
+                # FIN phase starts
+                if(work_flag == True):
+                    self.c.PUT(
+                        self.link,
+                        payload=[ord(b) for b in 'I'+str(chr(self.FIN))]
+                    )
+                    self.FIN_dict['FIN_1'] = 1
+                else:
+                    print 'wrong phase'
 
-                
+            elif((payload[0] == self.FIN) &
+                 (self.FIN_dict['FIN_2'] == 0) &
+                 (self.FIN_dict['FIN_1'] == 1)):
 
+                self.FIN_dict['FIN_2'] = 1
+
+            elif((payload[0] == self.ACK) &
+                 (self.FIN_dict['ACK_1'] == 0) &
+                 (self.FIN_dict['FIN_1'] == 1) &
+                 (self.FIN_dict['FIN_2'] == 1)):
+
+                self.FIN_dict['ACK_1'] = 1
+                # send Final ACK to client device
+                respCode = d.COAP_RC_2_05_CONTENT
+                respOptions = []
+                respPayload = [ord(b) for b in 'I'+str(chr(self.ACK))]
+
+                done_sem.acquire()
+                done_sem[self.index - 5686] = 1
+                done_sem.release()
+
+                return (respCode, respOptions, respPayload)
 
         elif(unichr(payload[0]) == 'S'):
             print 'error : Instruction coap server received Sensor Packet\n'
@@ -219,10 +274,10 @@ class BindResource(coapResource.coapResource):
         print '[BIND] GET received\n'
 
         port_sem.acquire()
-
         for i in range(len(ports)):
             if(ports[i] == 0):
                 self.alloc_index = i
+                print 'allocated index : ' + str(self.alloc_index) + '\n'
                 self.alloc_FLAG = True
                 break;
             elif((ports[i] == 1) & (i == 2)):
@@ -242,6 +297,7 @@ class BindResource(coapResource.coapResource):
             self.alloc_FLAG = False
             t = ThreadClass(alloc_index + appendix)
             t.start()
+            t_list.append(t)
         else:
             respPayload     = [ord(b) for b in 'error']    
         
@@ -252,6 +308,9 @@ class ThreadClass(threading.Thread):
     def __init__(self, index):
         threading.Thread.__init__(self)
         self.thread_index = index
+
+    def returnIndex(self):
+        return self.index
 
     def run(self):
         if(self.thread_index == 1):
@@ -283,9 +342,10 @@ class ThreadClass(threading.Thread):
         elif(self.thread_index == 5):
             raw_input('\n\nServer running. Press Enter to close.\n\n')
 
-            c_ROUTE.close()
-            c_SENSOR.close()
-            c_INST.close()
+            if(c_ROUTE != ''):
+                c_ROUTE.close()
+            if(c_SENSOR != ''):
+                c_SENSOR.close()
 
             os.kill(os.getpid(), signal.SIGTERM)
 
@@ -360,6 +420,42 @@ class UDP_IPC(SocketServer.BaseRequestHandler):
         
         print 'response : ' + print_str
 
+
+def checkJobDone():
+    thread_index = 0
+    for i in range(len(done)):
+        if(done[i] == 1):
+            done_sem.acquire()
+            done[i] = 0
+            done_sem.release()
+
+            thread_index = i
+
+            if(i == 0):
+                c_5686.close()
+            elif(i == 1):
+                c_5687.close()
+            else:
+                c_5688.close()
+
+        if((len(t_list) != 0)):
+            if((t_list[i].returnIndex() == thread_index)):
+                # thread exit
+                t_list[i].exit() 
+                # remove thread from list
+                t_list.remove(i)
+                time.sleep(1)
+                port_sem.acquire()
+                ports[i] = 0
+                port_sem.release()
+
+    threading.Timer(10, checkJobDone).start()
+
+
+
+
+
+
 # open
 
 
@@ -382,7 +478,10 @@ thread_index = 0
 server       = 0
 port_sem     = threading.Semaphore(1)
 tag_sem      = threading.Semaphore(1)
+done_sem     = threading.Semaphore(1)
+
 ports        = [0, 0, 0]
+done         = [0, 0, 0]
 
 c_ROUTE  = coap.coap(udpPort=5683) # Working checked
 c_SENSOR = coap.coap(udpPort=5684)
@@ -392,6 +491,8 @@ c_5686   = ''
 c_5687   = ''
 c_5688   = ''
 
+t_list = []
+
 data_tag = 0
 
 if __name__ == "__main__":
@@ -399,3 +500,5 @@ if __name__ == "__main__":
     for i in range(5):
         t = ThreadClass(i+1)
         t.start()
+
+    checkJobDone()

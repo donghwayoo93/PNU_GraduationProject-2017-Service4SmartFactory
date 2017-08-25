@@ -97,9 +97,9 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 			msg->payload = &(msg->packet[127]);
 			msg->length = 0;
 
-			packetfunctions_reserveHeaderSize(msg, 9);
+			packetfunctions_reserveHeaderSize(msg, 55);
 			msg->payload[0] = COAP_PAYLOAD_MARKER;
-
+/*
 			msg->payload[1] = 'e';
 			msg->payload[2] = 'x';
 			msg->payload[3] = ' ';
@@ -107,13 +107,10 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 			msg->payload[5] = 'e';
 			msg->payload[6] = 't';
 			msg->payload[7] = ' ';
-
-			if (1 == 1) {
-				msg->payload[8] = 'o';
-			}
-			else {
-				msg->payload[8] = 'x';
-			}
+*/
+         for(i = 0; i < 55; i++){
+            msg->payload[i+1] = i+65; 
+         }
 			
 			coap_header->Code = COAP_CODE_RESP_CONTENT;
 
