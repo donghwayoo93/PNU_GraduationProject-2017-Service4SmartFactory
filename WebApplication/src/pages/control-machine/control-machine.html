@@ -19,8 +19,8 @@
 
 <ion-content padding>
 
-    <button ion-button block class="refresh-button" (click)="new_refreshPage()">요청</button>
-    <button ion-button block class="refresh-button" (click)="old_refreshPage()">refresh</button>
+    <button ion-button block class="refresh-button" (click)="new_refreshPage()">신 갱신(파일에서 읽기)</button>
+    <button ion-button block class="refresh-button" (click)="old_refreshPage()">구 갱신(소켓 경유)</button>
     <ion-card>
         <ion-card-header>
             <h1>설비 정보</h1>
@@ -34,16 +34,28 @@
             </ion-list>
         </ion-card-content>
     </ion-card>
-
+    <ion-card>
+        <ion-card-header>
+            <h1>센서 현황</h1>
+        </ion-card-header>
+        <ion-card-content>
+            <ion-list>
+                <ion-item *ngFor="let sensorData of sensorDatas">
+                    <span item-start>{{sensorData.title}}</span>
+                    <span item-end>{{sensorData.content}}</span>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
     <ion-card>
         <ion-card-header>
             <h1>지시사항</h1>
         </ion-card-header>
         <ion-card-content>
             <ion-list>
-                <ion-item *ngFor="let manual of manuals">
-                    <span item-start>{{manual}}</span>
-                    <span item-end><ion-radio></ion-radio></span>
+                <ion-item *ngFor="let manual of manuals; let i = index;">
+                    <span item-start>{{i+1}}. {{manual}}</span>
+                    <span item-end><ion-checkbox color="primary"></ion-checkbox></span>
                 </ion-item>
             </ion-list>
         </ion-card-content>

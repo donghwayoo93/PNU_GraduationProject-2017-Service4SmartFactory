@@ -1,5 +1,4 @@
 var AuthenticationController = require('./controllers/authentication'),
-    TodoController = require('./controllers/todos'),
     MachineController = require('./controllers/machines'),
     express = require('express'),
     passportService = require('../config/passport'),
@@ -12,7 +11,6 @@ module.exports = function(app) {
 
     var apiRoutes = express.Router(),
         authRoutes = express.Router(),
-        todoRoutes = express.Router(),
         machineRoutes = express.Router();
 
     // Auth Routes
@@ -25,19 +23,12 @@ module.exports = function(app) {
         res.send({ content: 'Success' });
     });
 
-    // Todo Routes
-    apiRoutes.use('/todos', todoRoutes);
-
-    todoRoutes.get('/', requireAuth, AuthenticationController.roleAuthorization(['reader', 'creator', 'editor']), TodoController.getTodos);
-    todoRoutes.post('/', requireAuth, AuthenticationController.roleAuthorization(['creator', 'editor']), TodoController.createTodo);
-    todoRoutes.delete('/:todo_id', requireAuth, AuthenticationController.roleAuthorization(['editor']), TodoController.deleteTodo);
-
     // machines
     apiRoutes.use('/machines', machineRoutes);
 
-    machineRoutes.get('/', MachineController.getMachineAllData);
-    machineRoutes.get('/machinesData/:machineID', MachineController.getMachineData);
-    //machineRoutes.get('/machinesManual/:machineID', MachineController.getMachineManual);
+    machineRoutes.get('/info', MachineController.getMachineInfo);
+    machineRoutes.get('/sensor', MachineController.getSensorData);
+    machineRoutes.get('/manual', MachineController.getManual);
 
     // Set up routes
     app.use('/api', apiRoutes);

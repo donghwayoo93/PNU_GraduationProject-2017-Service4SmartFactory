@@ -14,6 +14,9 @@ var machineSchema = new mongoose.Schema({
         enum: ['1', '2', '3'],
         default: '1'
     },
+    accessLevel: {
+        type: String
+    },
     sensorState: {
         type: Array
     },

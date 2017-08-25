@@ -12,59 +12,37 @@ exports.getMachineAllData = function(req, res, next) {
     });
 }
 
-exports.getMachineData = function(req, res) {
-
-    Machine.find({ "machineID": req.params.machineID }, function(err, machineData) {
-
+exports.getMachineInfo = function(req, res) {
+    Machine.find({ nearWorkerID: req.query.workerID }, { _id: 0, machineID: 1, name: 1, accessLevel: 1 }, function(err, machineData) {
         if (err) {
             res.send(err);
         }
         if (!machineData) return res.status(404).send({ err: "User not Found" });
         res.json(machineData);
-
     });
-
 }
 
-exports.getMachineManual = function(req, res, next) {
-        Machine.find(function(err, machineManual) {
-            if (err) {
-                res.send(err);
-            }
-            res.json(machineManual);
-        });
-    }
-    /**
-    		exports.createTodo = function(req, res, next) {
+exports.getSensorData = function(req, res) {
+    Machine.find({ nearWorkerID: req.query.workerID }, { _id: 0, sensorState: 1 }, function(err, sensorData) {
+        if (err) {
+            res.send(err);
+        }
+        if (!sensorData) return res.status(404).send({ err: "Sensor data not Found" });
+        res.json(sensorData);
+    });
+}
 
-    				Machine.create({
-    						title: req.body.title
-    				}, function(err, todo) {
-
-    						if (err) {
-    								res.send(err);
-    						}
-
-    						Machine.find(function(err, todos) {
-
-    								if (err) {
-    										res.send(err);
-    								}
-
-    								res.json(todos);
-
-    						});
-
-    				});
-
-    		}
-
-    		exports.deleteTodo = function(req, res, next) {
-
-    				Machine.remove({
-    						_id: req.params.todo_id
-    				}, function(err, todo) {
-    						res.json(todo);
-    				});
-    }
-    */
+exports.getManual = function(req, res) {
+    Machine.find({ nearWorkerID: req.query.workerID }, { _id: 0, sensorState: 0, num: 0, manual: { $elemMatch: { num: req.query.manualNum } } }, function(err, manualData) {
+        if (err) {
+            res.send(err);
+        }
+        if (!manualData) {
+            console.log("아무것도 찾지 못함");
+            //a = [{ "manual": [{ "instruction": ["현재 할당된 지시사항이 없습니다."] }] }]
+            return res.status(404).send({ err: "manual data not Found" });
+            //res.json(a);
+        }
+        res.json(manualData);
+    });
+}

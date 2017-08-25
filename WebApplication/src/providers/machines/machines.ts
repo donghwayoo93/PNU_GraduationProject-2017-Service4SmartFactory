@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
+import { Http } from '@angular/http';
 import { AuthProvider } from '../auth/auth'
 import 'rxjs/add/operator/map';
 
@@ -10,11 +10,9 @@ export class MachinesProvider {
     //console.log('Hello MachinesProvider Provider');
   }
 
-  getMachineData(option) {
+  getMachineInformation(credentials) {
     return new Promise((resolve, reject) => {
-      let headers = new Headers();
-      headers.append('Authorization', this.authService.token);
-      this.http.get('http://localhost:8080/api/machines/machinesData/' + option.machineID, { headers: headers })
+      this.http.get('http://localhost:9999/api/machines/info', JSON.stringify(credentials))
         .map(res => res.json())
         .subscribe(data => {
           resolve(data);
@@ -24,7 +22,27 @@ export class MachinesProvider {
     });
   }
 
-  getMachineManual() {
+  getMachineSensorData(credentials) {
+    return new Promise((resolve, reject) => {
+      this.http.get('http://localhost:9999/api/machines/sensor', JSON.stringify(credentials))
+        .map(res => res.json())
+        .subscribe(data => {
+          resolve(data);
+        }, (err) => {
+          reject(err);
+        });
+    });
+  }
 
+  getMachineManual(credentials) {
+    return new Promise((resolve, reject) => {
+      this.http.get('http://localhost:9999/api/machines/manual', JSON.stringify(credentials))
+        .map(res => res.json())
+        .subscribe(data => {
+          resolve(data);
+        }, (err) => {
+          reject(err);
+        });
+    });
   }
 }

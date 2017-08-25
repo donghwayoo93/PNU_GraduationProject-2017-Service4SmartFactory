@@ -1,17 +1,30 @@
 import sys
-
-email = sys.argv[1]
-password = sys.argv[2]
-
+jsonData = {}
+if(sys.argv[1] == 'login'):
+    email = sys.argv[2]
+    password = sys.argv[3]
+    jsonData = {
+        "type": "login",
+        "email": email,
+        "password": password
+    }
+elif(sys.argv[1] == 'machineInfo'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
+elif(sys.argv[1] == 'machineSensor'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
+elif(sys.argv[1] == 'machineManual'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
 import socket
 import json
 
 HOST, PORT = "localhost", 25800
-jsonData = {
-    "type": "login",
-    "email": email,
-    "password": password
-}
+
 data = json.dumps(jsonData)
 
 # Create a socket object
@@ -25,7 +38,5 @@ sock.sendto(data, (HOST, PORT))
 
 # receive data from the server
 received = sock.recv(1024)
-
-
 # print "received:    {}".format(received)
-print "{}".format(received)
+print received
