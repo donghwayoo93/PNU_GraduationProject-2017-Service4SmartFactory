@@ -57,6 +57,18 @@ void idmanager_init() {
    // my64bID
    idmanager_vars.my64bID.type         = ADDR_64B;
    eui64_get(idmanager_vars.my64bID.addr_64b);
+
+
+   if(idmanager_vars.my64bID.addr_64b[7] == 0x94 && idmanager_vars.my64bID.addr_64b[6] == 0x0e){
+      idmanager_vars.my64bID.addr_64b[0] = 0x00;
+      idmanager_vars.my64bID.addr_64b[1] = 0x00;
+      idmanager_vars.my64bID.addr_64b[2] = 0x00;
+      idmanager_vars.my64bID.addr_64b[3] = 0x00;
+      idmanager_vars.my64bID.addr_64b[4] = 0x00;
+      idmanager_vars.my64bID.addr_64b[5] = 0x00;
+      idmanager_vars.my64bID.addr_64b[6] = 0x00;
+      idmanager_vars.my64bID.addr_64b[7] = 0x02;
+   }
    
    // my16bID
    packetfunctions_mac64bToMac16b(&idmanager_vars.my64bID,&idmanager_vars.my16bID);

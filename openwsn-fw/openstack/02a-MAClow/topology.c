@@ -58,7 +58,7 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
    switch (idmanager_getMyID(ADDR_64B)->addr_64b[7]) {
       case 0xec:
          if (
-               ieee802514_header->src.addr_64b[7]==0x94
+               ieee802514_header->src.addr_64b[7]==0x02
             ){
             returnVal=FALSE;
          }
@@ -66,7 +66,7 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
             returnVal=TRUE;
          }
          break;
-      case 0x94:
+      case 0x02:
          if (
                ieee802514_header->src.addr_64b[7]==0xec
             ){
@@ -79,7 +79,7 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
       case 0xbd:
          if (
                ieee802514_header->src.addr_64b[7]==0xec ||
-               ieee802514_header->src.addr_64b[7]==0x94
+               ieee802514_header->src.addr_64b[7]==0x02
             ){
             returnVal=TRUE;
          }
@@ -87,7 +87,7 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
       case 0x3c:
          if (
                ieee802514_header->src.addr_64b[7]==0xec ||
-               ieee802514_header->src.addr_64b[7]==0x94
+               ieee802514_header->src.addr_64b[7]==0x02
             ){
             returnVal=TRUE;
          }
