@@ -35,13 +35,7 @@ sock                 = ''
 sock_internal        = ''
 Instruction_String   = ''
 
-conn                 = ConnectionClass()
-inst                 = InstructionClass()
-login                = 
-
-
-
-class ConnectionClass():
+class ConnectionClass:
     SYN_dict = {
                 'SYN'     : 0,
                 'SYN+ACK' : 0,
@@ -79,7 +73,7 @@ class ConnectionClass():
     def _sendSYN(self):
         # 3-handshake ---------------------------------------- 1
         self.SYN_dict['SYN'] = 1
-        self.msg             = self.SYN
+        self.msg             = str(chr(self.SYN))
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
@@ -94,7 +88,7 @@ class ConnectionClass():
             # 3-handshake ------------------------------------ 2
             self.SYN_dict['SYN+ACK'] = 1
             self.SYN_dict['ACK']     = 1
-            self.msg                 = self.ACK
+            self.msg                 = str(chr(self.ACK))
             # 3-handshake ------------------------------------ 3
             SEND_OUT_SEMAPHORE.acquire()
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
@@ -117,10 +111,10 @@ class ConnectionClass():
             self.FIN_dict['ACK_1'] = 1
             # 4-handshake ------------------------------------ 2
             SEND_OUT_SEMAPHORE.acquire()
-            self.msg               = self.FIN
+            self.msg               = str(chr(self.FIN))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             # 4-handshake ------------------------------------ 3
-            self.msg               = self.ACK
+            self.msg               = str(chr(self.ACK))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             SEND_OUT_SEMAPHORE.release()
 
@@ -142,7 +136,7 @@ class ConnectionClass():
 
 
 
-class InstructionClass():
+class InstructionClass:
     Instruction_List      = 0
     Instruction_List_size = 0
     Instruction_size      = 0
@@ -197,7 +191,7 @@ class InstructionClass():
         SEND_IN_SEMAPHORE.release()
 
 
-class LoginClass():
+class LoginClass:
     msg = ''
     def __init__(self):
         self.msg = 'L'
@@ -223,43 +217,50 @@ class ThreadClass(threading.Thread):
 		self.thread_index = index
 
 	def run(self):
-		if(self.thread_index == THREAD_IPV6_UDP_SOCK):
+	    if(self.thread_index == THREAD_IPV6_UDP_SOCK):
+                conn._sendSYN()
+                while True:
+                    data, addr = sock.recvfrom(127)
+                    
+                    if(data[0] == 'I'):
+                        inst._recvInstructionData(data[1:])
 
-            conn._sendSYN()
-            while True:
-                data, addr = sock.recvfrom(127)
-                
-                if(data[0] == 'I'):
-                    inst._recvInstructionData(data[1:])
+                    elif(data[0] == 'C'):
+                        conn._handle(data[1:])
 
-                elif(data[0] == 'C'):
-                    conn._handle(data[1:])
+                    # login result from outer server
+                    elif(data[0] == 'L'):
+                        # send this result to internal
+                        login._recvResult(data[1:])
 
-                # login result from outer server
-                elif(data[0] == 'L'):
-                    # send this result to internal
-                    login._recvResult(data[1:])
+            elif(self.thread_index == THREAD_UDP_IPC_SOCK):
+                while True:
+                    data, addr = sock_internal.recvfrom(1024)
 
-        elif(self.thread_index == THREAD_UDP_IPC_SOCK)
-            while True:
-                data, addr = sock_internal.recvfrom(1024)
+                    # login request from internal
+                    if(data[0] == 'L'):
+                        # send this request to outer server
+                        login._login(data[1:])
 
-                # login request from internal
-                if(data[0] == 'L'):
-                    # send this request to outer server
-                    login._login(data[1:])
-
-		elif(self.thread_index == THREAD_SYSKILL):
+	    elif(self.thread_index == THREAD_SYSKILL):
 			raw_input('\n\nClient running. Press Enter to close.\n\n')
 			os.kill(os.getpid(), signal.SIGTERM)
 
 if __name__ == '__main__':
+    
+    conn                 = ConnectionClass()
+    inst                 = InstructionClass()
+    login                = LoginClass()
+    
+    
+    
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     sock.bind((UDP_IP, UDP_PORT))
 
-    sock_internal = socket.socket(socket.AF_INET4, socekt.SOCK_DGRAM)
+    sock_internal = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_internal.bind((UDP_IPC_IP, UDP_IPC_PORT))
 
-	for i in range(3):
-		t = ThreadClass(i+1)
-		t.start()
+    for i in range(3):
+            t = ThreadClass(i+1)
+            t.start()
+
