@@ -314,9 +314,6 @@ class ThreadClass(threading.Thread):
 
     def run(self):
         if(self.thread_index == 1):
-            # c = coap.coap()
-            # c.addResource(testResource())
-            # c_ROUTE.addResource(testResource())
             print 'ROUTE  coap server created with PORT : ' + str(5683) + '\n'
 
         elif(self.thread_index == 2):

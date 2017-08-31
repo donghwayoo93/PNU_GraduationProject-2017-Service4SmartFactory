@@ -130,6 +130,9 @@ void openudp_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
       case WKP_UDP_COAP_ROUTE:                      // coap:5683
          opencoap_sendDone(msg,error);
          break;
+      case WKP_UDP_COAP_INST:
+         opencoap_sendDone(msg,error);
+         break;
       case WKP_UDP_ECHO:
          uecho_sendDone(msg,error);
          break;

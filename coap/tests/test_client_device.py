@@ -64,7 +64,7 @@ class InstResource(coapResource.coapResource):
                 'ACK_2' : 0
     }
 
-    link         = 'coap://[bbbb::1]/client'
+    link         = 'coap://[bbbb::2]/client'
 
     SYN          = 0
     FIN          = 0
