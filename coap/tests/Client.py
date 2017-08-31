@@ -84,12 +84,13 @@ class ConnectionClass:
         if((self.SYN_dict['SYN'] == 1) &
            (self.SYN_dict['SYN+ACK'] == 0) &
            (data[0] == self.SYN + self.ACK)):
-
+            print 'client received SYN+ACK'
             # 3-handshake ------------------------------------ 2
             self.SYN_dict['SYN+ACK'] = 1
             self.SYN_dict['ACK']     = 1
             self.msg                 = str(chr(self.ACK))
             # 3-handshake ------------------------------------ 3
+            print 'client send ACK'
             SEND_OUT_SEMAPHORE.acquire()
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             SEND_OUT_SEMAPHORE.release()
@@ -105,15 +106,18 @@ class ConnectionClass:
              (self.FIN_dict['FIN_1'] == 0) &
              (self.FIN_dict['FIN_2'] == 0) &
              (data[0] == self.FIN)):
+            print 'client received FIN_1'
             # 4-handshake ------------------------------------ 1
             self.FIN_dict['FIN_1'] = 1
             self.FIN_dict['FIN_2'] = 1
             self.FIN_dict['ACK_1'] = 1
             # 4-handshake ------------------------------------ 2
             SEND_OUT_SEMAPHORE.acquire()
+            print 'client send FIN_2'
             self.msg               = str(chr(self.FIN))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             # 4-handshake ------------------------------------ 3
+            print 'client send ACK_1'
             self.msg               = str(chr(self.ACK))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             SEND_OUT_SEMAPHORE.release()
@@ -125,7 +129,7 @@ class ConnectionClass:
               (self.FIN_dict['FIN_2'] == 1) &
               (self.FIN_dict['ACK_1'] == 1) &
               (data[0] == self.ACK)):
-
+            print 'client received ACK_2'
             # 4-handshake ------------------------------------ 4
             # change connection flag
             self.FIN_dict['ACK_2'] = 1
@@ -153,6 +157,7 @@ class InstructionClass:
     def _recvInstructionData(self, payload):
 
         if(payload[0] == self.FRAG_1):
+            print 'client received FRAG_1'
             self.Instruction_size      = payload[1]
             self.Instruction_tag       = payload[2]
             self.Instruction_List_size = int((self.Instruction_size - 50) / 49 + 1)
@@ -160,6 +165,7 @@ class InstructionClass:
             self.Instruction_List[0]   = payload[3:]
 
         elif(payload[0] == self.FRAG_N):
+            print 'client received FRAG_N : ' + str(payload[3]) + 'th'
             if(self.Instruction_tag == payload[2]):
                 self.Instruction_List[payload[3]] = payload[4:]
 
@@ -173,9 +179,11 @@ class InstructionClass:
 
         # All Instruction data received
         if(total_length == self.Instruction_size):
+            print 'client checkList => True'
             return True
         # Not yet....
         else:
+            print 'client checkList => False'
             return False
 
     def _makeString(self):
@@ -184,6 +192,8 @@ class InstructionClass:
         for i in range(self.Instruction_List_size):
             Instruction_String += self.Instruction_List[i]
         INST_SEMAPHORE.release()
+
+        print 'client makeString'
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
@@ -218,6 +228,7 @@ class ThreadClass(threading.Thread):
 
 	def run(self):
 	    if(self.thread_index == THREAD_IPV6_UDP_SOCK):
+                print 'client send syn'
                 conn._sendSYN()
                 while True:
                     data, addr = sock.recvfrom(127)
@@ -233,7 +244,7 @@ class ThreadClass(threading.Thread):
                         # send this result to internal
                         login._recvResult(data[1:])
 
-            elif(self.thread_index == THREAD_UDP_IPC_SOCK):
+        elif(self.thread_index == THREAD_UDP_IPC_SOCK):
                 while True:
                     data, addr = sock_internal.recvfrom(1024)
 
