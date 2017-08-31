@@ -12,6 +12,8 @@ from openvisualizer.eventBus import eventBusClient
 import threading
 import openvisualizer.openvisualizer_utils as u
 
+import socket
+
 #============================ parameters ======================================
 
 class OpenLbr(eventBusClient.eventBusClient):
@@ -124,6 +126,11 @@ class OpenLbr(eventBusClient.eventBusClient):
     NHC_UDP_PORTS_16S_8D     = 1
     NHC_UDP_PORTS_8S_16D     = 2
     NHC_UDP_PORTS_4S_4D      = 3
+    
+    #=== send serial pkt to internal client app
+    UDP_IPC_DST_IP           = 'bbbb::2'
+    UDP_IPC_DST_PORT         = 25801
+    UDP_IPC_SOCK             = ''
 
     
     def __init__(self):
@@ -136,6 +143,8 @@ class OpenLbr(eventBusClient.eventBusClient):
         self.networkPrefix        = None
         self.dagRootEui64         = None
          
+        self.UDP_IPC_SOCK         = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+
         # initialize parent class
         eventBusClient.eventBusClient.__init__(
             self,
@@ -195,6 +204,8 @@ class OpenLbr(eventBusClient.eventBusClient):
         print 'forward data[1] to internal client app'
         print str(data)
         print '\n'
+
+        self.UDP_IPC_SOCK.sendto(data, (UDP_IPC_DST_IP, UDP_IPC_DST_PORT))
 
     def _sendOuter_notif(self, sender, signal, data):
         payload = []

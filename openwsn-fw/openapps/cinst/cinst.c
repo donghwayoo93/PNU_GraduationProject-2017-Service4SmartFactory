@@ -253,7 +253,7 @@ void cinst_task_cb() {
    pkt->payload[0]                = ((COAP_OPTION_NUM_URIPATH) << 4) | (sizeof(cinst_path0)-1);
    
    // metadata
-   pkt->l4_destination_port       = WKP_UDP_COAP;
+   pkt->l4_destination_port       = WKP_UDP_COAP_INST;
    pkt->l3_destinationAdd.type    = ADDR_128B;
 
    pkt->l3_destinationAdd.addr_128b[0]  = 0xbb;
