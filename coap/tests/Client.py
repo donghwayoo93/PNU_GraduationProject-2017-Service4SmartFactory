@@ -73,7 +73,7 @@ class ConnectionClass:
     def _sendSYN(self):
         # 3-handshake ---------------------------------------- 1
         self.SYN_dict['SYN'] = 1
-        self.msg             = str(chr(self.SYN))
+        self.msg             = 'C'+str(chr(self.SYN))
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
@@ -88,7 +88,7 @@ class ConnectionClass:
             # 3-handshake ------------------------------------ 2
             self.SYN_dict['SYN+ACK'] = 1
             self.SYN_dict['ACK']     = 1
-            self.msg                 = str(chr(self.ACK))
+            self.msg                 = 'C'+str(chr(self.ACK))
             # 3-handshake ------------------------------------ 3
             print 'client send ACK'
             SEND_OUT_SEMAPHORE.acquire()
@@ -114,11 +114,11 @@ class ConnectionClass:
             # 4-handshake ------------------------------------ 2
             SEND_OUT_SEMAPHORE.acquire()
             print 'client send FIN_2'
-            self.msg               = str(chr(self.FIN))
+            self.msg               = 'C'+str(chr(self.FIN))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             # 4-handshake ------------------------------------ 3
             print 'client send ACK_1'
-            self.msg               = str(chr(self.ACK))
+            self.msg               = 'C'+str(chr(self.ACK))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             SEND_OUT_SEMAPHORE.release()
 
@@ -244,7 +244,7 @@ class ThreadClass(threading.Thread):
                         # send this result to internal
                         login._recvResult(data[1:])
 
-        elif(self.thread_index == THREAD_UDP_IPC_SOCK):
+            elif(self.thread_index == THREAD_UDP_IPC_SOCK):
                 while True:
                     data, addr = sock_internal.recvfrom(1024)
 
