@@ -17,8 +17,8 @@ THREAD_SYSKILL       = 3
 CONNECTION_SYN       = False
 CONNECTION_FIN       = False
 
-UDP_IP               = 'bbbb::2'
-UDP_PORT             = 25801
+UDP_OV_IP            = 'bbbb::2'
+UDP_OV_PORT          = 25801
 
 TUN_DST_IP           = 'bbbb::1'
 TUN_DST_PORT         = 25800
@@ -64,8 +64,8 @@ class ConnectionClass:
 
     def __init__(self):
 
-        self.SYN      = 128
-        self.FIN      = 64
+        self.FIN      = 127
+        self.SYN      = 64
         self.ACK      = 32
         self.FRAG_1   = 24
         self.FRAG_N   = 28
@@ -73,7 +73,7 @@ class ConnectionClass:
     def _sendSYN(self):
         # 3-handshake ---------------------------------------- 1
         self.SYN_dict['SYN'] = 1
-        self.msg             = 'C'+str(chr(self.SYN))
+        self.msg             = 'C' + str(chr(self.SYN))
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
@@ -88,7 +88,7 @@ class ConnectionClass:
             # 3-handshake ------------------------------------ 2
             self.SYN_dict['SYN+ACK'] = 1
             self.SYN_dict['ACK']     = 1
-            self.msg                 = 'C'+str(chr(self.ACK))
+            self.msg                 = 'C' + str(chr(self.ACK))
             # 3-handshake ------------------------------------ 3
             print 'client send ACK'
             SEND_OUT_SEMAPHORE.acquire()
@@ -114,11 +114,11 @@ class ConnectionClass:
             # 4-handshake ------------------------------------ 2
             SEND_OUT_SEMAPHORE.acquire()
             print 'client send FIN_2'
-            self.msg               = 'C'+str(chr(self.FIN))
+            self.msg               = 'C' + str(chr(self.FIN))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             # 4-handshake ------------------------------------ 3
             print 'client send ACK_1'
-            self.msg               = 'C'+str(chr(self.ACK))
+            self.msg               = 'C' + str(chr(self.ACK))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             SEND_OUT_SEMAPHORE.release()
 
@@ -155,7 +155,6 @@ class InstructionClass:
         self.FRAG_N           = 28
 
     def _recvInstructionData(self, payload):
-
         if(payload[0] == self.FRAG_1):
             print 'client received FRAG_1'
             self.Instruction_size      = payload[1]
@@ -208,7 +207,7 @@ class LoginClass:
 
     def _login(self, payload):
         self.msg += str(payload)
-        # toss login data to outer
+        # toss login data to outer Server
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
@@ -222,56 +221,60 @@ class LoginClass:
 
 
 class ThreadClass(threading.Thread):
-	def __init__(self, index):
-		threading.Thread.__init__(self)
-		self.thread_index = index
+    def __init__(self, index):
+        threading.Thread.__init__(self)
+        self.thread_index = index
 
-	def run(self):
-	    if(self.thread_index == THREAD_IPV6_UDP_SOCK):
-                print 'client send syn'
-                conn._sendSYN()
-                while True:
-                    data, addr = sock.recvfrom(127)
+    def run(self):
+        if(self.thread_index == THREAD_IPV6_UDP_SOCK):
+            conn._sendSYN()
+            while True:
+                data, addr = sock.recvfrom(127)
+                # Instruction Data from Outer Server
+                if(data[0] == 'I'):
+                    # trim Packet label 'I' and Toss to InstructionClass to handle
+                    inst._recvInstructionData(data[1:])
                     
-                    if(data[0] == 'I'):
-                        inst._recvInstructionData(data[1:])
+                # Connection Packet from Outer Server
+                elif(data[0] == 'C'):
+                    # trim Packet label 'C' and Toss to ConnectionClass to handle
+                    conn._handle(data[1:])
+                    
+                # login result from outer server
+                elif(data[0] == 'L'):
+                    # send this result to internal
+                    # trim Packet label 'L' and Toss to LoginClass to handle
+                    login._recvResult(data[1:])
+                    
 
-                    elif(data[0] == 'C'):
-                        conn._handle(data[1:])
+        elif(self.thread_index == THREAD_UDP_IPC_SOCK):
+            while True:
+                data, addr = sock_internal.recvfrom(1024)
+                # login request from internal
+                if(data[0] == 'L'):
+                    # send this request to outer server
+                    login._login(data[1:])
 
-                    # login result from outer server
-                    elif(data[0] == 'L'):
-                        # send this result to internal
-                        login._recvResult(data[1:])
+        elif(self.thread_index == THREAD_SYSKILL):
+            raw_input('\n\nClient running. Press Enter to close.\n\n')
+            os.kill(os.getpid(), signal.SIGTERM)
 
-            elif(self.thread_index == THREAD_UDP_IPC_SOCK):
-                while True:
-                    data, addr = sock_internal.recvfrom(1024)
-
-                    # login request from internal
-                    if(data[0] == 'L'):
-                        # send this request to outer server
-                        login._login(data[1:])
-
-	    elif(self.thread_index == THREAD_SYSKILL):
-			raw_input('\n\nClient running. Press Enter to close.\n\n')
-			os.kill(os.getpid(), signal.SIGTERM)
 
 if __name__ == '__main__':
     
     conn                 = ConnectionClass()
     inst                 = InstructionClass()
-    login                = LoginClass()
+    login                = LoginClass()  
     
-    
-    
+    # receive Server Data from Openvisualizer & TUN Interface
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
-    sock.bind((UDP_IP, UDP_PORT))
+    sock.bind((UDP_OV_IP, UDP_OV_PORT))
 
+    # send Data from Server to Web APP
     sock_internal = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_internal.bind((UDP_IPC_IP, UDP_IPC_PORT))
 
     for i in range(3):
-            t = ThreadClass(i+1)
-            t.start()
+        t = ThreadClass(i+1)
+        t.start()
 
