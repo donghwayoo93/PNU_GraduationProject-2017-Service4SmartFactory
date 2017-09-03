@@ -61,6 +61,9 @@ class ConnectionClass:
 
     Response_addr = ''
     msg           = ''
+    
+    CONNECTION_SYN=False
+    CONNECTION_FIN=False
 
     def __init__(self):
 
@@ -79,6 +82,7 @@ class ConnectionClass:
         SEND_OUT_SEMAPHORE.release()
 
     def _handle(self, data):
+        data[0] = int(data[0])
         # client receives SYN+ACK pkt
         # response with ACK pkt and ready for other data
         if((self.SYN_dict['SYN'] == 1) &
@@ -97,12 +101,12 @@ class ConnectionClass:
 
             # change connection flag
             CONN_SEMAPHORE.acquire()
-            CONNECTION_SYN = True
+            self.CONNECTION_SYN = True
             CONN_SEMAPHORE.release()
 
         # client receives FIN pkt
         # response with FIN_2, ACK_1 and ready for final ACK_2 pkt
-        elif((CONNECTION_SYN == True) &
+        elif((self.CONNECTION_SYN == True) &
              (self.FIN_dict['FIN_1'] == 0) &
              (self.FIN_dict['FIN_2'] == 0) &
              (data[0] == self.FIN)):
@@ -124,7 +128,7 @@ class ConnectionClass:
 
         # client receives final ACK_2 pkt
         # response nothing and ready to kill itself
-        elif ((CONNECTION_SYN == True) &
+        elif ((self.CONNECTION_SYN == True) &
               (self.FIN_dict['FIN_1'] == 1) &
               (self.FIN_dict['FIN_2'] == 1) &
               (self.FIN_dict['ACK_1'] == 1) &
@@ -134,7 +138,7 @@ class ConnectionClass:
             # change connection flag
             self.FIN_dict['ACK_2'] = 1
             CONN_SEMAPHORE.acquire()
-            CONNECTION_FIN = True
+            self.CONNECTION_FIN = True
             CONN_SEMAPHORE.release()
             os.kill(os.getpid(), signal.SIGTERM)
 
@@ -155,12 +159,17 @@ class InstructionClass:
         self.FRAG_N           = 28
 
     def _recvInstructionData(self, payload):
+        print payload
+        payload = [int(i) for i in payload]
+        
+        
         if(payload[0] == self.FRAG_1):
             print 'client received FRAG_1'
             self.Instruction_size      = payload[1]
             self.Instruction_tag       = payload[2]
-            self.Instruction_List_size = int((self.Instruction_size - 50) / 49 + 1)
-            self.Instruction_List      = self.Instruction_List * self.Instruction_List_size
+            self.Instruction_List_size = int(self.Instruction_size/ 33 + 1)
+            for i in range(self.Instruction_List_size):
+                self.Instruction_List.append('') 
             self.Instruction_List[0]   = payload[3:]
 
         elif(payload[0] == self.FRAG_N):
@@ -186,17 +195,19 @@ class InstructionClass:
             return False
 
     def _makeString(self):
+        global Instruction_String
         # make fragmented string to one
         INST_SEMAPHORE.acquire()
         for i in range(self.Instruction_List_size):
-            Instruction_String += self.Instruction_List[i]
+            Instruction_String += ''.join(str(chr(c)) for c in self.Instruction_List[i])
         INST_SEMAPHORE.release()
 
         print 'client makeString'
+        print Instruction_String
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
-        sock_internal.sendto(Instruction_List, (UDP_IPC_IP, UDP_IPC_PORT))
+        sock_internal.sendto(Instruction_String, (UDP_IPC_IP, UDP_IPC_PORT))
         SEND_IN_SEMAPHORE.release()
 
 
@@ -229,19 +240,22 @@ class ThreadClass(threading.Thread):
         if(self.thread_index == THREAD_IPV6_UDP_SOCK):
             conn._sendSYN()
             while True:
-                data, addr = sock.recvfrom(127)
+                data, addr = sock.recvfrom(1024)
+                data = data[1:len(data)-1]
+                data = data.split(',')
                 # Instruction Data from Outer Server
-                if(data[0] == 'I'):
+                if(int(data[0]) == ord('I')):
                     # trim Packet label 'I' and Toss to InstructionClass to handle
+                    print 'handling instructions'
                     inst._recvInstructionData(data[1:])
                     
                 # Connection Packet from Outer Server
-                elif(data[0] == 'C'):
+                elif(int(data[0]) == ord('C')):
                     # trim Packet label 'C' and Toss to ConnectionClass to handle
                     conn._handle(data[1:])
                     
                 # login result from outer server
-                elif(data[0] == 'L'):
+                elif(int(data[0]) == ord('L')):
                     # send this result to internal
                     # trim Packet label 'L' and Toss to LoginClass to handle
                     login._recvResult(data[1:])
@@ -251,7 +265,7 @@ class ThreadClass(threading.Thread):
             while True:
                 data, addr = sock_internal.recvfrom(1024)
                 # login request from internal
-                if(data[0] == 'L'):
+                if(int(data[0]) == ord('L')):
                     # send this request to outer server
                     login._login(data[1:])
 
