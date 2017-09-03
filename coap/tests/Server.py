@@ -14,16 +14,21 @@ import SocketServer
 import time
 
 THREAD_ROUTE          = 1
-THREAD_DODAG_IPC      = 2
-THREAD_SENSOR         = 3
-THREAD_INST           = 4
-THREAD_SYSKILL        = 5
+THREAD_SENSOR         = 2
+THREAD_INST           = 3
+THREAD_RECV_LABEL     = 4
+THREAD_DODAG_IPC      = 5
+THREAD_SYSKILL        = 6
 
 CONNECTION_SYN        = False
 CONNECTION_FIN        = False
 
 CONN_SEMAPHORE        = threading.Semaphore(1)
 COAP_5685_SEMAPHORE   = threading.Semaphore(1)
+PAYLOAD_SEMAPHORE     = threading.Semaphore(1)
+
+COAP_RECV_PAYLOAD     = [0]
+OPENSERIAL_MTU        = 33
 
 
 class SensorResource(coapResource.coapResource):
@@ -45,17 +50,13 @@ class SensorResource(coapResource.coapResource):
         
         return (respCode,respOptions,respPayload)
 
-    def PUT(self, srcIP, options=[],payload=None):
+    def PUT(self, srcIp, options=[],payload=None):
         # In case Server Receives Sensor Value Packet
         if(unichr(payload[0]) == 'S'):
             payload = payload[2:]
             payload_str   = ''
             json_str      = ''
             sensor_value  = ''
-
-            ipaddr = srcIP.split(':')
-            ip_suffix = ipaddr[5]
-
             # print str(ip_suffix)
 
             my_suffix_1 = format(payload[0], 'x')
@@ -88,8 +89,15 @@ class SensorResource(coapResource.coapResource):
 
             json_str = json.dumps(sensor_value)
 
-            # print json_str
-
+            #print json_str
+        # In case Server Receives Connection Packet
+        elif(unichr(payload[0]) == 'C'):
+            print 'error : Sensor coap server received Connection Packet\n'
+            print 'This case SHOULD NOT happen\n'
+        # In case Server Receives Login Packet
+        elif(unichr(payload[0]) == 'L'):
+            print 'error : Sensor coap server received Login Packet\n'
+            print 'This case SHOULD NOT happen\n'
         # In case Server Receives Instruction Packet
         elif(unichr(payload[0]) == 'I'):
             print 'error : Sensor coap server received Instruction Packet\n'
@@ -102,44 +110,19 @@ class SensorResource(coapResource.coapResource):
 
 
 class InstResource(coapResource.coapResource):
-    conn  = ''
-    inst  = ''
-    login = ''
-    
+
     def __init__(self):
         # initialize parent class
         coapResource.coapResource.__init__(
             self,
             path = 'inst',
         )
-        self.conn  = ConnectionClass()
-        self.inst  = InstructionClass()
-        self.login = LoginClass()
 
-    def PUT(self, srcIP, options=[],payload=None):
-        # print str(srcIP)
-        print 'check in '
+    def PUT(self, srcIp, options=[],payload=None):
+        global COAP_RECV_PAYLOAD
         print '5685 : ' + str(payload)
-        # received label = Connection
-        if(unichr(payload[0]) == 'C'):
-            # trim label 'C'
-            payload = payload[1:]
-            self.conn._handle(payload)
 
-        elif(unichr(payload[0]) == 'L'):
-            # trim label 'L'
-            payload = payload[1:]
-            login._login(payload)
-
-        elif(unichr(payload[0]) == 'I'):
-            ipaddr = srcIP.split(':')
-            ip_suffix = ipaddr[5]
-            self.inst._sendInstructionData()
-            
-
-        elif(unichr(payload[0]) == 'S'):
-            print 'error : Instruction coap server received Sensor Packet\n'
-            print 'This case SHOULD NOT happen\n'
+        COAP_RECV_PAYLOAD = payload
 
         respCode = d.COAP_RC_NONE
         respOptions = []
@@ -202,20 +185,24 @@ class InstructionClass:
     def __init__(self):
         self.FRAG_1    = 24
         self.FRAG_N    = 28
-        self.FIN       = 64
+        self.FIN       = 127
         self.link      = 'coap://[bbbb::2]:5685/inst'
         self.work_flag = False
 
 
     def _sendInstructionData(self):
+        global data_tag
+        global c_INST
+        global COAP_5685_SEMAPHORE
+        
         print 'server sendInstructionData'
         # read data from DB
         data_str         = 'Five drinks in on Friday night We only came to dry your eyes And get you out of your room'
         data_str        += ' Now this bar has closed its doors I found my hand is holding yours Do you wanna go home so soon '
-        data_str        += 'Or maybe we shpuld take a ride Through the night and sing along to every song Thats on the radio In the back of a Taxi cab'
-        data_str        += 'in Brooklyn no no no The sun should rise Burning all the street lamps out at 3AM So DJ play it again'
-        data_str        += 'Until the night turns into morning You ll be in my arms And just keep driving Along the boulevard'
-        data_str        += 'And if I kiss you darling Please dont be alone its just start of everything if you want A new Love In New York' 
+        #data_str        += 'Or maybe we shpuld take a ride Through the night and sing along to every song Thats on the radio In the back of a Taxi cab'
+        #data_str        += 'in Brooklyn no no no The sun should rise Burning all the street lamps out at 3AM So DJ play it again'
+        #data_str        += 'Until the night turns into morning You ll be in my arms And just keep driving Along the boulevard'
+        #data_str        += 'And if I kiss you darling Please dont be alone its just start of everything if you want A new Love In New York' 
         data_size        = len(data_str)
         data_offset      = 1
         data_start_index = 0
@@ -228,7 +215,7 @@ class InstructionClass:
         # first Fragmented Packet Format
         # read first 50 bytes from data string
         payload_str += str(chr(self.FRAG_1)) + str(chr(data_size)) + str(chr(data_tag))
-        payload_str += data_str[0:50]
+        payload_str += data_str[0:OPENSERIAL_MTU]
 
         COAP_5685_SEMAPHORE.acquire()
 
@@ -242,12 +229,16 @@ class InstructionClass:
 
         # Second to Nth Fragmented Packet Format
         # read remain bytes, 49 bytes each
-        payload_str = 'I'
-        data_start_index = 50
+        
+        data_start_index = OPENSERIAL_MTU
 
         while(data_str != ''):
+            payload_str  = 'I'
             payload_str += str(chr(self.FRAG_N)) + str(chr(data_size)) + str(chr(data_tag)) + str(chr(data_offset))
-            payload_str += data_str[data_start_index : (data_start_index + 49)]
+            payload_str += data_str[data_start_index : (data_start_index + OPENSERIAL_MTU)]
+            data_str     = data_str[(data_start_index + OPENSERIAL_MTU):]
+
+            print payload_str
 
             COAP_5685_SEMAPHORE.acquire()
 
@@ -261,13 +252,15 @@ class InstructionClass:
 
             data_offset = data_offset + 1
 
+            data_start_index = 0
+
         # check DB whether sensor value changed or not, every 30 seconds
         # if work_flag is set 'True', it returns and send FIN flag
         self._checkDB()
         # 4-handshake --------------------------- 1
         c_INST.PUT(
             self.link,
-            payload=[ord(b) for b in 'C'+str(chr(self.FIN))]
+            payload=[ord(b) for b in 'C'+str(chr(self.FIN))]    
         )
 
         print 'server sends FIN_1'
@@ -311,11 +304,13 @@ class ConnectionClass:
     ACK       = 0
 
     def __init__(self):
-        self.SYN      = 128
-        self.FIN      = 64
+        self.FIN      = 127
+        self.SYN      = 64
         self.ACK      = 32   
 
     def _handle(self, payload):
+        global CONNECTION_SYN
+        global CONNECTION_FIN
         # Server Received SYN pkt from Client
         # 3-handshake ------------------------------- 1
         if((payload[0] == self.SYN) &
@@ -375,7 +370,6 @@ class ConnectionClass:
 
             # Reply with Final ACK to Client to close Connection
             # 4-handshake ----------------------- 4
-
             COAP_5685_SEMAPHORE.acquire()
 
             c_INST.PUT(
@@ -387,6 +381,7 @@ class ConnectionClass:
 
 
 class ThreadClass(threading.Thread):
+
     def __init__(self, index):
         threading.Thread.__init__(self)
         self.thread_index = index
@@ -396,25 +391,52 @@ class ThreadClass(threading.Thread):
 
     def run(self):
         if(self.thread_index == THREAD_ROUTE):
-            print 'ROUTE  coap server created with PORT : ' + str(5683) + '\n'
+            print 'ROUTE  coap server created with PORT : ' + str(5683)
+
+        elif(self.thread_index == THREAD_SENSOR):
+            c_SENSOR.addResource(SensorResource())
+            print 'SENSOR coap server created with PORT : ' + str(5684)
+
+        elif(self.thread_index == THREAD_INST):
+            c_INST.addResource(InstResource())
+            print 'INST   coap server created with PORT : ' + str(5685)
+
+        elif(self.thread_index == THREAD_RECV_LABEL):
+            global COAP_RECV_PAYLOAD
+            global CONNECTION_SYN
+            while True:
+                payload = COAP_RECV_PAYLOAD
+
+                # received label = Connection
+                if(unichr(payload[0]) == 'C'):
+                    # trim label 'C'
+                    payload = payload[1:]
+                    conn._handle(payload)
+                # received label = Login
+                elif(unichr(payload[0]) == 'L'):
+                    # trim label 'L'
+                    payload = payload[1:]
+                    login._login(payload)
+                # received label = Instruction
+                elif(unichr(payload[0]) == 'I'):
+                    ipaddr = srcIP.split(':')
+                    ip_suffix = ipaddr[5]
+                    inst._sendInstructionData()
+
+                if(CONNECTION_SYN == True):
+                    inst._sendInstructionData()
+
+                time.sleep(1)
 
         elif(self.thread_index == THREAD_DODAG_IPC):
             
             IPC_HOST = 'localhost'
             IPC_PORT = 25800
 
-            print ' UDP server created with HOST : ' + IPC_HOST + ' PORT : ' + str(IPC_PORT) + '\n'
+            print ' UDP server created with HOST : ' + IPC_HOST + ' PORT : ' + str(IPC_PORT)
 
             server = SocketServer.UDPServer((IPC_HOST, IPC_PORT), UDP_DODAG_IPC)
             server.serve_forever()
-
-        elif(self.thread_index == THREAD_SENSOR):
-            c_SENSOR.addResource(SensorResource())
-            print 'SENSOR coap server created with PORT : ' + str(5684) + '\n'
-
-        elif(self.thread_index == THREAD_INST):
-            c_INST.addResource(InstResource())
-            print 'INST   coap server created with PORT : ' + str(5685) + '\n'     
 
         elif(self.thread_index == THREAD_SYSKILL):
             raw_input('\n\nServer running. Press Enter to close.\n\n')
@@ -494,12 +516,16 @@ port_sem     = threading.Semaphore(1)
 tag_sem      = threading.Semaphore(1)
 done_sem     = threading.Semaphore(1)
 
-c_ROUTE  = coap.coap(udpPort=5683) # Working checked
-c_SENSOR = coap.coap(udpPort=5684)
-c_INST   = coap.coap(udpPort=5685) 
+c_ROUTE      = coap.coap(udpPort=5683) # Working checked
+c_SENSOR     = coap.coap(udpPort=5684)
+c_INST       = coap.coap(udpPort=5685) 
+
+conn         = ConnectionClass()
+inst         = InstructionClass()
+login        = LoginClass()
 
 if __name__ == "__main__":
 
-    for i in range(5):
+    for i in range(6):
         t = ThreadClass(i+1)
         t.start()

@@ -201,6 +201,7 @@ class coap(object):
         output += ['- sender:    {0}'.format(sender)]
         output += ['- bytes:     {0}'.format(u.formatBuf(rawbytes))]
         output  = '\n'.join(output)
+        #print str(['- sender:    {0}'.format(sender)])
         log.debug(output)
 
         srcIp   = sender[0]
@@ -339,6 +340,8 @@ class coap(object):
                 responseType = d.TYPE_ACK
             elif message['type']==d.TYPE_NON:
                 responseType = d.TYPE_NON
+            elif message['type']== d.TYPE_ACK:
+                responseType = d.TYPE_ACK
             else:
                 raise SystemError('unexpected type {0}'.format(message['type']))
 
