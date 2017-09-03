@@ -83,6 +83,11 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
             ){
             returnVal=TRUE;
          }
+         else if(
+                  ieee802514_header->src.addr_64b[7]==0x3c
+            ){
+               returnVal=FALSE;
+         }
          break;
       case 0x3c:
          if (
@@ -90,6 +95,11 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
                ieee802514_header->src.addr_64b[7]==0x02
             ){
             returnVal=TRUE;
+         }
+         else if(
+                  ieee802514_header->src.addr_64b[7]==0xbd
+            ){
+               returnVal=FALSE;
          }
          break;
       case 0xdf:
