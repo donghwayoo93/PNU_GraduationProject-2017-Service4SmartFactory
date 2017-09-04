@@ -12,6 +12,7 @@ from   coap   import    coap,                    \
 import json
 import SocketServer
 import time
+import requests
 
 THREAD_ROUTE          = 1
 THREAD_SENSOR         = 2
@@ -132,8 +133,6 @@ class InstResource(coapResource.coapResource):
 
 class LoginClass:
     DB        = ''
-    recv_id   = ''
-    recv_pw   = ''
     send_name = ''
     send_auth = ''
 
@@ -144,26 +143,33 @@ class LoginClass:
         self.link = 'coap://[bbbb::2]:5685/inst'
 
     def _login(self, payload):
-        dict = json.loads(payload)
+        info = payload.split(',')
 
-        self.recv_id = dict['id']
-        self.recv_pw = dict['pw']
+        json_data = {"type" : "login",
+                     "email" : str(info[0]),
+                     "password" : str(info[1])
+                     }
 
+        headers = {'Content-Type': 'application/json'}
+        res = requests.post('http://localhost:8080/api/auth/login',
+                            data = json.dumps(json_data),
+                            headers = headers)
+
+        res.text.encode("utf-8")
+
+        dict = json.loads(res.text.encode('utf-8'))
+
+        info = dict['user']
         # make connection with DB
         # get worker's name and auth
 
-        self.send_name = 'KIM'
-        self.send_auth = 'H'
+        self.send_name = info['email']
+        self.send_auth = info['accessLevel']
 
         self._sendResult()
 
     def _sendResult(self):
-        resp = {
-            'name' : str(self.send_name),
-            'auth' : str(self.send_auth)
-        }
-
-        payload = json.dumps(resp)
+        payload = str(self.send_name) + ',' + str(self.send_auth)
 
         COAP_5685_SEMAPHORE.acquire()
 
