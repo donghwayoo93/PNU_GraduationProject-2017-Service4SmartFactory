@@ -38,6 +38,7 @@ INST_SEMAPHORE       = threading.Semaphore(1)
 sock                 = ''
 sock_internal        = ''
 Instruction_String   = ''
+workerID             = '0EB2'
 
 class ConnectionClass:
     SYN_dict = {
@@ -81,8 +82,12 @@ class ConnectionClass:
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
+        print 'client sends SYN'
 
     def _handle(self, data):
+        print str(data[0])
+        data[0] = int(data[0])
+        
         # client receives SYN+ACK pkt
         # response with ACK pkt and ready for other data
         if((self.SYN_dict['SYN'] == 1) &
@@ -159,12 +164,34 @@ class InstructionClass:
         self.FRAG_N           = 28
 
     def _instructionSolicitation(self):
-
-        msg = 'I' + 'Solicitation'
+        global workerID
+        msg = 'I' + 'InstructionSolicitation' + ' ' + str(workerID)
 
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
+        
+        print 'Instruction Solicitation msg sent'
+        
+    def _machineInfoSolicitation(self):
+        global workerID
+        msg = 'I' + 'machineInfo' + ' ' +str(workerID)
+
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+        
+        print 'machineInfo Solicitation msg sent'
+        
+    def _machineSensorSolicitation(self):
+        global workerID
+        msg = 'I' + 'machineSensor' + ' ' +str(workerID)
+
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+        
+        print 'machineSensor Solicitation msg sent'
 
 
     def _recvInstructionData(self, payload):
@@ -173,20 +200,37 @@ class InstructionClass:
 
         if(payload[0] == self.FRAG_1):
             print 'client received FRAG_1'
-            self.Instruction_size      = payload[1]
-            self.Instruction_tag       = payload[2]
+            data_size_upper = payload[1]
+            data_size_lower = payload[2]
+            self.Instruction_size      = (data_size_upper * 256) + data_size_lower
+            self.Instruction_tag       = payload[3]
             self.Instruction_List_size = int(self.Instruction_size/33 + 1)
             for i in range(self.Instruction_List_size):
                 self.Instruction_List.append('')
-            self.Instruction_List[0]   = payload[3:]
+            self.Instruction_List[0]   = payload[4:]
+            
+            print 'data size : ' + str(self.Instruction_size)
 
         elif(payload[0] == self.FRAG_N):
-            print 'client received FRAG_N : ' + str(payload[3]) + 'th'
-            if(self.Instruction_tag == payload[2]):
-                self.Instruction_List[payload[3]] = payload[4:]
+            print 'client received FRAG_N : ' + str(payload[4]) + 'th'
+            if(self.Instruction_tag == payload[3]):
+                self.Instruction_List[payload[4]] = payload[5:]
 
             if(self._checkList() == True):
                 self._makeString()
+                
+        else:
+            print 'client received machineSensor or machineInfo'
+            payload_str = ''
+            for i in range(len(payload)):
+                payload_str  =+ chr(payload[i])
+                
+            # send instruction string internal
+            SEND_IN_SEMAPHORE.acquire()
+            sock_internal.sendto(payload_str, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+            SEND_IN_SEMAPHORE.release()
+                
+            
 
     def _checkList(self):
         total_length = 0
@@ -215,7 +259,7 @@ class InstructionClass:
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
-        sock_internal.sendto(Instruction_List, (UDP_IPC_IP, UDP_IPC_PORT))
+        sock_internal.sendto(Instruction_List, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
 
 
@@ -232,6 +276,7 @@ class LoginClass:
         SEND_OUT_SEMAPHORE.release()
 
     def _recvResult(self, payload):
+        payload = [int(i) for i in payload]
         payload_str = ''
 
         for i in range(len(payload)):
@@ -263,20 +308,25 @@ class ThreadClass(threading.Thread):
             conn._sendSYN()
             while True:
                 data, addr = sock.recvfrom(1024)
+                data = data[1:len(data)-1]
+                data = data.split(',')
                 # Instruction Data from Outer Server
-                if(data[0] == 'I'):
+                if(int(data[0]) == ord('I')):
                     # trim Packet label 'I' and Toss to InstructionClass to handle
+                    print 'handling Instruction Data'
                     inst._recvInstructionData(data[1:])
                     
                 # Connection Packet from Outer Server
-                elif(data[0] == 'C'):
+                elif(int(data[0]) == ord('C')):
                     # trim Packet label 'C' and Toss to ConnectionClass to handle
+                    print 'handling Connection Data'
                     conn._handle(data[1:])
                     
                 # login result from outer server
-                elif(data[0] == 'L'):
+                elif(int(data[0]) == ord('L')):
                     # send this result to internal
                     # trim Packet label 'L' and Toss to LoginClass to handle
+                    print 'handling Login Data'
                     login._recvResult(data[1:])
                     
 
@@ -290,8 +340,12 @@ class ThreadClass(threading.Thread):
                 if(dict['type'] == 'login'):
                     login._login(dict['email'], dict['password'])
                 # handling Instruction Soliciation
-                elif(dict['type'] == 'Instruction'):
+                elif(dict['type'] == 'machineManual'):
                     inst._instructionSolicitation()
+                elif(dict['type'] == 'machineInfo'):
+                    inst._machineInfoSolicitation()
+                elif(dict['type'] == 'machineSensor'):
+                    inst._machineSensorSolicitation()                    
                     
 
         elif(self.thread_index == THREAD_SYSKILL):

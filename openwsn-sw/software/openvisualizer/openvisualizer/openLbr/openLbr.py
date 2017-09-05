@@ -205,7 +205,7 @@ class OpenLbr(eventBusClient.eventBusClient):
         print str(data)
         print '\n'
 
-        self.UDP_IPC_SOCK.sendto(data, (UDP_IPC_DST_IP, UDP_IPC_DST_PORT))
+        self.UDP_IPC_SOCK.sendto(str(data[1]), (self.UDP_IPC_DST_IP, self.UDP_IPC_DST_PORT))
 
     def _sendOuter_notif(self, sender, signal, data):
         payload = []
