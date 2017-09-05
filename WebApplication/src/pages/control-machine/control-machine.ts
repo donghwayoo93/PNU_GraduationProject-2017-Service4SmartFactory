@@ -42,10 +42,9 @@ export class ControlMachinePage {
 		public loadingCtrl: LoadingController) {
 	}
 
-	old_refreshPage(page) {
+	refreshPage1(page) {
 		this.showLoader("설비 정보 가져오는 중...");
 		let credentials = {};
-
 
 		// 기기 정보
 		this.machineService.getMachineInformation(credentials).then((result) => {
@@ -70,6 +69,13 @@ export class ControlMachinePage {
 			console.log(err);
 		});
 
+
+	}
+
+	refreshPage2(page) {
+		this.showLoader("설비 정보 가져오는 중...");
+		let credentials = {};
+
 		// 센서 데이터
 		this.machineService.getMachineSensorData(credentials).then((result) => {
 			this.loading.dismiss();
@@ -85,7 +91,11 @@ export class ControlMachinePage {
 			this.loading.dismiss();
 			console.log(err);
 		});
+	}
 
+	refreshPage3(page) {
+		this.showLoader("설비 정보 가져오는 중...");
+		let credentials = {};
 		// 지시사항
 		this.machineService.getMachineManual(credentials).then((result) => {
 			this.loading.dismiss();
@@ -101,7 +111,6 @@ export class ControlMachinePage {
 			this.loading.dismiss();
 			console.log(err);
 		});
-
 	}
 
 	showLoader(content) {
