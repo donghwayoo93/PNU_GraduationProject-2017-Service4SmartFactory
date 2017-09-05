@@ -23,7 +23,7 @@ export class LoginPage {
   ionViewDidLoad() {
   }
 
-  new_login() {
+  login() {
     this.showLoader();
     let credentials = {
       email: this.email,
@@ -31,23 +31,6 @@ export class LoginPage {
     };
 
     this.authService.requestLogin(credentials).then((result) => {
-      this.loading.dismiss();
-      //console.log(result);
-      this.navCtrl.setRoot(MenuPage);
-    }, (err) => {
-      this.loading.dismiss();
-      //console.log(err);
-    });
-  }
-
-  old_Login() {
-    this.showLoader();
-    let credentials = {
-      email: this.email,
-      password: this.password
-    };
-
-    this.authService.oldLogin(credentials).then((result) => {
       this.loading.dismiss();
       //console.log(result);
       this.navCtrl.setRoot(MenuPage);

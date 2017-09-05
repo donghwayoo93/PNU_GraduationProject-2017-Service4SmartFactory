@@ -12,29 +12,6 @@ export class AuthProvider {
     //console.log('Hello AuthProvider Provider');
   }
 
-  oldLogin(credentials) {
-    return new Promise((resolve, reject) => {
-      let headers = new Headers();
-      headers.append('Content-Type', 'application/json');
-
-      this.http.post('http://localhost:8088/api/auth/login', JSON.stringify(credentials), { headers: headers })
-        .subscribe(res => {
-          let data = res.json();
-          console.log(data);
-          this.token = data.token;
-          this.storage.set('token', data.token);
-          this.storage.set('email', data.user.email)
-          this.storage.set('accessLevel', data.user.accessLevel)
-
-          resolve(data);
-
-          resolve(res.json());
-        }, (err) => {
-          reject(err);
-        });
-    });
-  }
-
   requestLogin(credentials) {
     return new Promise((resolve, reject) => {
       let headers = new Headers();
