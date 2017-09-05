@@ -10,7 +10,7 @@ function generateToken(user) {
 
 function setUserInfo(request) {
     return {
-        _id: request._id,
+        //_id: request._id,
         email: request.email,
         accessLevel: request.accessLevel
     };
@@ -20,7 +20,7 @@ exports.login = function(req, res, next) {
 
     var userInfo = setUserInfo(req.user);
     res.status(200).json({
-        token: 'JWT ' + generateToken(userInfo),
+        //token: 'JWT ' + generateToken(userInfo),
         user: userInfo
     });
 

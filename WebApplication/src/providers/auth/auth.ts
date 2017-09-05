@@ -17,7 +17,7 @@ export class AuthProvider {
       let headers = new Headers();
       headers.append('Content-Type', 'application/json');
 
-      this.http.post('http://localhost:8080/api/auth/login', JSON.stringify(credentials), { headers: headers })
+      this.http.post('http://localhost:8088/api/auth/login', JSON.stringify(credentials), { headers: headers })
         .subscribe(res => {
           let data = res.json();
           console.log(data);
@@ -70,7 +70,7 @@ export class AuthProvider {
       let headers = new Headers();
       headers.append('Content-Type', 'application/json');
 
-      this.http.post('http://localhost:8080/api/auth/register', JSON.stringify(details), { headers: headers })
+      this.http.post('http://localhost:8088/api/auth/register', JSON.stringify(details), { headers: headers })
         .subscribe(res => {
 
           let data = res.json();

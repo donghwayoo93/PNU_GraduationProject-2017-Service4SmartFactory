@@ -23,7 +23,8 @@ elif(sys.argv[1] == 'machineManual'):
 import socket
 import json
 
-HOST, PORT = "localhost", 25800
+HOST, PORT = "localhost", 25805
+CLIENTPORT = 30000
 
 data = json.dumps(jsonData)
 
@@ -32,6 +33,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Define the port on which you want to connect
 port = 12345
+sock.bind((HOST, CLIENTPORT))
 
 # connect to the server on local computer
 sock.sendto(data, (HOST, PORT))

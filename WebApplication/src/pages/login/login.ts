@@ -5,7 +5,6 @@ import { MenuPage } from '../menu/menu';
 import { SignupPage } from '../signup/signup';
 
 import { AuthProvider } from '../../providers/auth/auth';
-import * as $ from 'jquery';
 
 @Component({
   selector: 'page-login',
