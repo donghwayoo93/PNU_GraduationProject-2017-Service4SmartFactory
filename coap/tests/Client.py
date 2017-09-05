@@ -158,13 +158,26 @@ class InstructionClass:
         self.FRAG_1           = 24
         self.FRAG_N           = 28
 
+    def _instructionSolicitation(self):
+
+        msg = 'I' + 'Solicitation'
+
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+
+
     def _recvInstructionData(self, payload):
+
+        payload = [int(i) for i in payload]
+
         if(payload[0] == self.FRAG_1):
             print 'client received FRAG_1'
             self.Instruction_size      = payload[1]
             self.Instruction_tag       = payload[2]
-            self.Instruction_List_size = int((self.Instruction_size - 50) / 49 + 1)
-            self.Instruction_List      = self.Instruction_List * self.Instruction_List_size
+            self.Instruction_List_size = int(self.Instruction_size/33 + 1)
+            for i in range(self.Instruction_List_size):
+                self.Instruction_List.append('')
             self.Instruction_List[0]   = payload[3:]
 
         elif(payload[0] == self.FRAG_N):
@@ -190,13 +203,15 @@ class InstructionClass:
             return False
 
     def _makeString(self):
+        global Instruction_String
         # make fragmented string to one
         INST_SEMAPHORE.acquire()
         for i in range(self.Instruction_List_size):
-            Instruction_String += self.Instruction_List[i]
+            Instruction_String += ''.join(str(chr(c)) for c in self.Instruction_List[i])
         INST_SEMAPHORE.release()
 
         print 'client makeString'
+        print Instruction_String
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
@@ -217,7 +232,14 @@ class LoginClass:
         SEND_OUT_SEMAPHORE.release()
 
     def _recvResult(self, payload):
-        info = payload.split(',')
+        payload_str = ''
+
+        for i in range(len(payload)):
+            payload_str += chr(payload[i])
+
+        print 'check on _recvResult        : ' + payload_str
+
+        info = payload_str.split(',')
 
         json_data = {"user":{
             "email" : str(info[0]),
@@ -269,6 +291,7 @@ class ThreadClass(threading.Thread):
                     login._login(dict['email'], dict['password'])
                 # handling Instruction Soliciation
                 elif(dict['type'] == 'Instruction'):
+                    inst._instructionSolicitation()
                     
 
         elif(self.thread_index == THREAD_SYSKILL):
