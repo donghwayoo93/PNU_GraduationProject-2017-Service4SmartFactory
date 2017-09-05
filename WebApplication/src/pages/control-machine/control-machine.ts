@@ -111,48 +111,4 @@ export class ControlMachinePage {
 
 		this.loading.present();
 	}
-
-	new_refreshPage(page) {
-		var filePath = 'assets/machineData.json';
-		return this.http.get(filePath)
-			.map((res) => {
-				return res.json()
-			}).subscribe(actual_JSON => {
-				console.log(actual_JSON);
-
-				var machineID = actual_JSON.machineID;
-				var accessLevel = actual_JSON.accessLevel;
-				//var isLogin = actual_JSON.isLogin;
-				var SensorState = actual_JSON.sensorState;
-				console.log(SensorState);
-				var machineName = actual_JSON.name;
-				var manual = actual_JSON.manual;
-				console.log(manual);
-				this.machineDatas = [
-					{
-						"title": "ID",
-						"content": machineID
-					}, {
-						"title": "name",
-						"content": machineName
-					}, {
-						"title": "access level",
-						"content": accessLevel
-					}
-				];
-
-				for (var idx in SensorState) {
-					this.machineDatas.push({
-						"title": "센서명 : " + idx,
-						"content": SensorState[idx]
-					});
-				}
-				this.manuals = [];
-				for (var idx2 in manual) {
-					this.manuals.push(
-						manual[idx2]
-					);
-				}
-			});
-	}
 }
