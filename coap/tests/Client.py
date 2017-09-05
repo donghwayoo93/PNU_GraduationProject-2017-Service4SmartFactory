@@ -262,7 +262,7 @@ class ThreadClass(threading.Thread):
         if(self.thread_index == THREAD_IPV6_UDP_SOCK):
             conn._sendSYN()
             while True:
-                data, addr = sock.recvfrom(127)
+                data, addr = sock.recvfrom(1024)
                 # Instruction Data from Outer Server
                 if(data[0] == 'I'):
                     # trim Packet label 'I' and Toss to InstructionClass to handle
