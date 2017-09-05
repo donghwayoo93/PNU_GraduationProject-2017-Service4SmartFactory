@@ -40,5 +40,7 @@ sock.sendto(data, (HOST, PORT))
 
 # receive data from the server
 received = sock.recv(1024)
-# print "received:    {}".format(received)
+
+sock.close()
+
 print received
