@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { Http } from '@angular/http';
 import { NavController, NavParams, LoadingController } from 'ionic-angular';
 import { MachinesProvider } from '../../providers/machines/machines';
 
@@ -38,8 +37,7 @@ export class ControlMachinePage {
 	};
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
-		public machineService: MachinesProvider, private http: Http,
-		public loadingCtrl: LoadingController) {
+		public machineService: MachinesProvider, public loadingCtrl: LoadingController) {
 	}
 
 	refreshPage1(page) {
