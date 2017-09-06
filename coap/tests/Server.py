@@ -13,6 +13,25 @@ import json
 import SocketServer
 import time
 import requests
+import logging
+import logging.handlers
+
+
+# create logger
+logger = logging.getLogger("crumbs")
+logger.setLevel(logging.INFO)
+
+# format logger
+formatter = logging.Formatter('[%(levelname)s | %(filename)s : %(lineno)s] %(asctime)s > %(message)s')
+
+fileHandler = logging.FileHandler('./log/Server.log')
+streamHandler = logging.StreamHandler()
+
+fileHandler.setFormatter(formatter)
+streamHandler.setFormatter(formatter)
+
+logger.addHandler(fileHandler)
+logger.addHandler(streamHandler)
 
 THREAD_ROUTE          = 1
 THREAD_SENSOR         = 2
@@ -152,9 +171,9 @@ class LoginClass:
 
         for i in range(len(payload)):
             payload_str += chr(payload[i])
-        print 'check on _login     : ' + payload_str
 
         info = payload_str.split(',')
+        logger.info('Received LoginData email : ' + str(info[0]))
 
         json_data = {"type" : "login",
                      "email" : str(info[0]),
@@ -191,9 +210,149 @@ class LoginClass:
         )
 
         COAP_5685_SEMAPHORE.release()
+        logger.info('Sends back LoginData email : ' + str(self.send_name) + 'accessLevel : ' + str(self.send_auth))
 
     def __del__(self):
-        print 'destruct LoginClass'
+        logger.info('destruct LoginClass')
+
+
+class machineClass:
+    FRAG_1  = 0
+    FRAG_N  = 0
+    link    = ''
+
+    def __init__(self):
+        self.FRAG_1    = 24
+        self.FRAG_N    = 28
+        self.link      = 'coap://[bbbb::2]:5685/inst'
+
+    def _handle(self, payload):
+        payload_str = ''
+        for i in range(len(payload)):
+            payload_str += chr(payload[i])
+
+        print payload_str
+
+        if(payload_str[0] == 'machineInfo'):
+            logger.info('Received machineInfo Solicitation Message')
+            self._sendMachineInfo(payload_str[1])
+
+        elif(payload_str[0] == 'machineSensor'):
+            logger.info('Received machineSensor Solicitation Message')
+            self._sendMachineSensor(payload_str[1])
+
+
+    def _sendMachineInfo(self, workerID):
+        global c_INST, COAP_5685_SEMAPHORE, data_tag, OPENSERIAL_MTU
+
+        json_data = {
+                     "workerID"  : str(workerID)
+        }
+
+        res = requests.get('http://localhost:8088/api/machines/info',
+                            params=json_data)
+
+
+        print res.text.encode('utf-8')
+
+        data_str = json.loads(res.text.encode('utf-8'))
+
+        tag_sem.acquire()
+        data_tag += 1
+        tag_sem.release()
+
+        logger.info('Received ' + len(data_str) + ' bytes of MachineInfoData from DataBase')
+
+        data_start_index = 0
+        data_offset = 1
+        data_len_upper, data_len_lower = divmod(len(data_str, 256))
+        payload_str  = 'M'
+        payload_str += str(chr(self.FRAG_1)) + str(chr(data_len_upper)) + str(chr(data_len_lower)) +  str(chr(data_tag))
+        payload_str += data_str[0:OPENSERIAL_MTU]
+
+        COAP_5685_SEMAPHORE.acquire()
+        c_INST.PUT(
+            self.link,
+            payload=[ord(b) for b in str(payload_str)]
+        )
+        COAP_5685_SEMAPHORE.release()
+
+        data_start_index = OPENSERIAL_MTU
+
+        while(data_str != ''):
+            payload_str  = 'M'
+            payload_str += str(chr(self.FRAG_N)) + str(chr(data_size_upper)) + str(chr(data_size_lower)) + str(chr(data_tag)) + str(chr(data_offset))
+            payload_str += data_str[data_start_index : (data_start_index + OPENSERIAL_MTU)]
+            data_str     = data_str[(data_start_index + OPENSERIAL_MTU):]
+
+            COAP_5685_SEMAPHORE.acquire()
+
+            c_INST.PUT(
+                self.link,
+                payload=[ord(b) for b in str(payload_str)]
+            )
+
+            COAP_5685_SEMAPHORE.release()
+
+            data_offset += 1
+            data_start_index = 0
+
+        logger.info('Sends back with machineInfo Message')
+
+
+
+    def _sendMachineSensor(self, workerID):
+        global c_INST, COAP_5685_SEMAPHORE, data_tag, OPENSERIAL_MTU
+
+        json_data = {
+                     "workerID"  : str(workerID)
+        }
+
+        res = requests.get('http://localhost:8088/api/machines/sensor',
+                            params=json_data)
+
+        data_str = json.loads(res.text.encode('utf-8'))
+
+        tag_sem.acquire()
+        data_tag += 1
+        tag_sem.release()
+
+        logger.info('Received ' + len(data_str) + ' bytes of MachineSensorData from DataBase')
+
+        data_start_index = 0
+        data_offset = 1
+        data_len_upper, data_len_lower = divmod(len(data_str, 256))
+        payload_str  = 'M'
+        payload_str += str(chr(self.FRAG_1)) + str(chr(data_len_upper)) + str(chr(data_len_lower)) +  str(chr(data_tag))
+        payload_str += data_str[0:OPENSERIAL_MTU]
+
+
+        COAP_5685_SEMAPHORE.acquire()
+        c_INST.PUT(
+            self.link,
+            payload=[ord(b) for b in str(payload_str)]
+        )
+        COAP_5685_SEMAPHORE.release()
+
+        while(data_str != ''):
+            payload_str  = 'M'
+            payload_str += str(chr(self.FRAG_N)) + str(chr(data_size_upper)) + str(chr(data_size_lower)) + str(chr(data_tag)) + str(chr(data_offset))
+            payload_str += data_str[data_start_index : (data_start_index + OPENSERIAL_MTU)]
+            data_str     = data_str[(data_start_index + OPENSERIAL_MTU):]
+
+            COAP_5685_SEMAPHORE.acquire()
+
+            c_INST.PUT(
+                self.link,
+                payload=[ord(b) for b in str(payload_str)]
+            )
+
+            COAP_5685_SEMAPHORE.release()
+
+            data_offset += 1
+            data_start_index = 0
+
+        logger.info('Sends back with machineSensor Message')
 
 
 class InstructionClass:
@@ -220,74 +379,13 @@ class InstructionClass:
         payload_str = payload_str.split(' ')
 
         if(payload_str[0] == 'InstructionSolicitation'):
-
-            print 'Client sent Instruction Solicitation msg'
+            logger.info('Received Instruction Solicitation Message')
             self._sendInstructionData(payload_str[1])
-
-        elif(payload_str[0] == 'machineInfo'):
-
-            print 'Client sent machineInfo Solicitation msg'
-            self._sendMachineInfo(payload_str[1])
-
-        elif(payload_str[0] == 'machineSensor'):
-
-            print 'Client sent machineSensor Solicitation msg'
-            self._sendMachineSensor(payload_str[1])
-
-
-    def _sendMachineInfo(self, workerID):
-        global c_INST, COAP_5685_SEMAPHORE
-        print 'server sendMachineInfo'
-
-        json_data = {
-                     "workerID"  : str(workerID)
-        }
-
-        res = requests.get('http://localhost:8088/api/machines/info',
-                            params=json_data)
-
-
-        print res.text.encode('utf-8')
-
-        data_str = json.loads(res.text.encode('utf-8'))
-
-        COAP_5685_SEMAPHORE.acquire()
-        c_INST.PUT(
-            self.link,
-            payload=[ord(b) for b in 'I' + str(data_str)]
-        )
-        COAP_5685_SEMAPHORE.release()
-
-    def _sendMachineSensor(self, workerID):
-        global c_INST, COAP_5685_SEMAPHORE
-        print 'server sendMachineSensor'
-
-        json_data = {
-                     "workerID"  : str(workerID)
-        }
-
-        res = requests.get('http://localhost:8088/api/machines/sensor',
-                            params=json_data)
-
-
-        print res.text.encode('utf-8')
-
-        data_str = json.loads(res.text.encode('utf-8'))
-
-        COAP_5685_SEMAPHORE.acquire()
-        c_INST.PUT(
-            self.link,
-            payload=[ord(b) for b in 'I' + str(data_str)]
-        )
-        COAP_5685_SEMAPHORE.release()
-
 
     def _sendInstructionData(self, workerID):
         global data_tag
         global c_INST
         global COAP_5685_SEMAPHORE
-        
-        print 'server sendInstructionData'
 
         json_data = {"type" : "machineManual",
                      "workerID"  : str(workerID),
@@ -296,9 +394,6 @@ class InstructionClass:
 
         res = requests.get('http://localhost:8088/api/machines/manual',
                             params=json_data)
-
-
-        print res.text.encode('utf-8')
 
         data_str = json.loads(res.text.encode('utf-8'))
 
@@ -316,6 +411,8 @@ class InstructionClass:
         data_start_index = 0
         payload_str      = 'I'
 
+        logger.info('Received ' + data_size + ' bytes of Instruction from DataBase')
+
         tag_sem.acquire()
         data_tag += 1
         tag_sem.release()
@@ -327,9 +424,9 @@ class InstructionClass:
         payload_str += str(chr(self.FRAG_1)) + str(chr(data_size_upper)) + str(chr(data_size_lower)) + str(chr(data_tag))
         payload_str += data_str[0:OPENSERIAL_MTU]
 
-        print 'data_size            : ' + str(data_size)
-        print 'data_size_upper      : ' + str(data_size_upper)
-        print 'data_size_lower      : ' + str(data_size_lower)
+        #print 'data_size            : ' + str(data_size)
+        #print 'data_size_upper      : ' + str(data_size_upper)
+        #print 'data_size_lower      : ' + str(data_size_lower)
 
         COAP_5685_SEMAPHORE.acquire()
 
@@ -339,7 +436,6 @@ class InstructionClass:
         )
 
         COAP_5685_SEMAPHORE.release()
-        print 'server sends FRAG_1'
 
         # Second to Nth Fragmented Packet Format
         # read remain bytes, 49 bytes each
@@ -362,12 +458,11 @@ class InstructionClass:
             )
 
             COAP_5685_SEMAPHORE.release()
-            print 'server sends FRAG_N : ' + str(data_offset) + 'th'
 
             data_offset = data_offset + 1
-
             data_start_index = 0
 
+        logger.info('Sends back with Instruction Data')
         # check DB whether sensor value changed or not, every 30 seconds
         # if work_flag is set 'True', it returns and send FIN flag
         self._checkDB()
@@ -376,8 +471,7 @@ class InstructionClass:
             self.link,
             payload=[ord(b) for b in 'C'+str(chr(self.FIN))]    
         )
-
-        print 'server sends FIN_1'        
+        logger.info('Sends FIN to Client')
 
     def _checkDB(self):
         max_timeout = 300
@@ -395,7 +489,7 @@ class InstructionClass:
         threading.Timer(30, self._checkDB).start()
 
     def __del__(self):
-        print 'destruct Instruction Class'
+        logger.info('Destruct Instruction Class')
 
 
 
@@ -435,17 +529,16 @@ class ConnectionClass:
            (self.SYN_dict['SYN'] == 0)):
             self.SYN_dict['SYN']     = 1
             self.SYN_dict['SYN+ACK'] = 1
-            print 'server received SYN'
+            logger.info('Received SYN from Client')
             # Response with PUT methd
             # reply : SYN + ACK
             # 3-handshake --------------------------- 2
             COAP_5685_SEMAPHORE.acquire()
-            print 'in semaphore'
             c_INST.PUT(
                 self.link,
                 payload=[ord(b) for b in 'C'+str(chr(self.SYN + self.ACK))]
             )
-            print 'server sends SYN+ACK'
+            logger.info('Sends back with SYN+ACK')
             COAP_5685_SEMAPHORE.release()
 
         # Server Received ACK pkt from Client
@@ -455,12 +548,12 @@ class ConnectionClass:
              (self.SYN_dict['SYN'] == 1) &
              (self.SYN_dict['SYN+ACK'] == 1) &
              (self.SYN_dict['ACK'] == 0)):
-            print 'server received ACK'
+            logger.info('Received ACK from Client')
             self.SYN_dict['ACK'] = 1
             CONN_SEMAPHORE.acquire()
             CONNECTION_SYN = True
             CONN_SEMAPHORE.release()
-            print 'server connection SYN = True'
+            logger.info('Connection SYN flag status => True')
 
         # Server Received FIN pkt from Client
         # FIN pkt Arrived 
@@ -469,7 +562,7 @@ class ConnectionClass:
              (self.FIN_dict['FIN_2'] == 0) &
              (self.FIN_dict['FIN_1'] == 1) &
              (CONNECTION_SYN == True)):
-            print 'server received FIN_1'
+            logger.info('Received FIN from Client')
             self.FIN_dict['FIN_2'] = 1
 
         # Server Received ACK pkt from Client
@@ -479,7 +572,7 @@ class ConnectionClass:
              (self.FIN_dict['ACK_1'] == 0) &
              (self.FIN_dict['FIN_1'] == 1) &
              (self.FIN_dict['FIN_2'] == 1)):
-            print 'server received ACK_1'
+            logger.info('Received ACK from Client')
             self.FIN_dict['ACK_1'] = 1
 
             # Reply with Final ACK to Client to close Connection
@@ -490,15 +583,17 @@ class ConnectionClass:
                 self.link,
                 payload=[ord(b) for b in 'C'+str(chr(self.ACK))]
             )
-            print 'server sends ACK_2'
+            logger.info('Sends back with ACK')
             COAP_5685_SEMAPHORE.release()
 
             CONN_SEMAPHORE.acquire()
             CONNECTION_FIN = True
             CONN_SEMAPHORE.release()
 
+            logger.info('Connection FIN flag status => True')
+
     def __del__(self):
-        print 'destruct Connection Class'
+        logger.info('Destruct Connection Class')
 
 
 class ThreadClass(threading.Thread):
@@ -512,15 +607,15 @@ class ThreadClass(threading.Thread):
 
     def run(self):
         if(self.thread_index == THREAD_ROUTE):
-            print 'ROUTE  coap server created with PORT : ' + str(5683)
+            logger.info('Route CoAP Server : 5683')
 
         elif(self.thread_index == THREAD_SENSOR):
             c_SENSOR.addResource(SensorResource())
-            print 'SENSOR coap server created with PORT : ' + str(5684)
+            logger.info('Sensor CoAP Server : 5684')
 
         elif(self.thread_index == THREAD_INST):
             c_INST.addResource(InstResource())
-            print 'INST   coap server created with PORT : ' + str(5685)
+            logger.info('Instruction CoAP Server : 5685')
 
         elif(self.thread_index == THREAD_RECV_LABEL):
             global COAP_RECV_PAYLOAD, PAYLOAD_SEMAPHORE
@@ -540,9 +635,10 @@ class ThreadClass(threading.Thread):
                 # received label = Instruction
                 elif(unichr(payload[0]) == 'I'):
                     inst._handle(payload[1:])
+                # received lavel = Machine
+                elif(unichr(payload[0]) == 'M'):
+                    machine._handle()
 
-                #if(CONNECTION_SYN == True):
-                #    inst._sendInstructionData()
                 PAYLOAD_SEMAPHORE.acquire()
                 COAP_RECV_PAYLOAD = [0]
                 PAYLOAD_SEMAPHORE.release()
@@ -594,10 +690,12 @@ class ThreadClass(threading.Thread):
                     del inst
                     del conn
                     del login
+                    del machine
 
-                    inst = InstructionClass()
-                    conn = ConnectionClass()
-                    login = LoginClass()
+                    inst    = InstructionClass()
+                    conn    = ConnectionClass()
+                    login   = LoginClass()
+                    machine = machineClass()
 
 class UDP_DODAG_IPC(SocketServer.BaseRequestHandler):
     def handle(self):
@@ -682,6 +780,7 @@ c_INST       = coap.coap(udpPort=5685)
 conn         = ConnectionClass()
 inst         = InstructionClass()
 login        = LoginClass()
+machine      = machineClass()
 
 if __name__ == "__main__":
 
