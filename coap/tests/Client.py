@@ -85,6 +85,7 @@ class ConnectionClass:
         print 'client sends SYN'
 
     def _handle(self, data):
+        global CONNECTION_SYN, CONNECTION_FIN, CONN_SEMAPHORE
         print str(data[0])
         data[0] = int(data[0])
         
@@ -184,7 +185,7 @@ class InstructionClass:
             data_size_lower = payload[2]
             self.Instruction_size      = (data_size_upper * 256) + data_size_lower
             self.Instruction_tag       = payload[3]
-            self.Instruction_List_size = int(self.Instruction_size/33 + 1)
+            self.Instruction_List_size = int(self.Instruction_size/32 + 1)
             for i in range(self.Instruction_List_size):
                 self.Instruction_List.append('')
             self.Instruction_List[0]   = payload[4:]
@@ -197,19 +198,7 @@ class InstructionClass:
                 self.Instruction_List[payload[4]] = payload[5:]
 
             if(self._checkList() == True):
-                self._makeString()
-                
-        else:
-            print 'client received machineSensor or machineInfo'
-            payload_str = ''
-            for i in range(len(payload)):
-                payload_str  =+ chr(payload[i])
-                
-            # send instruction string internal
-            SEND_IN_SEMAPHORE.acquire()
-            sock_internal.sendto(payload_str, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
-            SEND_IN_SEMAPHORE.release()
-                
+                self._makeString()              
             
 
     def _checkList(self):
@@ -239,8 +228,11 @@ class InstructionClass:
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
-        sock_internal.sendto(Instruction_List, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        sock_internal.sendto(str(Instruction_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
+        
+        Instruction_String = ''
+        self.Instruction_List = []
 
 class MachineClass:
     machine_List      = 0
@@ -281,6 +273,8 @@ class MachineClass:
     def _recvMachineData(self, payload):
 
         payload = [int(i) for i in payload]
+        
+        print 'machine : ' + str(payload)
 
         if(payload[0] == self.FRAG_1):
             print 'client received machine FRAG_1'
@@ -288,7 +282,7 @@ class MachineClass:
             data_size_lower = payload[2]
             self.machine_size      = (data_size_upper * 256) + data_size_lower
             self.machine_tag       = payload[3]
-            self.machine_List_size = int(self.machine_size/33 + 1)
+            self.machine_List_size = int(self.machine_size/32 + 1)
             for i in range(self.machine_List_size):
                 self.machine_List.append('')
             self.machine_List[0]   = payload[4:]
@@ -302,6 +296,7 @@ class MachineClass:
 
             if(self._checkList() == True):
                 self._makeString()
+                self.machine_List = []
 
     def _checkList(self):
         total_length = 0
@@ -329,6 +324,8 @@ class MachineClass:
         SEND_IN_SEMAPHORE.acquire()
         sock_internal.sendto(str(self.Machine_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
+        
+        self.Machine_String = ''
 
 
 
