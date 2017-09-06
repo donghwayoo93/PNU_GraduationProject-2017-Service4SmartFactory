@@ -637,7 +637,7 @@ class ThreadClass(threading.Thread):
                     inst._handle(payload[1:])
                 # received lavel = Machine
                 elif(unichr(payload[0]) == 'M'):
-                    machine._handle()
+                    machine._handle(payload[1:])
 
                 PAYLOAD_SEMAPHORE.acquire()
                 COAP_RECV_PAYLOAD = [0]
