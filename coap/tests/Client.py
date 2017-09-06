@@ -173,26 +173,6 @@ class InstructionClass:
         
         print 'Instruction Solicitation msg sent'
         
-    def _machineInfoSolicitation(self):
-        global workerID
-        msg = 'I' + 'machineInfo' + ' ' +str(workerID)
-
-        SEND_OUT_SEMAPHORE.acquire()
-        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
-        SEND_OUT_SEMAPHORE.release()
-        
-        print 'machineInfo Solicitation msg sent'
-        
-    def _machineSensorSolicitation(self):
-        global workerID
-        msg = 'I' + 'machineSensor' + ' ' +str(workerID)
-
-        SEND_OUT_SEMAPHORE.acquire()
-        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
-        SEND_OUT_SEMAPHORE.release()
-        
-        print 'machineSensor Solicitation msg sent'
-
 
     def _recvInstructionData(self, payload):
 
@@ -262,6 +242,95 @@ class InstructionClass:
         sock_internal.sendto(Instruction_List, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
 
+class MachineClass:
+    machine_List      = 0
+    machine_List_size = 0
+    machine_size      = 0
+    machine_tag       = 0
+
+    FRAG_1            = 0
+    FRAG_N            = 0
+
+    Machine_String    = ''
+
+    def __init__(self):
+        self.machine_List     = []
+        self.FRAG_1           = 24
+        self.FRAG_N           = 28
+
+    def _machineInfoSolicitation(self):
+        global workerID
+        msg = 'M' + 'machineInfo' + ' ' +str(workerID)
+
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+        
+        print 'machineInfo Solicitation msg sent'
+        
+    def _machineSensorSolicitation(self):
+        global workerID
+        msg = 'M' + 'machineSensor' + ' ' +str(workerID)
+
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+        
+        print 'machineSensor Solicitation msg sent'
+
+    def _recvMachineData(self, payload):
+
+        payload = [int(i) for i in payload]
+
+        if(payload[0] == self.FRAG_1):
+            print 'client received machine FRAG_1'
+            data_size_upper = payload[1]
+            data_size_lower = payload[2]
+            self.machine_size      = (data_size_upper * 256) + data_size_lower
+            self.machine_tag       = payload[3]
+            self.machine_List_size = int(self.machine_size/33 + 1)
+            for i in range(self.machine_List_size):
+                self.machine_List.append('')
+            self.machine_List[0]   = payload[4:]
+            
+            print 'machine data size : ' + str(self.machine_size)
+
+        elif(payload[0] == self.FRAG_N):
+            print 'client received machine FRAG_N : ' + str(payload[4]) + 'th'
+            if(self.machine_tag == payload[3]):
+                self.machine_List[payload[4]] = payload[5:]
+
+            if(self._checkList() == True):
+                self._makeString()
+
+    def _checkList(self):
+        total_length = 0
+        for i in range(self.machine_List_size):
+            total_length += len(self.machine_List[i])
+
+        # All Instruction data received
+        if(total_length == self.machine_size):
+            print 'client machine checkList => True'
+            return True
+        # Not yet....
+        else:
+            print 'client machine checkList => False'
+            return False
+
+    def _makeString(self):
+        # make fragmented string to one
+        for i in range(self.machine_List_size):
+            self.Machine_String += ''.join(str(chr(c)) for c in self.machine_List[i])
+
+        print 'client makeString'
+        print self.Machine_String
+
+        # send instruction string internal
+        SEND_IN_SEMAPHORE.acquire()
+        sock_internal.sendto(str(self.Machine_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        SEND_IN_SEMAPHORE.release()
+
+
 
 class LoginClass:
     msg = ''
@@ -328,6 +397,14 @@ class ThreadClass(threading.Thread):
                     # trim Packet label 'L' and Toss to LoginClass to handle
                     print 'handling Login Data'
                     login._recvResult(data[1:])
+
+                # Machine Info or Sensor result from outer server
+                elif(int(data[0]) == ord('M')):
+                    # send this result to internal
+                    # trim Packet label 'L' and Toss to LoginClass to handle
+                    print 'handling Machine Data'
+                    machine._recvMachineData(data[1:])
+
                     
 
         elif(self.thread_index == THREAD_UDP_IPC_SOCK):
@@ -343,9 +420,9 @@ class ThreadClass(threading.Thread):
                 elif(dict['type'] == 'machineManual'):
                     inst._instructionSolicitation()
                 elif(dict['type'] == 'machineInfo'):
-                    inst._machineInfoSolicitation()
+                    machine._machineInfoSolicitation()
                 elif(dict['type'] == 'machineSensor'):
-                    inst._machineSensorSolicitation()                    
+                    machine._machineSensorSolicitation()                    
                     
 
         elif(self.thread_index == THREAD_SYSKILL):
@@ -357,7 +434,8 @@ if __name__ == '__main__':
     
     conn                 = ConnectionClass()
     inst                 = InstructionClass()
-    login                = LoginClass()  
+    login                = LoginClass()
+    machine              = MachineClass()  
     
     # receive Server Data from Openvisualizer & TUN Interface
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
