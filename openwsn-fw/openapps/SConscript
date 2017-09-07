@@ -10,7 +10,7 @@ localEnv      = env.Clone()
 defaultApps   = [
     'c6t',
 	'cexample',
-    'cinfo',
+    #'cinfo',
     'cleds',
     'cwellknown',
     'uecho',
@@ -28,7 +28,7 @@ if localEnv['board']=='python':
 defaultAppsInit   = [
     'c6t',
 	'cexample',
-    'cinfo',
+    #'cinfo',
     'cleds',
     'cwellknown',
     'uecho',

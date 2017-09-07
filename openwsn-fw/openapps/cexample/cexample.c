@@ -16,20 +16,16 @@
 #include "IEEE802154E.h"
 
 #include "icmpv6rpl.h"
-
-/*
-	added for solar sensor
-*/
-//#include "adc_sensor.h"
-//#include "sensors.h"
+#include "adc_sensor.h"
+#include "sensors.h"
 //#include "sht11.h"
 
 
 //=========================== defines =========================================
 
 /// inter-packet period (in ms)
-#define CEXAMPLEPERIOD  30000
-#define PAYLOADLEN      16
+#define CEXAMPLEPERIOD  10000
+#define PAYLOADLEN      10
 
 const uint8_t cexample_path0[] = "ex";
 
@@ -64,8 +60,7 @@ void cexample_init() {
    /*
 		init sensors
    */
-   //sensors_init();
-   
+   sensors_init();
    
    opencoap_register(&cexample_vars.desc);
    cexample_vars.timerId    = opentimers_start(CEXAMPLEPERIOD,
@@ -78,19 +73,11 @@ void cexample_init() {
 owerror_t cexample_receive(OpenQueueEntry_t* msg,
                       coap_header_iht* coap_header,
                       coap_option_iht* coap_options) {
-	/*
-		created by Yoo DongHwa
-		2017-07-10
-		interacting with coap
-		coap/tests/test_client_coap.py
-      2017-08-12
-      modified
-      adjust DIO, DAO Period with CoAP Packet based RPL.py
-	*/
+
 	owerror_t outcome;
 	uint8_t PUT_flag = E_FAIL;
-   uint8_t i = 0;
-   uint32_t new_Period = 0;
+   uint8_t i = 0, new_Period_upper = 0, new_Period_lower = 0;
+   uint8_t changed_type = 'N';
 
 	switch (coap_header->Code) {
 		case COAP_CODE_REQ_GET:
@@ -99,15 +86,7 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
 
 			packetfunctions_reserveHeaderSize(msg, 55);
 			msg->payload[0] = COAP_PAYLOAD_MARKER;
-/*
-			msg->payload[1] = 'e';
-			msg->payload[2] = 'x';
-			msg->payload[3] = ' ';
-			msg->payload[4] = 'g';
-			msg->payload[5] = 'e';
-			msg->payload[6] = 't';
-			msg->payload[7] = ' ';
-*/
+
          for(i = 0; i < 55; i++){
             msg->payload[i+1] = i+65; 
          }
@@ -119,18 +98,28 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
       //------------------------------------------case GET
 		case COAP_CODE_REQ_PUT:
          if(msg->l4_destination_port == WKP_UDP_COAP_ROUTE){    // Destination UDP Port #5683
+            /* DIO & DAO PERIOD ADJUSTMENT PKT FORMAT */
+            /////////////////////////////////////////////////////////////////////////
+            //      0      /      1      /      2      /      3      /      4      //
+            //=====================================================================//
+            // PERIOD TYPE /  SEPERATOR  /PERIOD_UPPER /PERIOD_LOWER /  MARKER_END //
+            /////////////////////////////////////////////////////////////////////////
             if((msg->payload[0] == DIO_PERIOD) &&
                (msg->payload[1] == CEXAMPLE_SEPERATOR) &&
-               (msg->payload[3] == MARKER_END)) {               // SET DIO Period
-               new_Period = (msg->payload[2] - 48);
-               icmpv6rpl_setDIOPeriod(new_Period*10000);                 // void (uint32_t dioPeriod)
+               (msg->payload[4] == MARKER_END)) {                       // SET DIO Period
+               new_Period_upper = (msg->payload[2] - 48);
+               new_Period_lower = (msg->payload[3] - 48);
+               icmpv6rpl_setDIOPeriod(((new_Period_upper * 10) + new_Period_lower) * 1000);                 // void (uint32_t dioPeriod)
+               changed_type = 'I';
                PUT_flag = E_SUCCESS;
             }
             else if((msg->payload[0] == DAO_PERIOD) &&
                (msg->payload[1] == CEXAMPLE_SEPERATOR) &&
-               (msg->payload[3] == MARKER_END)) {               // SET DAO Period
-               new_Period = (msg->payload[2] - 48);
-               icmpv6rpl_setDAOPeriod(new_Period*10000);                 // void (uint32_t daoPeriod)
+               (msg->payload[4] == MARKER_END)) {                       // SET DAO Period
+               new_Period_upper = (msg->payload[2] - 48);
+               new_Period_lower = (msg->payload[3] - 48);
+               icmpv6rpl_setDAOPeriod(((new_Period_upper * 10) + new_Period_lower) * 1000);                 // void (uint32_t daoPeriod)
+               changed_type = 'A';
                PUT_flag = E_SUCCESS;
             }
             else{                                                       // Received Undefined VALUE
@@ -141,25 +130,31 @@ owerror_t cexample_receive(OpenQueueEntry_t* msg,
             msg->length = 0;
 
    			if (PUT_flag == E_SUCCESS) {                                // Response with changed Value
-   				packetfunctions_reserveHeaderSize(msg, 6);
+   				packetfunctions_reserveHeaderSize(msg, 11);
    				msg->payload[0] = COAP_PAYLOAD_MARKER;
 
-   				msg->payload[1] = new_Period + 48;
-   				msg->payload[2] = ' ';
-   				msg->payload[3] = 'p';
-   				msg->payload[4] = 'u';
-   				msg->payload[5] = 't';
+               msg->payload[1]  = 'D';
+               msg->payload[2]  = changed_type;
+               msg->payload[3]  = 'O';
+               msg->payload[4]  = ' ';
+   				msg->payload[5]  = new_Period_upper + 48;
+               msg->payload[6]  = new_Period_lower + 48;
+   				msg->payload[7]  = ' ';
+   				msg->payload[8]  = 'P';
+   				msg->payload[9]  = 'U';
+   				msg->payload[10] = 'T';
    			}
             else if(PUT_flag == E_FAIL){                                // Response with error
-               packetfunctions_reserveHeaderSize(msg, 7);
+               packetfunctions_reserveHeaderSize(msg, 8);
                msg->payload[0] = COAP_PAYLOAD_MARKER;
 
-               msg->payload[1] = 'e';
-               msg->payload[2] = 'x';
-               msg->payload[3] = ' ';
-               msg->payload[4] = 'e';
-               msg->payload[5] = 'r';
-               msg->payload[6] = 'r';
+               msg->payload[1]  = 'D';
+               msg->payload[2]  = changed_type;
+               msg->payload[3]  = 'O';
+               msg->payload[4]  = ' ';
+               msg->payload[5]  = 'E';
+               msg->payload[6]  = 'R';
+               msg->payload[7]  = 'R';
             }
          }
 
@@ -188,10 +183,10 @@ void cexample_task_cb() {
    uint8_t              my_suffix_1, my_suffix_2;
    uint8_t              i;
    
-   uint16_t             sensor_read_solar          = 0;
-   uint16_t             sensor_read_photosynthetic = 0;
-   uint16_t             sensor_read_temperature	   = 0;
-   uint16_t             sensor_read_humidity	      = 0;
+   uint16_t             sensor_read_solar          = 0; // visible range                    (560 nm)
+   uint16_t             sensor_read_photosynthetic = 0; // visible range and infrared range (960 nm)
+   //uint16_t             sensor_read_temperature	   = 0;
+   //uint16_t             sensor_read_humidity	      = 0;
    
    // don't run if not synch
    if (ieee154e_isSynch() == FALSE) return;
@@ -206,8 +201,8 @@ void cexample_task_cb() {
         modified by Yoo DongHwa
 		get raw adc value from light sensors
    */
-   //sensor_read_solar		  = adc_sens_read_total_solar();
-   //sensor_read_photosynthetic = adc_sens_read_photosynthetic();
+   sensor_read_solar		      = adc_sens_read_total_solar();
+   sensor_read_photosynthetic = adc_sens_read_photosynthetic();
    //sensor_read_temperature    = sensors_getCallbackRead(SENSOR_TEMPERATURE);
    //sensor_read_humidity       = sensors_getCallbackRead(SENSOR_HUMIDITY);
 
@@ -263,15 +258,15 @@ void cexample_task_cb() {
    pkt->payload[8]                = (sensor_read_photosynthetic >> 8) & 0xff;
    pkt->payload[9]                = (sensor_read_photosynthetic >> 0) & 0xff;
 
-   pkt->payload[10]                = 0x20;
+   //pkt->payload[10]                = 0x20;
 
-   pkt->payload[11]                = (sensor_read_temperature >> 8) & 0xff;
-   pkt->payload[12]                = (sensor_read_temperature >> 0) & 0xff;
+   //pkt->payload[11]                = (sensor_read_temperature >> 8) & 0xff;
+   //pkt->payload[12]                = (sensor_read_temperature >> 0) & 0xff;
 
-   pkt->payload[13]               = 0x20;
+   //pkt->payload[13]               = 0x20;
 
-   pkt->payload[14]               = (sensor_read_humidity >> 8) & 0xff;
-   pkt->payload[15]               = (sensor_read_humidity >> 0) & 0xff;
+   //pkt->payload[14]               = (sensor_read_humidity >> 8) & 0xff;
+   //pkt->payload[15]               = (sensor_read_humidity >> 0) & 0xff;
 
 
 

@@ -227,7 +227,7 @@ class RPL(eventBusClient.eventBusClient):
             print 'Current parent : ' + self.CURRENT_PARENT_ADDR + '\n'
             if(self.FORMER_PARENT_ADDR != ''):
                 # to current leaf node's ex-parent : reset dio period to default
-                self._adjust_DIO_Period(source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'ex', 1)
+                self._adjust_DIO_Period(source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'ex', 10)
             self.FORMER_PARENT_ADDR = self.CURRENT_PARENT_ADDR
             return True
     
@@ -264,7 +264,7 @@ class RPL(eventBusClient.eventBusClient):
 
         # to compare DAO source addr and Worker device ipv6 addr
         source_suffix_ipv6 = '{0}'.format(u.formatIPv6Addr(source))
-        # print source_suffix_ipv6
+        print source_suffix_ipv6
 
 
         # DAO example
@@ -366,9 +366,9 @@ class RPL(eventBusClient.eventBusClient):
             self.CURRENT_PARENT_ADDR = parent_suffix_ipv6
             if(self._checkParentChanged()):
                 # to current leaf node : set dao period loosely
-                self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 7)
+                self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 60)
                 # to current leaf node's parent : set dio period loosely
-                self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 6)
+                self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 20)
                 
         
         # update parents information with parents collected -- calls topology module.
