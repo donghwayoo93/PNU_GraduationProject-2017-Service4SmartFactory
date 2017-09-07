@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, LoadingController } from 'ionic-angular';
+import { NavController, LoadingController, ToastController } from 'ionic-angular';
 
 import { MenuPage } from '../menu/menu';
 import { SignupPage } from '../signup/signup';
@@ -17,22 +17,18 @@ export class LoginPage {
   loading: any;
 
   constructor(public navCtrl: NavController, public authService: AuthProvider,
-    public loadingCtrl: LoadingController) {
+    public loadingCtrl: LoadingController, public toastCtrl: ToastController) {
   }
 
   ionViewDidLoad() {
   }
 
   login() {
-    this.navCtrl.setRoot(MenuPage);
-    /*
     this.showLoader();
     let credentials = {
       email: this.email,
       password: this.password
     };
-
-    this.navCtrl.setRoot(MenuPage);
 
     this.authService.requestLogin(credentials).then((result) => {
       this.loading.dismiss();
@@ -40,9 +36,8 @@ export class LoginPage {
       this.navCtrl.setRoot(MenuPage);
     }, (err) => {
       this.loading.dismiss();
-      //console.log(err);
+      this.presentToast("Failed to Sign in");
     });
-    */
   }
 
   showLoader() {
@@ -55,5 +50,14 @@ export class LoginPage {
 
   launchSignup() {
     this.navCtrl.push(SignupPage);
+  }
+
+  presentToast(message) {
+    let toast = this.toastCtrl.create({
+      message: message,
+      duration: 3000,
+      position: 'top'
+    });
+    toast.present();
   }
 }

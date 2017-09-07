@@ -5,7 +5,7 @@
 				</button>
 
         <ion-title>
-            <h2>작업자 지원 서비스</h2>
+            <h2>Smart Factory Operator Support System</h2>
         </ion-title>
 
         <ion-buttons end>
@@ -18,13 +18,19 @@
 </ion-header>
 
 <ion-content padding>
+    <ion-list>
+        <ion-item>
+            <ion-label>Connection Status</ion-label>
+            <ion-toggle [(ngModel)]="isToggled" (click)="updateConnection(item)" checked="false"></ion-toggle>
+        </ion-item>
+    </ion-list>
     <button ion-button block class="refresh-button" (click)="refreshPage1()">machine info</button>
     <button ion-button block class="refresh-button" (click)="refreshPage2()">sensor</button>
     <button ion-button block class="refresh-button" (click)="refreshPage3()">manual</button>
     <button ion-button block class="refresh-button" (click)="refreshPageTest()">test</button>
     <ion-card>
         <ion-card-header>
-            <h1>설비 정보</h1>
+            <h1>Machine Information</h1>
         </ion-card-header>
         <ion-card-content>
             <ion-list>
@@ -37,7 +43,7 @@
     </ion-card>
     <ion-card>
         <ion-card-header>
-            <h1>센서 현황</h1>
+            <h1>Sensor Status</h1>
         </ion-card-header>
         <ion-card-content>
             <ion-list>
@@ -50,7 +56,7 @@
     </ion-card>
     <ion-card>
         <ion-card-header>
-            <h1>지시사항</h1>
+            <h1>Instruction</h1>
         </ion-card-header>
         <ion-card-content>
             <ion-slides pager loop="false" autoplay="true">

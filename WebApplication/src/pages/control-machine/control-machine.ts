@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, LoadingController } from 'ionic-angular';
+import { NavController, NavParams, LoadingController, ToastController } from 'ionic-angular';
 import { MachinesProvider } from '../../providers/machines/machines';
+import { ConnectionProvider } from '../../providers/connection/connection';
+
 @Component({
 	selector: 'page-control-machine',
 	templateUrl: 'control-machine.html',
@@ -10,31 +12,33 @@ export class ControlMachinePage {
 	machineID: any;
 	manualNum: any;
 	loading: any;
+	isToggled: boolean;
 
 	machineDatas: any = [
 		{
-			"title": "조회 필요",
-			"content": "조회 필요"
+			"title": "Need refresh",
+			"content": "Need refresh"
 		}
 	];
 
 	sensorDatas: any = [
 		{
-			"title": "조회 필요",
-			"content": "조회 필요"
+			"title": "Need refresh",
+			"content": "Need refresh"
 		}
 	];
 
 	manuals: any = [
 		{
-			"instruction": "조회 필요",
+			"instruction": "Need refresh",
 			"photoNum": ""
 		}
 	];
 
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
-		public machineService: MachinesProvider, public loadingCtrl: LoadingController) {
+		public machineService: MachinesProvider, public loadingCtrl: LoadingController,
+		public ConnectionService: ConnectionProvider, private toastCtrl: ToastController) {
 
 	}
 
@@ -55,6 +59,31 @@ export class ControlMachinePage {
 
 	}
 
+	updateConnection(item) {
+
+		if (this.isToggled == true) {
+			this.showLoader("Connect...");
+			this.ConnectionService.tryConnect().then((result) => {
+				console.log(result);
+			}, (err) => {
+				this.presentToast("Failed to connect");
+				this.isToggled = false;
+				this.loading.dismiss();
+			})
+		} else {
+			this.showLoader("disconnect...");
+			this.ConnectionService.tryDisconnect().then((result) => {
+				console.log(result);
+			}, (err) => {
+				this.presentToast("Failed to disconnect");
+				this.isToggled = true;
+				this.loading.dismiss();
+			})
+
+		}
+
+	}
+
 	refreshPage1(page) {
 		this.showLoader("설비 정보 가져오는 중...");
 		let credentials = {};
@@ -70,10 +99,10 @@ export class ControlMachinePage {
 					"title": "ID",
 					"content": machineID
 				}, {
-					"title": "name",
+					"title": "Name",
 					"content": machineName
 				}, {
-					"title": "access level",
+					"title": "Access Level",
 					"content": accessLevel
 				}
 			];
@@ -81,8 +110,6 @@ export class ControlMachinePage {
 			this.loading.dismiss();
 			console.log(err);
 		});
-
-
 	}
 
 	refreshPage2(page) {
@@ -120,7 +147,7 @@ export class ControlMachinePage {
 
 			var photoNum = [];
 			if (manualNum == 1) {
-				photoNum = [4, 3, 2, 1];
+				photoNum = [4, 3, 2, 1, 3];
 			} else if (manualNum == 2) {
 				photoNum = [1, 2, 3, 4];
 			} else {
@@ -145,5 +172,14 @@ export class ControlMachinePage {
 		});
 
 		this.loading.present();
+	}
+
+	presentToast(message) {
+		let toast = this.toastCtrl.create({
+			message: message,
+			duration: 3000,
+			position: 'top'
+		});
+		toast.present();
 	}
 }

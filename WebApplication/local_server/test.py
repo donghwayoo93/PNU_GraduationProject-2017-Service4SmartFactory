@@ -20,10 +20,18 @@ elif(sys.argv[1] == 'machineManual'):
     jsonData = {
         "type": sys.argv[1]
     }
+elif(sys.argv[1] == 'connect'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
+elif(sys.argv[1] == 'disconnect'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
 import socket
 import json
 
-HOST, PORT = "localhost", 25805
+HOST, SERVERPORT = "localhost", 25805
 CLIENTPORT = 30000
 
 data = json.dumps(jsonData)
@@ -32,11 +40,10 @@ data = json.dumps(jsonData)
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Define the port on which you want to connect
-port = 12345
 sock.bind((HOST, CLIENTPORT))
 
 # connect to the server on local computer
-sock.sendto(data, (HOST, PORT))
+sock.sendto(data, (HOST, SERVERPORT))
 
 # receive data from the server
 received = sock.recv(1024)

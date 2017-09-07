@@ -28,7 +28,7 @@ export class MenuPage {
 
   ionViewDidLoad() {
     this.pages = [
-      { title: '관제', component: ControlMachinePage }
+      { title: 'Control', component: ControlMachinePage }
     ];
     this.getUser();
     this.getAccessLevel();

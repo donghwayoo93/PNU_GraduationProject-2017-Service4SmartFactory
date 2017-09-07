@@ -108,9 +108,49 @@ app.get('/api/machines/manual', function(req, res) {
             //console.log('results: %j', results);
             res.send(results);
         }
-
     });
+});
 
+app.get('/api/connect', function(req, res) {
+    //console.log(req.body);
+    var options = {
+        mode: 'text',
+        pythonPath: '',
+        pythonOptions: ['-u'],
+        scriptPath: '',
+        args: ['connect']
+    };
+    pythonShell.run('test.py', options, function(err, results) {
+        if (err) throw err;
+        if (results == 'Unauthorized') {
+            //console.log('Unauthorized 확인');
+            //console.log(results);
+            res.status(401).send(results);
+        } else {
+            res.send(results);
+        }
+    });
+});
+
+app.get('/api/disconnect', function(req, res) {
+    //console.log(req.body);
+    var options = {
+        mode: 'text',
+        pythonPath: '',
+        pythonOptions: ['-u'],
+        scriptPath: '',
+        args: ['disconnect']
+    };
+    pythonShell.run('test.py', options, function(err, results) {
+        if (err) throw err;
+        if (results == 'Unauthorized') {
+            //console.log('Unauthorized 확인');
+            //console.log(results);
+            res.status(401).send(results);
+        } else {
+            res.send(results);
+        }
+    });
 });
 
 // listen
