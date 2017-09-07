@@ -21,6 +21,7 @@
     <button ion-button block class="refresh-button" (click)="refreshPage1()">machine info</button>
     <button ion-button block class="refresh-button" (click)="refreshPage2()">sensor</button>
     <button ion-button block class="refresh-button" (click)="refreshPage3()">manual</button>
+    <button ion-button block class="refresh-button" (click)="refreshPageTest()">test</button>
     <ion-card>
         <ion-card-header>
             <h1>설비 정보</h1>
@@ -52,12 +53,12 @@
             <h1>지시사항</h1>
         </ion-card-header>
         <ion-card-content>
-            <ion-list>
-                <ion-item *ngFor="let manual of manuals; let i = index;">
-                    <span item-start>{{i+1}}. {{manual}}</span>
-                    <span item-end><ion-checkbox color="primary"></ion-checkbox></span>
-                </ion-item>
-            </ion-list>
+            <ion-slides pager loop="false" autoplay="true">
+                <ion-slide style="height:auto" *ngFor="let manual of manuals; let i = index;">
+                    <h2 style="margin-top: 0px; font-size: 27px;">{{i+1}}. {{manual.instruction}}</h2>
+                    <img class="manualImage" src={{manual.photoNum}} />
+                </ion-slide>
+            </ion-slides>
         </ion-card-content>
     </ion-card>
 

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, LoadingController } from 'ionic-angular';
 import { MachinesProvider } from '../../providers/machines/machines';
-
 @Component({
 	selector: 'page-control-machine',
 	templateUrl: 'control-machine.html',
@@ -12,32 +11,48 @@ export class ControlMachinePage {
 	manualNum: any;
 	loading: any;
 
-	machineDatas = [
+	machineDatas: any = [
 		{
 			"title": "조회 필요",
 			"content": "조회 필요"
 		}
 	];
 
-	sensorDatas = [
+	sensorDatas: any = [
 		{
 			"title": "조회 필요",
 			"content": "조회 필요"
 		}
 	];
 
-	manuals = [
-		'조회 필요'
+	manuals: any = [
+		{
+			"instruction": "조회 필요",
+			"photoNum": ""
+		}
 	];
 
-	data = {
-		one: false,
-		two: false,
-		three: false
-	};
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, public loadingCtrl: LoadingController) {
+
+	}
+
+	refreshPageTest(page) {
+		this.manuals = [];
+		this.manuals.push({
+			"instruction": "물 끓이기",
+			"photoNum": "../../assets/images/3.png"
+		});
+		this.manuals.push({
+			"instruction": "면 넣기",
+			"photoNum": "../../assets/images/1.png"
+		});
+		this.manuals.push({
+			"instruction": "스프넣기",
+			"photoNum": "../../assets/images/4.png"
+		});
+
 	}
 
 	refreshPage1(page) {
@@ -97,13 +112,26 @@ export class ControlMachinePage {
 		// 지시사항
 		this.machineService.getMachineManual(credentials).then((result) => {
 			this.loading.dismiss();
+			//[{"manual":[{"instruction":["냄비 열기","물 끓이기","라면 넣기","스프넣기","3분간 끓이기"],"num":"1"}]}]
+			console.log(result);
 			var manual = result[0].manual[0].instruction;
+			var manualNum = result[0].manual[0].num;
 			console.log(manual);
+
+			var photoNum = [];
+			if (manualNum == 1) {
+				photoNum = [4, 3, 2, 1];
+			} else if (manualNum == 2) {
+				photoNum = [1, 2, 3, 4];
+			} else {
+				photoNum = [3, 3, 3, 4];
+			}
 			this.manuals = [];
 			for (var idx2 in manual) {
-				this.manuals.push(
-					manual[idx2]
-				);
+				this.manuals.push({
+					"instruction": manual[idx2],
+					"photoNum": "../../assets/images/" + photoNum[idx2] + ".png"
+				});
 			}
 		}, (err) => {
 			this.loading.dismiss();

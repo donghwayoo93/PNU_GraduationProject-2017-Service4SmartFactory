@@ -24,11 +24,15 @@ export class LoginPage {
   }
 
   login() {
+    this.navCtrl.setRoot(MenuPage);
+    /*
     this.showLoader();
     let credentials = {
       email: this.email,
       password: this.password
     };
+
+    this.navCtrl.setRoot(MenuPage);
 
     this.authService.requestLogin(credentials).then((result) => {
       this.loading.dismiss();
@@ -38,6 +42,7 @@ export class LoginPage {
       this.loading.dismiss();
       //console.log(err);
     });
+    */
   }
 
   showLoader() {
