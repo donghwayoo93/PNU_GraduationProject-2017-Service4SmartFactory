@@ -12,7 +12,8 @@ import time
 
 THREAD_IPV6_UDP_SOCK = 1
 THREAD_UDP_IPC_SOCK  = 2
-THREAD_SYSKILL       = 3
+THREAD_RENEW_CONN    = 3
+THREAD_SYSKILL       = 4
 
 CONNECTION_SYN       = False
 CONNECTION_FIN       = False
@@ -50,8 +51,7 @@ class ConnectionClass:
     FIN_dict = {
                 'FIN_1' : 0,
                 'FIN_2' : 0,
-                'ACK_1' : 0,
-                'ACK_2' : 0
+                'ACK'   : 0
     }
 
     SYN          = 0
@@ -83,6 +83,14 @@ class ConnectionClass:
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
         SEND_OUT_SEMAPHORE.release()
         print 'client sends SYN'
+        
+    def _sendFIN(self):
+        self.FIN_dict['FIN_1'] = 1
+        self.msg               = 'C' + str(chr(self.FIN))
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+        print 'client sends FIN'
 
     def _handle(self, data):
         global CONNECTION_SYN, CONNECTION_FIN, CONN_SEMAPHORE
@@ -104,49 +112,50 @@ class ConnectionClass:
             SEND_OUT_SEMAPHORE.acquire()
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
             SEND_OUT_SEMAPHORE.release()
+            
+            self._SYN_Return()
 
             # change connection flag
             CONN_SEMAPHORE.acquire()
             CONNECTION_SYN = True
-            CONN_SEMAPHORE.release()
+            CONN_SEMAPHORE.release()            
 
         # client receives FIN pkt
         # response with FIN_2, ACK_1 and ready for final ACK_2 pkt
         elif((CONNECTION_SYN == True) &
-             (self.FIN_dict['FIN_1'] == 0) &
+             (self.FIN_dict['FIN_1'] == 1) &
              (self.FIN_dict['FIN_2'] == 0) &
              (data[0] == self.FIN)):
-            print 'client received FIN_1'
+            print 'client received FIN_2'
             # 4-handshake ------------------------------------ 1
-            self.FIN_dict['FIN_1'] = 1
             self.FIN_dict['FIN_2'] = 1
-            self.FIN_dict['ACK_1'] = 1
             # 4-handshake ------------------------------------ 2
             SEND_OUT_SEMAPHORE.acquire()
-            print 'client send FIN_2'
-            self.msg               = 'C' + str(chr(self.FIN))
-            sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
-            # 4-handshake ------------------------------------ 3
-            print 'client send ACK_1'
+            print 'client send Final ACK'
             self.msg               = 'C' + str(chr(self.ACK))
             sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
+            # 4-handshake ------------------------------------ 3
             SEND_OUT_SEMAPHORE.release()
-
-        # client receives final ACK_2 pkt
-        # response nothing and ready to kill itself
-        elif ((CONNECTION_SYN == True) &
-              (self.FIN_dict['FIN_1'] == 1) &
-              (self.FIN_dict['FIN_2'] == 1) &
-              (self.FIN_dict['ACK_1'] == 1) &
-              (data[0] == self.ACK)):
-            print 'client received ACK_2'
-            # 4-handshake ------------------------------------ 4
-            # change connection flag
-            self.FIN_dict['ACK_2'] = 1
+            
+            self._FIN_Return()
+            
             CONN_SEMAPHORE.acquire()
             CONNECTION_FIN = True
             CONN_SEMAPHORE.release()
-            os.kill(os.getpid(), signal.SIGTERM)
+            
+            
+    def _SYN_Return(self):
+        SEND_IN_SEMAPHORE.acquire()
+        sock_internal.sendto('TRUE', (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        SEND_IN_SEMAPHORE.release()
+        
+    def _FIN_Return(self):
+        SEND_IN_SEMAPHORE.acquire()
+        sock_internal.sendto('FALSE', (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        SEND_IN_SEMAPHORE.release()
+            
+    def __del__(self):
+        print 'destruct Connection Class'
 
 
 
@@ -371,7 +380,6 @@ class ThreadClass(threading.Thread):
 
     def run(self):
         if(self.thread_index == THREAD_IPV6_UDP_SOCK):
-            conn._sendSYN()
             while True:
                 data, addr = sock.recvfrom(1024)
                 data = data[1:len(data)-1]
@@ -419,7 +427,26 @@ class ThreadClass(threading.Thread):
                 elif(dict['type'] == 'machineInfo'):
                     machine._machineInfoSolicitation()
                 elif(dict['type'] == 'machineSensor'):
-                    machine._machineSensorSolicitation()                    
+                    machine._machineSensorSolicitation()
+                elif(dict['type'] == 'connect'):
+                    conn._sendSYN()
+                elif(dict['type'] == 'disconnect'):
+                    conn._sendFIN()
+                    
+        elif(self.thread_index == THREAD_RENEW_CONN):
+            global CONNECTION_SYN, CONNECTION_FIN, CONN_SEMAPHORE
+            global conn
+            
+            while True:
+                if((CONNECTION_SYN == True) & (CONNECTION_FIN == True)):
+                    CONN_SEMAPHORE.acquire()
+                    CONNECTION_SYN = False
+                    CONNECTION_FIN = False
+                    CONN_SEMAPHORE.release()
+                    
+                    del conn
+                    
+                    conn = ConnectionClass
                     
 
         elif(self.thread_index == THREAD_SYSKILL):
@@ -427,13 +454,12 @@ class ThreadClass(threading.Thread):
             os.kill(os.getpid(), signal.SIGTERM)
 
 
+conn                 = ConnectionClass()
+ 
 if __name__ == '__main__':
-    
-    conn                 = ConnectionClass()
     inst                 = InstructionClass()
     login                = LoginClass()
-    machine              = MachineClass()  
-    
+    machine              = MachineClass() 
     # receive Server Data from Openvisualizer & TUN Interface
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     sock.bind((UDP_OV_IP, UDP_OV_PORT))
@@ -442,7 +468,7 @@ if __name__ == '__main__':
     sock_internal = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_internal.bind((UDP_IPC_IP, UDP_IPC_PORT))
 
-    for i in range(3):
+    for i in range(4):
         t = ThreadClass(i+1)
         t.start()
 
