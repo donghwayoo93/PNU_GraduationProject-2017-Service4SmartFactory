@@ -22,21 +22,14 @@ export class LoginPage {
   constructor(public navCtrl: NavController, public authService: AuthProvider,
     public loadingCtrl: LoadingController, public toastCtrl: ToastController,
     public ConnectionService: ConnectionProvider) {
-    console.log("construct");
-    console.log(this.toggleStatus);
   }
 
   ionViewDidLoad() {
-    console.log("view loaded");
-    console.log(this.toggleStatus);
     this.toggleStatus = false;
     this.connectionStatus = false;
-    console.log(this.toggleStatus);
   }
 
   login() {
-    this.navCtrl.setRoot(MenuPage);
-
     this.showLoader("Authentication...");
     let credentials = {
       email: this.email,
