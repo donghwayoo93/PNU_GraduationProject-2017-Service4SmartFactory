@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, LoadingController, ToastController } from 'ionic-angular';
 import { MachinesProvider } from '../../providers/machines/machines';
-import { ConnectionProvider } from '../../providers/connection/connection';
 
 @Component({
 	selector: 'page-control-machine',
@@ -12,7 +11,6 @@ export class ControlMachinePage {
 	machineID: any;
 	manualNum: any;
 	loading: any;
-	isToggled: boolean;
 
 	machineDatas: any = [
 		{
@@ -38,7 +36,7 @@ export class ControlMachinePage {
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, public loadingCtrl: LoadingController,
-		public ConnectionService: ConnectionProvider, private toastCtrl: ToastController) {
+		private toastCtrl: ToastController) {
 
 	}
 
@@ -56,31 +54,6 @@ export class ControlMachinePage {
 			"instruction": "스프넣기",
 			"photoNum": "../../assets/images/4.png"
 		});
-
-	}
-
-	updateConnection(item) {
-
-		if (this.isToggled == true) {
-			this.showLoader("Connect...");
-			this.ConnectionService.tryConnect().then((result) => {
-				console.log(result);
-			}, (err) => {
-				this.presentToast("Failed to connect");
-				this.isToggled = false;
-				this.loading.dismiss();
-			})
-		} else {
-			this.showLoader("disconnect...");
-			this.ConnectionService.tryDisconnect().then((result) => {
-				console.log(result);
-			}, (err) => {
-				this.presentToast("Failed to disconnect");
-				this.isToggled = true;
-				this.loading.dismiss();
-			})
-
-		}
 
 	}
 

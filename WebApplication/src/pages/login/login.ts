@@ -5,6 +5,7 @@ import { MenuPage } from '../menu/menu';
 import { SignupPage } from '../signup/signup';
 
 import { AuthProvider } from '../../providers/auth/auth';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 @Component({
   selector: 'page-login',
@@ -15,16 +16,28 @@ export class LoginPage {
   email: string;
   password: string;
   loading: any;
+  toggleStatus: boolean;
+  connectionStatus: boolean;
 
   constructor(public navCtrl: NavController, public authService: AuthProvider,
-    public loadingCtrl: LoadingController, public toastCtrl: ToastController) {
+    public loadingCtrl: LoadingController, public toastCtrl: ToastController,
+    public ConnectionService: ConnectionProvider) {
+    console.log("construct");
+    console.log(this.toggleStatus);
   }
 
   ionViewDidLoad() {
+    console.log("view loaded");
+    console.log(this.toggleStatus);
+    this.toggleStatus = false;
+    this.connectionStatus = false;
+    console.log(this.toggleStatus);
   }
 
   login() {
-    this.showLoader();
+    this.navCtrl.setRoot(MenuPage);
+
+    this.showLoader("Authentication...");
     let credentials = {
       email: this.email,
       password: this.password
@@ -40,11 +53,42 @@ export class LoginPage {
     });
   }
 
-  showLoader() {
-    this.loading = this.loadingCtrl.create({
-      content: 'Authentication...'
-    });
+  updateConnection() {
+    if (this.toggleStatus == true) {
+      this.showLoader("Connecting...");
+      this.ConnectionService.tryConnect().then((result) => {
+        console.log(result[0]);
+        if (result[0] == "TRUE") {
+          this.presentToast("Success connecting");
+          this.loading.dismiss();
+          this.connectionStatus = true;
+        }
+      }, (err) => {
+        this.presentToast("Failed to connect");
+        this.toggleStatus = false;
+        this.loading.dismiss();
+      })
+    } else {
+      this.showLoader("disconnect...");
+      this.ConnectionService.tryDisconnect().then((result) => {
+        console.log(result[0]);
+        if (result[0] == "TRUE") {
+          this.presentToast("Success disconnecting");
+          this.loading.dismiss();
+          this.connectionStatus = false;
+        }
+      }, (err) => {
+        this.presentToast("Failed to disconnect");
+        this.toggleStatus = true;
+        this.loading.dismiss();
+      })
+    }
+  }
 
+  showLoader(content) {
+    this.loading = this.loadingCtrl.create({
+      content: content
+    });
     this.loading.present();
   }
 
@@ -55,9 +99,11 @@ export class LoginPage {
   presentToast(message) {
     let toast = this.toastCtrl.create({
       message: message,
-      duration: 3000,
+      duration: 1500,
       position: 'top'
     });
     toast.present();
   }
+
+
 }

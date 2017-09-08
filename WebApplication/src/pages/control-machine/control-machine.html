@@ -18,12 +18,6 @@
 </ion-header>
 
 <ion-content padding>
-    <ion-list>
-        <ion-item>
-            <ion-label>Connection Status</ion-label>
-            <ion-toggle [(ngModel)]="isToggled" (click)="updateConnection(item)" checked="false"></ion-toggle>
-        </ion-item>
-    </ion-list>
     <button ion-button block class="refresh-button" (click)="refreshPage1()">machine info</button>
     <button ion-button block class="refresh-button" (click)="refreshPage2()">sensor</button>
     <button ion-button block class="refresh-button" (click)="refreshPage3()">manual</button>
