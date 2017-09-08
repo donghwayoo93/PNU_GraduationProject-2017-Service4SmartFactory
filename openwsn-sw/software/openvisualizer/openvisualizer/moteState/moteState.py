@@ -234,16 +234,10 @@ class StateQueue(StateElem):
 
 
 class StateNeighborsRow(StateElem):
-    # define global vars
-    # forwarding to local server
-    # host => localhost
-    # port => 25801
-
     rssi_host = "localhost"
-    rssi_port = 25801
+    rssi_port = 25810
     rssi_forwarding_flag = False
     rssi_socket = 0
-    rssi_payload = ""
 
     def update(self, notif):
         StateElem.update(self)
@@ -274,35 +268,21 @@ class StateNeighborsRow(StateElem):
                                    notif.asn_4)
         self.data[0]['f6PNORES'] = notif.f6PNORES
 
-        # added part
-        # modified by Yoo DongHwa
-        # 2017-07-09
-        # creates udp socket to forward 'mote addr' and its 'rssi to meter' information
-        # host = "localhost"  port = 25801
-        # payload type  = json {moteipv6Addr, rssi_to_meter}
-        # payload contains non-zero value of meter that transformed from rssi
 
-        rssi_to_meter = str(self.data[0]['rssi']).split(' ')
+        rssi_to_send = str(self.data[0]['rssi']).split(' ')
+        
+        print 'OV : ' + str(rssi_to_send)
 
         # check whether rssi_to_meter value is zero
-        if (rssi_to_meter[0] != '0'):
+        if (rssi_to_send[0] != '0'):
             if (self.rssi_forwarding_flag == False):
                 # create udp socket
                 self.rssi_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.rssi_forwarding_flag = True
 
             if (self.rssi_forwarding_flag == True):
-                addr = str(self.data[0]['addr']).split(' ')
-                # form json string
-                self.rssi_payload = {'moteipv6Addr': str(addr[0]), 'rssi_to_meter': str(rssi_to_meter[0])}
                 # send
-                self.rssi_socket.sendto(json.dumps(self.rssi_payload), (self.rssi_host, self.rssi_port))
-
-                # check the value at terminal
-                # rssi = str(self.data[0]['rssi']).split(' ')
-                # addr = str(self.data[0]['addr']).split(' ')
-                # print 'addr : ' + str(addr[0])
-                # print 'rssi : ' + str(rssi[0])
+                self.rssi_socket.sendto(str(rssi_to_send[0]), (self.rssi_host, self.rssi_port))
 
 
 class StateIsSync(StateElem):

@@ -13,7 +13,8 @@ import time
 THREAD_IPV6_UDP_SOCK = 1
 THREAD_UDP_IPC_SOCK  = 2
 THREAD_RENEW_CONN    = 3
-THREAD_SYSKILL       = 4
+THREAD_RSSI_SOCK     = 4
+THREAD_SYSKILL       = 5
 
 CONNECTION_SYN       = False
 CONNECTION_FIN       = False
@@ -30,14 +31,19 @@ UDP_IPC_PORT         = 25805
 UDP_WEB_APP_IP       = 'localhost'
 UDP_WEB_APP_PORT     = 30000
 
+UDP_RSSI_IP          = 'localhost'
+UDP_RSSI_PORT        = 25810
+
 
 SEND_OUT_SEMAPHORE   = threading.Semaphore(1)
 SEND_IN_SEMAPHORE    = threading.Semaphore(1)
 CONN_SEMAPHORE       = threading.Semaphore(1)
 INST_SEMAPHORE       = threading.Semaphore(1)
+RSSI_SEMAPHORE       = threading.Semaphore(1)
 
 sock                 = ''
 sock_internal        = ''
+sock_rssi            = ''
 Instruction_String   = ''
 workerID             = '0EB2'
 
@@ -372,6 +378,28 @@ class LoginClass:
         sock_internal.sendto(self.msg, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
 
+class rssiClass:
+    rssi = 0
+    
+    def __init__(self):
+        self.rssi = ''
+        
+    def _returnRssiToWeb(self):
+        global RSSI_SEMAPHORE, SEND_IN_SEMAPHORE
+        RSSI_SEMAPHORE.acquire()
+        SEND_IN_SEMAPHORE.acquire()
+        sock_internal.sendto(str(self.rssi), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        SEND_IN_SEMAPHORE.release()
+        RSSI_SEMAPHORE.release()
+        
+    def _updateRssi(self, new_value):
+        global RSSI_SEMAPHORE
+        
+        RSSI_SEMAPHORE.acquire()
+        self.rssi = str(new_value)
+        RSSI_SEMAPHORE.release()
+
+
 
 class ThreadClass(threading.Thread):
     def __init__(self, index):
@@ -432,6 +460,9 @@ class ThreadClass(threading.Thread):
                     conn._sendSYN()
                 elif(dict['type'] == 'disconnect'):
                     conn._sendFIN()
+                elif(dict['type'] == 'rssi'):
+                    rssi._returnRssiToWeb()
+                    
                     
         elif(self.thread_index == THREAD_RENEW_CONN):
             global CONNECTION_SYN, CONNECTION_FIN, CONN_SEMAPHORE
@@ -446,8 +477,15 @@ class ThreadClass(threading.Thread):
                     
                     del conn
                     
-                    conn = ConnectionClass
+                    conn = ConnectionClass()
                     
+                    
+        elif(self.thread_index == THREAD_RSSI_SOCK):
+            while True:
+                data, addr = sock_rssi.recvfrom(1024)
+                
+                rssi._updateRssi(str(data))
+                
 
         elif(self.thread_index == THREAD_SYSKILL):
             raw_input('\n\nClient running. Press Enter to close.\n\n')
@@ -455,6 +493,7 @@ class ThreadClass(threading.Thread):
 
 
 conn                 = ConnectionClass()
+rssi                 = rssiClass()
  
 if __name__ == '__main__':
     inst                 = InstructionClass()
@@ -467,8 +506,12 @@ if __name__ == '__main__':
     # send Data from Server to Web APP
     sock_internal = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_internal.bind((UDP_IPC_IP, UDP_IPC_PORT))
+    
+    # receive data from Openvisualizer that containning rssi value
+    sock_rssi = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock_rssi.bind((UDP_RSSI_IP, UDP_RSSI_PORT))
 
-    for i in range(4):
+    for i in range(5):
         t = ThreadClass(i+1)
         t.start()
 
