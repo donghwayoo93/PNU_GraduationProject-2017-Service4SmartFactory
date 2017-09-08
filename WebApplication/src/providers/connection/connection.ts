@@ -18,6 +18,7 @@ export class ConnectionProvider {
   tryConnect() {
     return new Promise((resolve, reject) => {
       this.http.get('http://localhost:9999/api/connect')
+        .map(res => res.json())
         .subscribe(data => {
           resolve(data);
         }, (err) => {
