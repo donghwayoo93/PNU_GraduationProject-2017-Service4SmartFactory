@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, LoadingController, ToastController } from 'ionic-angular';
+
+import { LoginPage } from '../login/login';
+
 import { MachinesProvider } from '../../providers/machines/machines';
+import { ConnectionProvider } from '../../providers/connection/connection';
 
 @Component({
 	selector: 'page-control-machine',
@@ -36,7 +40,7 @@ export class ControlMachinePage {
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, public loadingCtrl: LoadingController,
-		private toastCtrl: ToastController) {
+		private toastCtrl: ToastController, public ConnectionService: ConnectionProvider) {
 
 	}
 
@@ -136,6 +140,21 @@ export class ControlMachinePage {
 		}, (err) => {
 			this.loading.dismiss();
 			console.log(err);
+		});
+	}
+
+	disconnect() {
+		this.showLoader("disconnect...");
+		this.ConnectionService.tryDisconnect().then((result) => {
+			console.log(result[0]);
+			if (result[0] == "TRUE") {
+				this.presentToast("Success disconnecting");
+				this.loading.dismiss();
+				this.navCtrl.setRoot(LoginPage);
+			}
+		}, (err) => {
+			this.presentToast("Failed to disconnect");
+			this.loading.dismiss();
 		});
 	}
 

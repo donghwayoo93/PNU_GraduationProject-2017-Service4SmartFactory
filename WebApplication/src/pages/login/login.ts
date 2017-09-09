@@ -60,7 +60,7 @@ export class LoginPage {
         this.presentToast("Failed to connect");
         this.toggleStatus = false;
         this.loading.dismiss();
-      })
+      });
     } else {
       this.showLoader("disconnect...");
       this.ConnectionService.tryDisconnect().then((result) => {
@@ -74,7 +74,7 @@ export class LoginPage {
         this.presentToast("Failed to disconnect");
         this.toggleStatus = true;
         this.loading.dismiss();
-      })
+      });
     }
   }
 
