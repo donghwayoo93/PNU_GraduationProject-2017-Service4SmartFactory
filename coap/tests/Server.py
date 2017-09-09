@@ -80,10 +80,10 @@ class SensorResource(coapResource.coapResource):
             payload_str   = ''
             json_str      = ''
             sensor_value  = ''
-            # print str(ip_suffix)
 
             my_suffix_1 = format(payload[0], 'x')
             my_suffix_2 = format(payload[1], 'x')
+
 
             if(len(my_suffix_1) == 1):
                 my_suffix_1 = '0' + my_suffix_1
@@ -101,19 +101,19 @@ class SensorResource(coapResource.coapResource):
 
             sensor_arr = payload_str.split(' ')
             sensor_arr[0] = str(my_suffix_1) + str(my_suffix_2)
-            sensor_arr[1] = (int)(2.5 * (float(sensor_arr[1]) / 4096) * 6250)
-            sensor_arr[2] = (int)(1.5 * (float(sensor_arr[2]) / 4096) * 1000)
+
+            if(sensor_arr[1] != ''):
+                sensor_arr[1] = (int)(2.5 * (float(sensor_arr[1]) / 4096) * 6250)
+            if(sensor_arr[2] != ''):
+                sensor_arr[2] = (int)(1.5 * (float(sensor_arr[2]) / 4096) * 1000)
 
             sensor_value = {
                             'ipaddr' : str(sensor_arr[0]),
                             'solar' : str(sensor_arr[1]),
                             'photosynthetic' : str(sensor_arr[2])
-                            #'temperature' : str(sensor_arr[3]), 
-                            #'humidity' : str(sensor_arr[4])
                             }
 
             json_str = json.dumps(sensor_value)
-            #print str(json_str)
             logging.info(str(json_str))
 
             print json_str
@@ -589,15 +589,6 @@ class ConnectionClass:
         # Server Received ACK pkt from Client
         # ACK pkt Arrived
         # 4-handshake --------------------------- 3
-        elif((payload[0] == self.ACK) &
-             (self.FIN_dict['ACK'] == 0) &
-             (self.FIN_dict['FIN_1'] == 1) &
-             (self.FIN_dict['FIN_2'] == 1)):
-            logger.info('Received ACK from Client')
-            self.FIN_dict['ACK'] = 1
-
-            # Reply with Final ACK to Client to close Connection
-            # 4-handshake ----------------------- 4
 
     def __del__(self):
         logger.info('Destruct Connection Class')
@@ -710,8 +701,6 @@ class UDP_DODAG_IPC(SocketServer.BaseRequestHandler):
         data   = self.request[0]
         socket = self.request[1]
 
-        print data
-
         dict = json.loads(data)
 
         pkt_type = dict['type']
@@ -728,18 +717,13 @@ class UDP_DODAG_IPC(SocketServer.BaseRequestHandler):
             print 'error : no match type for the handler'
             print 'pkt_type : ' + pkt_type
 
-        socket.sendto(data.upper(), self.client_address)
-
 
 class RPLClass:
-    print_str = ''
-
-    def __init__(self):
-        self.print_str = ''
 
     def DIO_Adjust(self, Dest, uri, period):
         global CURRENT_PARENT
         global PARENT_SEMAPHORE
+        global c_ROUTE
 
         # save Current parent's ipv6 address
         PARENT_SEMAPHORE.acquire()
@@ -749,34 +733,37 @@ class RPLClass:
         print 'Parent addr       : ' + Dest
         print 'CURRENT_PARENT    : ' + CURRENT_PARENT
 
-
-        link        = 'coap://[bbbb::' + str(Dest) + ']/' + str(uri)
+        link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '1=' + str(period) + '!'
 
+        logger.info('Server sends DIO adjust message Destination : ' + str(Dest))
+
+        '''
         response = c_ROUTE.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
-
-        print_str = ''
-        for r in response:
-            print_str += chr(r)
+        '''
         
+        print_str = ''
         print 'response : ' + print_str
 
     def DAO_Adjust(self, Dest, uri, period):
+        global c_ROUTE
 
-        link        = 'coap://[bbbb::' + str(Dest) + ']/' + str(uri)
+        link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '2=' + str(period) + '!'
 
-        response = c_ROUTE.PUT(
+        logger.info('Server sends DAO adjust message Destination : ' + str(Dest))  
+
+        '''
+        c_ROUTE.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
+        '''
 
         print_str = ''
-        for r in response:
-            print_str += chr(r)
         
         print 'response : ' + print_str
 
