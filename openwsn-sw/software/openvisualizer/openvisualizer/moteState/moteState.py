@@ -271,8 +271,6 @@ class StateNeighborsRow(StateElem):
 
         rssi_to_send = str(self.data[0]['rssi']).split(' ')
         
-        print 'OV : ' + str(rssi_to_send)
-
         # check whether rssi_to_meter value is zero
         if (rssi_to_send[0] != '0'):
             if (self.rssi_forwarding_flag == False):

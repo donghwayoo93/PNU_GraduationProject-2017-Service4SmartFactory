@@ -94,15 +94,7 @@ owerror_t cinst_receive(OpenQueueEntry_t* msg,
 
 			packetfunctions_reserveHeaderSize(msg, 55);
 			msg->payload[0] = COAP_PAYLOAD_MARKER;
-/*
-			msg->payload[1] = 'e';
-			msg->payload[2] = 'x';
-			msg->payload[3] = ' ';
-			msg->payload[4] = 'g';
-			msg->payload[5] = 'e';
-			msg->payload[6] = 't';
-			msg->payload[7] = ' ';
-*/
+
          for(i = 0; i < 55; i++){
             msg->payload[i+1] = i+65; 
          }
@@ -114,48 +106,7 @@ owerror_t cinst_receive(OpenQueueEntry_t* msg,
       //------------------------------------------case GET
 		case COAP_CODE_REQ_PUT:
          if(msg->l4_destination_port == WKP_UDP_COAP_ROUTE){    // Destination UDP Port #5683
-            if((msg->payload[0] == DIO_PERIOD) &&
-               (msg->payload[1] == CEXAMPLE_SEPERATOR) &&
-               (msg->payload[3] == MARKER_END)) {               // SET DIO Period
-               new_Period = (msg->payload[2] - 48);
-               icmpv6rpl_setDIOPeriod(new_Period*10000);                 // void (uint32_t dioPeriod)
-               PUT_flag = E_SUCCESS;
-           		 }
-            else if((msg->payload[0] == DAO_PERIOD) &&
-               (msg->payload[1] == CEXAMPLE_SEPERATOR) &&
-               (msg->payload[3] == MARKER_END)) {               // SET DAO Period
-               new_Period = (msg->payload[2] - 48);
-               icmpv6rpl_setDAOPeriod(new_Period*10000);                 // void (uint32_t daoPeriod)
-               PUT_flag = E_SUCCESS;
-            		}
-            else{                                                       // Received Undefined VALUE
-               PUT_flag = E_FAIL;
-            		}
 
-            msg->payload = &(msg->packet[127]);
-            msg->length = 0;
-
-   			if (PUT_flag == E_SUCCESS) {                                // Response with changed Value
-   				packetfunctions_reserveHeaderSize(msg, 6);
-   				msg->payload[0] = COAP_PAYLOAD_MARKER;
-
-   				msg->payload[1] = new_Period + 48;
-   				msg->payload[2] = ' ';
-   				msg->payload[3] = 'p';
-   				msg->payload[4] = 'u';
-   				msg->payload[5] = 't';
-   			}
-            else if(PUT_flag == E_FAIL){                                // Response with error
-               packetfunctions_reserveHeaderSize(msg, 7);
-               msg->payload[0] = COAP_PAYLOAD_MARKER;
-
-               msg->payload[1] = 'e';
-               msg->payload[2] = 'x';
-               msg->payload[3] = ' ';
-               msg->payload[4] = 'e';
-               msg->payload[5] = 'r';
-               msg->payload[6] = 'r';
-            		}
         	 }
 		else if(msg->l4_destination_port == WKP_UDP_COAP_INST){   // Destination UDP Port #5685
 			openserial_printInst((uint8_t*)(msg->payload),msg->length);

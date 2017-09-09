@@ -157,7 +157,7 @@ class ConnectionClass:
         
     def _FIN_Return(self):
         SEND_IN_SEMAPHORE.acquire()
-        sock_internal.sendto('FALSE', (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        sock_internal.sendto('TRUE', (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
             
     def __del__(self):
@@ -396,7 +396,7 @@ class rssiClass:
         global RSSI_SEMAPHORE
         
         RSSI_SEMAPHORE.acquire()
-        self.rssi = str(new_value)
+        self.rssi = str(new_value[1:])
         RSSI_SEMAPHORE.release()
 
 
