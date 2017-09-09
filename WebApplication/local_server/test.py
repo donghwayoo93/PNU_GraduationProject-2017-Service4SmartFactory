@@ -28,6 +28,10 @@ elif(sys.argv[1] == 'disconnect'):
     jsonData = {
         "type": sys.argv[1]
     }
+elif(sys.argv[1] == 'rssi'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
 import socket
 import json
 
@@ -45,9 +49,11 @@ sock.bind((HOST, CLIENTPORT))
 # connect to the server on local computer
 sock.sendto(data, (HOST, SERVERPORT))
 
-# receive data from the server
-received = sock.recv(1024)
-
-sock.close()
-
-print received
+try:
+    # receive data from the server
+    received = sock.recv(1024)
+except socket.error:
+    received = "Unauthorized"
+finally:
+    sock.close()
+    print received

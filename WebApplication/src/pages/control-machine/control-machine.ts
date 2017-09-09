@@ -44,24 +44,13 @@ export class ControlMachinePage {
 
 	}
 
-	refreshPageTest(page) {
-		this.manuals = [];
-		this.manuals.push({
-			"instruction": "물 끓이기",
-			"photoNum": "../../assets/images/3.png"
-		});
-		this.manuals.push({
-			"instruction": "면 넣기",
-			"photoNum": "../../assets/images/1.png"
-		});
-		this.manuals.push({
-			"instruction": "스프넣기",
-			"photoNum": "../../assets/images/4.png"
-		});
-
+	ionViewDidLoad() {
+		setInterval(() => {
+			this.getRSSI();
+		}, 30000)
 	}
 
-	refreshPage1(page) {
+	refreshMachineInfo(page) {
 		this.showLoader("설비 정보 가져오는 중...");
 		let credentials = {};
 
@@ -89,7 +78,7 @@ export class ControlMachinePage {
 		});
 	}
 
-	refreshPage2(page) {
+	refreshSensorStatus(page) {
 		this.showLoader("설비 정보 가져오는 중...");
 		let credentials = {};
 
@@ -110,7 +99,7 @@ export class ControlMachinePage {
 		});
 	}
 
-	refreshPage3(page) {
+	refreshMachineManual(page) {
 		this.showLoader("설비 정보 가져오는 중...");
 		let credentials = {};
 		// 지시사항
@@ -158,11 +147,19 @@ export class ControlMachinePage {
 		});
 	}
 
+	getRSSI() {
+		this.ConnectionService.getRSSI().then((result) => {
+			console.log(result);
+			console.log(result[0]);
+		}, (err) => {
+			console.log('failed to get RSSI');
+		});
+	}
+
 	showLoader(content) {
 		this.loading = this.loadingCtrl.create({
 			content: content
 		});
-
 		this.loading.present();
 	}
 

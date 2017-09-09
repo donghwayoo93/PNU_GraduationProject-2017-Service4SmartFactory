@@ -38,4 +38,15 @@ export class ConnectionProvider {
     });
   }
 
+  getRSSI() {
+    return new Promise((resolve, reject) => {
+      this.http.get('http://localhost:9999/api/rssi')
+        .subscribe(data => {
+          resolve(data);
+        }, (err) => {
+          reject(err);
+        });
+    });
+  }
+
 }
