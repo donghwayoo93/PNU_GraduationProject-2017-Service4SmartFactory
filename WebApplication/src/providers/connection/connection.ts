@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
+import { Storage } from '@ionic/storage';
 import 'rxjs/add/operator/map';
 
 /*
@@ -11,7 +12,7 @@ import 'rxjs/add/operator/map';
 @Injectable()
 export class ConnectionProvider {
 
-  constructor(public http: Http) {
+  constructor(public http: Http, public storage: Storage) {
     //console.log('Hello ConnectionProvider Provider');
   }
 
@@ -30,8 +31,12 @@ export class ConnectionProvider {
   tryDisconnect() {
     return new Promise((resolve, reject) => {
       this.http.get('http://localhost:9999/api/disconnect')
+        .map(res => res.json())
         .subscribe(data => {
           resolve(data);
+          this.storage.set('token', '');
+          this.storage.set('email', '');
+          this.storage.set('accessLevel', '');
         }, (err) => {
           reject(err);
         });

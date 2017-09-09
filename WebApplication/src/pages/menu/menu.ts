@@ -40,12 +40,6 @@ export class MenuPage {
     this.nav.setRoot(page.component);
   }
 
-  logout() {
-    this.authService.logout();
-    this.navCtrl.setRoot(LoginPage);
-
-  }
-
   getUser() {
     this.storage.get('email').then(email => {
       this.user = email;

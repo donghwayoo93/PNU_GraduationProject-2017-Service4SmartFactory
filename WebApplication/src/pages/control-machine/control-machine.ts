@@ -51,7 +51,7 @@ export class ControlMachinePage {
 	}
 
 	refreshMachineInfo(page) {
-		this.showLoader("설비 정보 가져오는 중...");
+		this.showLoader("Bringing machine information...");
 		let credentials = {};
 
 		// 기기 정보
@@ -79,7 +79,7 @@ export class ControlMachinePage {
 	}
 
 	refreshSensorStatus(page) {
-		this.showLoader("설비 정보 가져오는 중...");
+		this.showLoader("Bringing sensor status...");
 		let credentials = {};
 
 		// 센서 데이터
@@ -89,7 +89,7 @@ export class ControlMachinePage {
 			this.sensorDatas = [];
 			for (var idx in SensorState) {
 				this.sensorDatas.push({
-					"title": "센서명 : " + idx,
+					"title": "Sensor Name : " + idx,
 					"content": SensorState[idx]
 				});
 			}
@@ -100,7 +100,7 @@ export class ControlMachinePage {
 	}
 
 	refreshMachineManual(page) {
-		this.showLoader("설비 정보 가져오는 중...");
+		this.showLoader("Bringing manuals...");
 		let credentials = {};
 		// 지시사항
 		this.machineService.getMachineManual(credentials).then((result) => {
