@@ -155,5 +155,5 @@ app.get('/api/disconnect', function(req, res) {
 
 // listen
 var server = app.listen(9999);
-server.setTimeout(10000);
+server.setTimeout(30000);
 console.log("App listening on port 9999");
