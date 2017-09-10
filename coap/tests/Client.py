@@ -44,7 +44,7 @@ RSSI_SEMAPHORE       = threading.Semaphore(1)
 sock                 = ''
 sock_internal        = ''
 sock_rssi            = ''
-Instruction_String   = ''
+
 workerID             = '0EB2'
 
 class ConnectionClass:
@@ -170,9 +170,12 @@ class InstructionClass:
     Instruction_List_size = 0
     Instruction_size      = 0
     Instruction_tag       = 0
+    Instruction_String    = ''
 
     FRAG_1                = 0
     FRAG_N                = 0
+
+    Instruction_Timer_flag= False
 
     def __init__(self):
         self.Instruction_List = []
@@ -188,9 +191,28 @@ class InstructionClass:
         SEND_OUT_SEMAPHORE.release()
         
         print 'Instruction Solicitation msg sent'
+
+    def _reinitVars(self):
+        self.Instruction_List       = []
+        self.Instruction_List_size  = 0
+        self.Instruction_size       = 0
+        self.Instruction_tag        = 0
+        self.Instruction_String     = ''
+        self.Instruction_Timer_flag = False
+
+    def _timerStart(self):
+        if(self.Instruction_Timer_flag == False):
+            self.Instruction_Timer_flag = True
+
+            Instruction_timer = timerClass()
+            Instruction_timer.setHandler(self._reinitVars)
+            Instruction_timer.setDelay(60)
+            Instruction_timer.start()
         
 
     def _recvInstructionData(self, payload):
+
+        self._timerStart()
 
         payload = [int(i) for i in payload]
 
@@ -231,22 +253,19 @@ class InstructionClass:
             return False
 
     def _makeString(self):
-        global Instruction_String
         # make fragmented string to one
-        INST_SEMAPHORE.acquire()
         for i in range(self.Instruction_List_size):
-            Instruction_String += ''.join(str(chr(c)) for c in self.Instruction_List[i])
-        INST_SEMAPHORE.release()
+            self.Instruction_String += ''.join(str(chr(c)) for c in self.Instruction_List[i])
 
         print 'client makeString'
-        print Instruction_String
+        print self.Instruction_String
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
         sock_internal.sendto(str(Instruction_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
         
-        Instruction_String = ''
+        self.Instruction_String = ''
         self.Instruction_List = []
 
 class MachineClass:
@@ -259,6 +278,7 @@ class MachineClass:
     FRAG_N            = 0
 
     Machine_String    = ''
+    Machine_Timer_flag= False
 
     def __init__(self):
         self.machine_List     = []
@@ -285,7 +305,26 @@ class MachineClass:
         
         print 'machineSensor Solicitation msg sent'
 
+    def _reinitVars(self):
+        self.machine_List      = []
+        self.machine_size      = 0
+        self.machine_List_size = 0
+        self.machine_tag       = 0
+        self.Machine_String    = ''
+        self.Machine_Timer_flag= False
+
+    def _timerStart(self):
+        if(self.Machine_Timer_flag == False):
+            self.Machine_Timer_flag = True
+
+            machine_timer = timerClass()
+            machine_timer.setHandler(self._reinitVars)
+            machine_timer.setDelay(60)
+            machine_timer.start()
+
     def _recvMachineData(self, payload):
+
+        self._timerStart()
 
         payload = [int(i) for i in payload]
         
@@ -399,6 +438,29 @@ class rssiClass:
         self.rssi = str(new_value[1:])
         RSSI_SEMAPHORE.release()
 
+class timerClass:
+
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.delay   = 1
+        self.state   = True
+        self.handler = None
+
+    def setDelay(self, delay):
+        self.delay = delay
+
+    def run(self):
+        while self.state:
+            time.sleep(self.delay)
+
+            if(self.handler != None):
+                self.handler()
+
+    def end(self):
+        self.state = False
+
+    def setHandler(self, handler):
+        self.handler = handler
 
 
 class ThreadClass(threading.Thread):
@@ -470,6 +532,7 @@ class ThreadClass(threading.Thread):
             
             while True:
                 if((CONNECTION_SYN == True) & (CONNECTION_FIN == True)):
+                    print 'Client Connection ended Flags renewed and Connection class renewed'
                     CONN_SEMAPHORE.acquire()
                     CONNECTION_SYN = False
                     CONNECTION_FIN = False
