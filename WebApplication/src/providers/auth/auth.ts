@@ -34,12 +34,6 @@ export class AuthProvider {
     });
   }
 
-  logout() {
-    this.storage.set('token', '');
-    this.storage.set('email', '');
-    this.storage.set('accessLevel', '');
-  }
-
   createAccount(details) {
 
     return new Promise((resolve, reject) => {

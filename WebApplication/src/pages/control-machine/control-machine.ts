@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, LoadingController, ToastController } from 'ionic-angular';
+import { NavController, NavParams, LoadingController, ToastController, ActionSheetController, AlertController } from 'ionic-angular';
+
+import { LoginPage } from '../login/login';
+
 import { MachinesProvider } from '../../providers/machines/machines';
 import { ConnectionProvider } from '../../providers/connection/connection';
 
@@ -12,80 +15,26 @@ export class ControlMachinePage {
 	machineID: any;
 	manualNum: any;
 	loading: any;
-	isToggled: boolean;
-
-	machineDatas: any = [
-		{
-			"title": "Need refresh",
-			"content": "Need refresh"
-		}
-	];
-
-	sensorDatas: any = [
-		{
-			"title": "Need refresh",
-			"content": "Need refresh"
-		}
-	];
-
-	manuals: any = [
-		{
-			"instruction": "Need refresh",
-			"photoNum": ""
-		}
-	];
+	machineDatas: Array<{ title: string, content: string }>;
+	sensorDatas: Array<{ title: string, content: string }>;
+	manuals: Array<{ instruction: string, photoNum: string }>;
 
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, public loadingCtrl: LoadingController,
-		public ConnectionService: ConnectionProvider, private toastCtrl: ToastController) {
+		private toastCtrl: ToastController, public ConnectionService: ConnectionProvider,
+		private actionSheetCtrl: ActionSheetController, private alertCtrl: AlertController) {
 
 	}
 
-	refreshPageTest(page) {
-		this.manuals = [];
-		this.manuals.push({
-			"instruction": "물 끓이기",
-			"photoNum": "../../assets/images/3.png"
-		});
-		this.manuals.push({
-			"instruction": "면 넣기",
-			"photoNum": "../../assets/images/1.png"
-		});
-		this.manuals.push({
-			"instruction": "스프넣기",
-			"photoNum": "../../assets/images/4.png"
-		});
-
+	ionViewDidLoad() {
+		setInterval(() => {
+			this.getRSSI();
+		}, 30000)
 	}
 
-	updateConnection(item) {
-
-		if (this.isToggled == true) {
-			this.showLoader("Connect...");
-			this.ConnectionService.tryConnect().then((result) => {
-				console.log(result);
-			}, (err) => {
-				this.presentToast("Failed to connect");
-				this.isToggled = false;
-				this.loading.dismiss();
-			})
-		} else {
-			this.showLoader("disconnect...");
-			this.ConnectionService.tryDisconnect().then((result) => {
-				console.log(result);
-			}, (err) => {
-				this.presentToast("Failed to disconnect");
-				this.isToggled = true;
-				this.loading.dismiss();
-			})
-
-		}
-
-	}
-
-	refreshPage1(page) {
-		this.showLoader("설비 정보 가져오는 중...");
+	refreshMachineInfo() {
+		this.showLoader("Bringing machine information...");
 		let credentials = {};
 
 		// 기기 정보
@@ -112,8 +61,8 @@ export class ControlMachinePage {
 		});
 	}
 
-	refreshPage2(page) {
-		this.showLoader("설비 정보 가져오는 중...");
+	refreshSensorStatus() {
+		this.showLoader("Bringing sensor status...");
 		let credentials = {};
 
 		// 센서 데이터
@@ -123,7 +72,7 @@ export class ControlMachinePage {
 			this.sensorDatas = [];
 			for (var idx in SensorState) {
 				this.sensorDatas.push({
-					"title": "센서명 : " + idx,
+					"title": "Sensor Name : " + idx,
 					"content": SensorState[idx]
 				});
 			}
@@ -133,8 +82,8 @@ export class ControlMachinePage {
 		});
 	}
 
-	refreshPage3(page) {
-		this.showLoader("설비 정보 가져오는 중...");
+	refreshMachineManual() {
+		this.showLoader("Bringing manuals...");
 		let credentials = {};
 		// 지시사항
 		this.machineService.getMachineManual(credentials).then((result) => {
@@ -166,11 +115,41 @@ export class ControlMachinePage {
 		});
 	}
 
+	disconnect() {
+		this.showLoader("disconnect...");
+		this.ConnectionService.tryDisconnect().then((result) => {
+			console.log(result[0]);
+			if (result[0] == "TRUE") {
+				this.presentToast("Success disconnecting");
+				this.loading.dismiss();
+				this.navCtrl.setRoot(LoginPage);
+			}
+		}, (err) => {
+			this.presentToast("Failed to disconnect");
+			this.loading.dismiss();
+		});
+	}
+
+	getRSSI() {
+		this.ConnectionService.getRSSI().then((result) => {
+			console.log(result);
+			console.log(result[0]);
+			if (0 < result[0] && result[0] < 50) {
+				console.log("0~50");
+			} else if (result[0] < 0) {
+				console.log("0 이하");
+			} else {
+				console.log("50 이상");
+			}
+		}, (err) => {
+			console.log('failed to get RSSI');
+		});
+	}
+
 	showLoader(content) {
 		this.loading = this.loadingCtrl.create({
 			content: content
 		});
-
 		this.loading.present();
 	}
 
@@ -181,5 +160,74 @@ export class ControlMachinePage {
 			position: 'top'
 		});
 		toast.present();
+	}
+
+	openMenu() {
+		let actionSheet = this.actionSheetCtrl.create({
+			//title: 'Refresh data',
+			buttons: [
+				{
+					text: 'Machine Information',
+					icon: 'refresh',
+					handler: () => {
+						console.log('Machine info clicked');
+						this.refreshMachineInfo();
+					}
+				}, {
+					text: 'Sensor Status',
+					icon: 'refresh',
+					handler: () => {
+						console.log('Sensor clicked');
+						this.refreshSensorStatus();
+					}
+				}, {
+					text: 'Instructions',
+					icon: 'refresh',
+					handler: () => {
+						console.log('Instructions clicked');
+						this.refreshMachineManual();
+					}
+				}, {
+					text: 'Disconnect from machine',
+					role: 'destructive',
+					icon: 'exit',
+					handler: () => {
+						this.showDisconnectConfirm();
+						console.log('disconnect clicked');
+					},
+					cssClass: "danger"
+				}, {
+					text: 'Cancel',
+					role: 'cancel',
+					handler: () => {
+						console.log('Cancel clicked');
+					}
+				}
+			]
+		});
+		actionSheet.present();
+	}
+
+	showDisconnectConfirm() {
+		let confirm = this.alertCtrl.create({
+			title: 'Do you really want to disconnect from machine?',
+			message: 'You must reconnect with this or other mahcines. \nThen you can use this application again.',
+			buttons: [
+				{
+					text: 'Disagree',
+					handler: () => {
+						console.log('Disagree clicked');
+					}
+				},
+				{
+					text: 'Agree',
+					handler: () => {
+						console.log('Agree clicked');
+						this.disconnect();
+					}
+				}
+			]
+		});
+		confirm.present();
 	}
 }

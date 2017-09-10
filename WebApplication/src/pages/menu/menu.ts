@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { Nav, NavController, NavParams } from 'ionic-angular';
 
 import { ControlMachinePage } from '../control-machine/control-machine';
-import { LoginPage } from '../login/login'
 import { Storage } from '@ionic/storage';
 
 import { AuthProvider } from '../../providers/auth/auth'
@@ -38,12 +37,6 @@ export class MenuPage {
     // Reset the content nav to have just this page
     // we wouldn't want the back button to show in this scenario
     this.nav.setRoot(page.component);
-  }
-
-  logout() {
-    this.authService.logout();
-    this.navCtrl.setRoot(LoginPage);
-
   }
 
   getUser() {

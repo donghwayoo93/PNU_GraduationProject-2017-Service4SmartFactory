@@ -1,7 +1,7 @@
 <ion-menu [content]="content">
     <ion-header>
         <ion-toolbar color="primary">
-            <ion-title>Menu</ion-title>
+            <ion-title>User Info</ion-title>
         </ion-toolbar>
     </ion-header>
 
@@ -12,15 +12,10 @@
             </button>
             <ion-item>
                 <ion-avatar item-start>
-                    <!--<img src="assets/images/avatar-ts-woody.png" />-->
                     <ion-icon name="person" id="personIcon"></ion-icon>
                 </ion-avatar>
                 {{user}}
                 <p>level {{accessLevel}}</p>
-                <button ion-button item-end (click)="logout()">
-                    logout
-                    <ion-icon name="log-out"  ></ion-icon>
-                </button>
             </ion-item>
         </ion-list>
     </ion-content>

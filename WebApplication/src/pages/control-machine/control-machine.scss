@@ -21,4 +21,9 @@ page-control-machine {
         margin-right: auto;
         display: block;
     }
+    .danger {
+        .button-inner {
+            color: darkred;
+        }
+    }
 }
