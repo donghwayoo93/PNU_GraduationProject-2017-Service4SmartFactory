@@ -3,27 +3,22 @@
         <button ion-button [menuToggle]="activeMenu">
 					<ion-icon name="menu"></ion-icon>
 				</button>
-
         <ion-title>
-            <h2>Smart Factory Operator Support System</h2>
+            <h2>Operator Support System</h2>
         </ion-title>
-
-        <ion-buttons end>
-            <button ion-button (click)="disconnect()">
-                <ion-icon name="log-out"></ion-icon>
-					</button>
-        </ion-buttons>
     </ion-navbar>
 
 </ion-header>
 
 <ion-content padding>
+    <!--
     <button ion-button block class="refresh-button" (click)="refreshMachineInfo()">machine info</button>
     <button ion-button block class="refresh-button" (click)="refreshSensorStatus()">sensor</button>
     <button ion-button block class="refresh-button" (click)="refreshMachineManual()">manual</button>
+    -->
     <ion-card>
-        <ion-card-header>
-            <h1>Machine Information</h1>
+        <ion-card-header icon-left>
+            <ion-icon name="bookmark"></ion-icon>Machine Information
         </ion-card-header>
         <ion-card-content>
             <ion-list>
@@ -35,8 +30,8 @@
         </ion-card-content>
     </ion-card>
     <ion-card>
-        <ion-card-header>
-            <h1>Sensor Status</h1>
+        <ion-card-header icon-left>
+            <ion-icon name="stats"></ion-icon>Sensor Status
         </ion-card-header>
         <ion-card-content>
             <ion-list>
@@ -48,17 +43,19 @@
         </ion-card-content>
     </ion-card>
     <ion-card>
-        <ion-card-header>
-            <h1>Instruction</h1>
+        <ion-card-header icon-left>
+            <ion-icon name="checkmark-circle"></ion-icon>Instructions
         </ion-card-header>
         <ion-card-content>
             <ion-slides pager loop="false" autoplay="true">
                 <ion-slide style="height:auto" *ngFor="let manual of manuals; let i = index;">
-                    <h2 style="margin-top: 0px; font-size: 27px;">{{i+1}}. {{manual.instruction}}</h2>
+                    <h2 style="margin-top: 0px; font-size: 24px;">{{i+1}}. {{manual.instruction}}</h2>
                     <img class="manualImage" src={{manual.photoNum}} />
                 </ion-slide>
             </ion-slides>
         </ion-card-content>
     </ion-card>
-
+    <ion-fab right bottom>
+        <button ion-fab color="primary" (click)="openMenu()"><ion-icon name="hammer"></ion-icon></button>
+    </ion-fab>
 </ion-content>

@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { Nav, NavController, NavParams } from 'ionic-angular';
 
 import { ControlMachinePage } from '../control-machine/control-machine';
-import { LoginPage } from '../login/login'
 import { Storage } from '@ionic/storage';
 
 import { AuthProvider } from '../../providers/auth/auth'

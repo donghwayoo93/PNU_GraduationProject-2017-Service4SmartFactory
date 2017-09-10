@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams, LoadingController, ToastController } from 'ionic-angular';
+import { NavController, NavParams, LoadingController, ToastController, ActionSheetController, AlertController } from 'ionic-angular';
 
 import { LoginPage } from '../login/login';
 
@@ -15,32 +15,15 @@ export class ControlMachinePage {
 	machineID: any;
 	manualNum: any;
 	loading: any;
-
-	machineDatas: any = [
-		{
-			"title": "Need refresh",
-			"content": "Need refresh"
-		}
-	];
-
-	sensorDatas: any = [
-		{
-			"title": "Need refresh",
-			"content": "Need refresh"
-		}
-	];
-
-	manuals: any = [
-		{
-			"instruction": "Need refresh",
-			"photoNum": ""
-		}
-	];
+	machineDatas: Array<{ title: string, content: string }>;
+	sensorDatas: Array<{ title: string, content: string }>;
+	manuals: Array<{ instruction: string, photoNum: string }>;
 
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, public loadingCtrl: LoadingController,
-		private toastCtrl: ToastController, public ConnectionService: ConnectionProvider) {
+		private toastCtrl: ToastController, public ConnectionService: ConnectionProvider,
+		private actionSheetCtrl: ActionSheetController, private alertCtrl: AlertController) {
 
 	}
 
@@ -50,7 +33,7 @@ export class ControlMachinePage {
 		}, 30000)
 	}
 
-	refreshMachineInfo(page) {
+	refreshMachineInfo() {
 		this.showLoader("Bringing machine information...");
 		let credentials = {};
 
@@ -78,7 +61,7 @@ export class ControlMachinePage {
 		});
 	}
 
-	refreshSensorStatus(page) {
+	refreshSensorStatus() {
 		this.showLoader("Bringing sensor status...");
 		let credentials = {};
 
@@ -99,7 +82,7 @@ export class ControlMachinePage {
 		});
 	}
 
-	refreshMachineManual(page) {
+	refreshMachineManual() {
 		this.showLoader("Bringing manuals...");
 		let credentials = {};
 		// 지시사항
@@ -170,5 +153,74 @@ export class ControlMachinePage {
 			position: 'top'
 		});
 		toast.present();
+	}
+
+	openMenu() {
+		let actionSheet = this.actionSheetCtrl.create({
+			//title: 'Refresh data',
+			buttons: [
+				{
+					text: 'Machine Information',
+					icon: 'refresh',
+					handler: () => {
+						console.log('Machine info clicked');
+						this.refreshMachineInfo();
+					}
+				}, {
+					text: 'Sensor Status',
+					icon: 'refresh',
+					handler: () => {
+						console.log('Sensor clicked');
+						this.refreshSensorStatus();
+					}
+				}, {
+					text: 'Instructions',
+					icon: 'refresh',
+					handler: () => {
+						console.log('Instructions clicked');
+						this.refreshMachineManual();
+					}
+				}, {
+					text: 'Disconnect from machine',
+					role: 'destructive',
+					icon: 'exit',
+					handler: () => {
+						this.showDisconnectConfirm();
+						console.log('disconnect clicked');
+					},
+					cssClass: "danger"
+				}, {
+					text: 'Cancel',
+					role: 'cancel',
+					handler: () => {
+						console.log('Cancel clicked');
+					}
+				}
+			]
+		});
+		actionSheet.present();
+	}
+
+	showDisconnectConfirm() {
+		let confirm = this.alertCtrl.create({
+			title: 'Do you really want to disconnect from machine?',
+			message: 'You must reconnect with this or other mahcines. \nThen you can use this application again.',
+			buttons: [
+				{
+					text: 'Disagree',
+					handler: () => {
+						console.log('Disagree clicked');
+					}
+				},
+				{
+					text: 'Agree',
+					handler: () => {
+						console.log('Agree clicked');
+						this.disconnect();
+					}
+				}
+			]
+		});
+		confirm.present();
 	}
 }
