@@ -433,7 +433,7 @@ class InstructionClass:
         data_size_upper, data_size_lower = divmod(data_size, 256)
 
         # first Fragmented Packet Format
-        # read first 50 bytes from data string
+        # read first 32 bytes from data string
         payload_str += str(chr(self.FRAG_1)) + str(chr(data_size_upper)) + str(chr(data_size_lower)) + str(chr(data_tag))
         payload_str += str(data_str[0:OPENSERIAL_MTU])
 
@@ -451,7 +451,7 @@ class InstructionClass:
         COAP_5685_SEMAPHORE.release()
 
         # Second to Nth Fragmented Packet Format
-        # read remain bytes, 49 bytes each
+        # read remain bytes, 32 bytes each
         
         data_start_index = OPENSERIAL_MTU
 
@@ -586,10 +586,6 @@ class ConnectionClass:
 
             logger.info('Connection FIN flag status => True')
 
-        # Server Received ACK pkt from Client
-        # ACK pkt Arrived
-        # 4-handshake --------------------------- 3
-
     def __del__(self):
         logger.info('Destruct Connection Class')
 
@@ -668,9 +664,11 @@ class ThreadClass(threading.Thread):
         elif(self.thread_index == THREAD_RENEW_CONN):
             global CONNECTION_FIN, CONNECTION_SYN, CONN_SEMAPHORE, COAP_RECV_PAYLOAD
             global CURRENT_PARENT, PARENT_SEMAPHORE, PAYLOAD_SEMAPHORE
+            global inst, conn, login, machine, data_tag, tag_sem
             
             while True:
                 if((CONNECTION_SYN == True) & (CONNECTION_FIN == True)):
+                    logger.info('Server Renews the Flags and classes')
                     # initialize SYN, FIN Flag
                     CONN_SEMAPHORE.acquire()
                     CONNECTION_SYN = False
@@ -694,6 +692,13 @@ class ThreadClass(threading.Thread):
                     conn    = ConnectionClass()
                     login   = LoginClass()
                     machine = machineClass()
+
+
+                if (data_tag == 255):
+                    logger.info('Server Renews the data_tag value to 1')
+                    tag_sem.acquire()
+                    data_tag = 1
+                    tag_sem.release()
 
 class UDP_DODAG_IPC(SocketServer.BaseRequestHandler):
     def handle(self):
@@ -764,7 +769,6 @@ class RPLClass:
         '''
 
         print_str = ''
-        
         print 'response : ' + print_str
 
 

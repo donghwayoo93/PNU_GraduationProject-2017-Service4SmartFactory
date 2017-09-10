@@ -24,7 +24,7 @@
 //=========================== defines =========================================
 
 /// inter-packet period (in ms)
-#define CEXAMPLEPERIOD  10000
+#define CEXAMPLEPERIOD  30000
 #define PAYLOADLEN      10
 
 const uint8_t cexample_path0[] = "ex";
