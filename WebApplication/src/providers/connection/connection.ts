@@ -46,6 +46,7 @@ export class ConnectionProvider {
   getRSSI() {
     return new Promise((resolve, reject) => {
       this.http.get('http://localhost:9999/api/rssi')
+        .map(res => res.json())
         .subscribe(data => {
           resolve(data);
         }, (err) => {
