@@ -219,6 +219,7 @@ class RPL(eventBusClient.eventBusClient):
             return False
 
     def _checkParentChanged(self):
+        global source_suffix_ipv6
         if(self.CURRENT_PARENT_ADDR == self.FORMER_PARENT_ADDR):
             return False
         else:

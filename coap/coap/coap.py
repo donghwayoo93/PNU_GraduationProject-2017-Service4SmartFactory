@@ -202,6 +202,7 @@ class coap(object):
         output += ['- bytes:     {0}'.format(u.formatBuf(rawbytes))]
         output  = '\n'.join(output)
         #print str(['- sender:    {0}'.format(sender)])
+        #print str(['- bytes:     {0}'.format(u.formatBuf(rawbytes))])
         log.debug(output)
 
         srcIp   = sender[0]
@@ -305,8 +306,10 @@ class coap(object):
 
                 found  = False
                 with self.transmittersLock:
-                    self._cleanupTransmitter()
+                    #self._cleanupTransmitter()
                     for (k,v) in self.transmitters.items():
+                        #print 'k,v    : ' + str((k,v))
+                        #print 'msgod  : ' + str(msgkey)
                         # try matching
                         if (
                                 msgkey[0]==k[0] and
@@ -318,6 +321,7 @@ class coap(object):
                             ):
                             found = True
                             v.receiveMessage(timestamp,srcIp,srcPort,message)
+                            self._cleanupTransmitter()
                             break
                 if found==False:
                     raise e.coapRcBadRequest(

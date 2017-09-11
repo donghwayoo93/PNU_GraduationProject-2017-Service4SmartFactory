@@ -13,6 +13,8 @@ import json
 import SocketServer
 import time
 import requests
+import pymongo
+import datetime
 import logging
 import logging.handlers
 
@@ -107,16 +109,10 @@ class SensorResource(coapResource.coapResource):
             if(sensor_arr[2] != ''):
                 sensor_arr[2] = (int)(1.5 * (float(sensor_arr[2]) / 4096) * 1000)
 
-            sensor_value = {
-                            'ipaddr' : str(sensor_arr[0]),
-                            'solar' : str(sensor_arr[1]),
-                            'photosynthetic' : str(sensor_arr[2])
-                            }
+            updateSensor(str(sensor_arr[0]), str(sensor_arr[1]), 'solar')
+            updateSensor(str(sensor_arr[0]), str(sensor_arr[2]), 'photosynthetic')
 
-            json_str = json.dumps(sensor_value)
-            logging.info(str(json_str))
-
-            print json_str
+           # print json_str
         # In case Server Receives Connection Packet
         elif(unichr(payload[0]) == 'C'):
             print 'error : Sensor coap server received Connection Packet\n'
@@ -134,7 +130,43 @@ class SensorResource(coapResource.coapResource):
         respOptions = []
         respPayload = []
         return (respCode, respOptions, respPayload)
+##################################################################
+#                       UPDATE DB Function Start         
 
+def updateSensor(machineID, sensorData, sensorName):
+    connection = pymongo.MongoClient("localhost", 27017)
+    DB = connection.mongodbroles
+    DB.machines.update({
+        "machineID":str(machineID)
+    },{
+        '$set': {
+            "sensorState." + sensorName : str(sensorData)
+        }
+    }, upsert=True)
+
+    DB.sensorDB.update({
+        "machineID":str(machineID)
+    },{
+        '$push' : {"sensorState":
+            {"time":datetime.datetime.now(),
+             "sensor":sensorName,
+             "data":sensorData}
+        }
+    }, upsert=True)
+
+def updateNearWorkerID(machineID, workerID):
+    connection = pymongo.MongoClient("localhost", 27017)
+    DB = connection.mongodbroles
+    DB.machines.update({
+        "machineID": str(machineID)
+    }, {
+        '$set': {
+            "nearWorkerID": workerID
+        }
+    }, upsert=True)
+
+##################################################################
+#                       UPDATE DB Function End        ^
 
 class InstResource(coapResource.coapResource):
 
@@ -372,14 +404,12 @@ class InstructionClass:
     FRAG_N    = 0
     FIN       = 0
     link      = ''
-    work_flag = ''
 
     def __init__(self):
         self.FRAG_1    = 24
         self.FRAG_N    = 28
         self.FIN       = 127
         self.link      = 'coap://[bbbb::2]:5685/inst'
-        self.work_flag = False
 
     def _handle(self, payload):
         payload_str = ''
@@ -475,12 +505,7 @@ class InstructionClass:
             data_offset = data_offset + 1
             data_start_index = 0
 
-        logger.info('Sends back with Instruction Data')      
-
-
-    def __del__(self):
-        logger.info('Destruct Instruction Class')
-
+        logger.info('Sends back with Instruction Data')   
 
 
 class ConnectionClass:
@@ -515,6 +540,8 @@ class ConnectionClass:
         global rpl
 
         print str(payload)
+        print 'FIN_1 : ' + str(self.FIN_dict['FIN_1'])
+        print 'FIN_2 : ' + str(self.FIN_dict['FIN_2'])
 
         # Server Received SYN pkt from Client
         # 3-handshake ------------------------------- 1
@@ -588,6 +615,15 @@ class ConnectionClass:
 
     def __del__(self):
         logger.info('Destruct Connection Class')
+
+    def _renewClass(self):
+        self.SYN_dict['SYN']     = 0
+        self.SYN_dict['SYN+ACK'] = 0
+        self.SYN_dict['ACK']     = 0
+
+        self.FIN_dict['FIN_1']   = 0
+        self.FIN_dict['FIN_2']   = 0
+        self.FIN_dict['ACK']     = 0
 
 
 class ThreadClass(threading.Thread):
@@ -665,6 +701,8 @@ class ThreadClass(threading.Thread):
             global CONNECTION_FIN, CONNECTION_SYN, CONN_SEMAPHORE, COAP_RECV_PAYLOAD
             global CURRENT_PARENT, PARENT_SEMAPHORE, PAYLOAD_SEMAPHORE
             global inst, conn, login, machine, data_tag, tag_sem
+
+            time.sleep(1)
             
             while True:
                 if((CONNECTION_SYN == True) & (CONNECTION_FIN == True)):
@@ -683,15 +721,7 @@ class ThreadClass(threading.Thread):
                     CURRENT_PARENT = ''
                     PARENT_SEMAPHORE.release()
 
-                    del inst
-                    del conn
-                    del login
-                    del machine
-
-                    inst    = InstructionClass()
-                    conn    = ConnectionClass()
-                    login   = LoginClass()
-                    machine = machineClass()
+                    conn._renewClass()
 
 
                 if (data_tag == 255):
@@ -741,34 +771,39 @@ class RPLClass:
         link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '1=' + str(period) + '!'
 
-        logger.info('Server sends DIO adjust message Destination : ' + str(Dest))
-
-        '''
-        response = c_ROUTE.PUT(
-                link,
-                payload=[ord(b) for b in payload_str]
-        )
-        '''
-        
-        print_str = ''
-        print 'response : ' + print_str
+        if(str(Dest) != ''):
+            logger.info('Server sends DIO adjust message Destination : ' + str(Dest))
+            response = c_ROUTE.PUT(
+                    link,
+                    payload=[ord(b) for b in payload_str]
+            )
+            
+            print_str = ''
+            for r in response:
+                print_str += chr(r)
+            print 'response : ' + print_str
+        else:
+            logger.info('No parrent node to send DIO')
 
     def DAO_Adjust(self, Dest, uri, period):
         global c_ROUTE
+
+        if(str(Dest) == '0:0:0:2'):
+            Dest = '2'
 
         link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '2=' + str(period) + '!'
 
         logger.info('Server sends DAO adjust message Destination : ' + str(Dest))  
 
-        '''
-        c_ROUTE.PUT(
+        response = c_ROUTE.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
-        '''
 
         print_str = ''
+        for r in response:
+            print_str += chr(r)
         print 'response : ' + print_str
 
 
@@ -791,6 +826,6 @@ rpl          = RPLClass()
 
 if __name__ == "__main__":
 
-    for i in range(6):
+    for i in range(7):
         t = ThreadClass(i+1)
         t.start()
