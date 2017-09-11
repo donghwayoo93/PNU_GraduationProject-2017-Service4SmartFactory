@@ -63,14 +63,7 @@ class ConnectionClass:
     SYN          = 0
     FIN          = 0
     ACK          = 0
-    FRAG_1       = 0
-    FRAG_N       = 0
 
-    data_tag     = 0
-    data_size    = 0
-    total_offset = 0
-
-    Response_addr = ''
     msg           = ''
 
     def __init__(self):
@@ -78,8 +71,6 @@ class ConnectionClass:
         self.FIN      = 127
         self.SYN      = 64
         self.ACK      = 32
-        self.FRAG_1   = 24
-        self.FRAG_N   = 28
 
     def _sendSYN(self):
         # 3-handshake ---------------------------------------- 1
@@ -162,6 +153,15 @@ class ConnectionClass:
             
     def __del__(self):
         print 'destruct Connection Class'
+        
+    def _renewClass(self):
+        self.SYN_dict['SYN'] = 0
+        self.SYN_dict['SYN+ACK'] = 0
+        self.SYN_dict['ACK'] = 0
+        
+        self.FIN_dict['FIN_1'] = 0
+        self.FIN_dict['FIN_2'] = 0
+        self.FIN_dict['ACK'] = 0
 
 
 
@@ -262,7 +262,7 @@ class InstructionClass:
 
         # send instruction string internal
         SEND_IN_SEMAPHORE.acquire()
-        sock_internal.sendto(str(Instruction_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        sock_internal.sendto(str(self.Instruction_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
         
         self.Instruction_String = ''
@@ -389,7 +389,7 @@ class LoginClass:
         self.msg = 'L'
 
     def _login(self, id, pw):
-        self.msg += str(id) + ',' + str(pw)
+        self.msg ='L' + str(id) + ',' + str(pw)
         # toss login data to outer Server
         SEND_OUT_SEMAPHORE.acquire()
         sock.sendto(self.msg, (TUN_DST_IP, TUN_DST_PORT))
@@ -438,7 +438,7 @@ class rssiClass:
         self.rssi = str(new_value[1:])
         RSSI_SEMAPHORE.release()
 
-class timerClass:
+class timerClass(threading.Thread):
 
     def __init__(self):
         threading.Thread.__init__(self)
@@ -538,9 +538,7 @@ class ThreadClass(threading.Thread):
                     CONNECTION_FIN = False
                     CONN_SEMAPHORE.release()
                     
-                    del conn
-                    
-                    conn = ConnectionClass()
+                    conn._renewClass()
                     
                     
         elif(self.thread_index == THREAD_RSSI_SOCK):
