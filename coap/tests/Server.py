@@ -788,9 +788,6 @@ class RPLClass:
     def DAO_Adjust(self, Dest, uri, period):
         global c_ROUTE
 
-        if(str(Dest) == '0:0:0:2'):
-            Dest = '2'
-
         link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '2=' + str(period) + '!'
 
