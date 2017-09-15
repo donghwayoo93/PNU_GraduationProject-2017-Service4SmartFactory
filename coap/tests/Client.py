@@ -279,6 +279,7 @@ class MachineClass:
 
     Machine_String    = ''
     Machine_Timer_flag= False
+    machine_timer     = ''
 
     def __init__(self):
         self.machine_List     = []
@@ -305,7 +306,19 @@ class MachineClass:
         
         print 'machineSensor Solicitation msg sent'
 
+    def _machineMotorAdjustment(self, command):
+        msg = 'M' + 'machineMotor' + ' ' + str(command)
+
+        SEND_OUT_SEMAPHORE.acquire()
+        sock.sendto(msg, (TUN_DST_IP, TUN_DST_PORT))
+        SEND_OUT_SEMAPHORE.release()
+        
+        print 'machineMotor Adjustment msg sent'
+
+
     def _reinitVars(self):
+        self.machine_timer.end()
+
         self.machine_List      = []
         self.machine_size      = 0
         self.machine_List_size = 0
@@ -317,10 +330,10 @@ class MachineClass:
         if(self.Machine_Timer_flag == False):
             self.Machine_Timer_flag = True
 
-            machine_timer = timerClass()
-            machine_timer.setHandler(self._reinitVars)
-            machine_timer.setDelay(60)
-            machine_timer.start()
+            self.machine_timer = timerClass()
+            self.machine_timer.setHandler(self._reinitVars)
+            self.machine_timer.setDelay(60)
+            self.machine_timer.start()
 
     def _recvMachineData(self, payload):
 
@@ -367,6 +380,7 @@ class MachineClass:
             return False
 
     def _makeString(self):
+        self.machine_timer.end()
         # make fragmented string to one
         for i in range(self.machine_List_size):
             self.Machine_String += ''.join(str(chr(c)) for c in self.machine_List[i])
@@ -380,6 +394,7 @@ class MachineClass:
         SEND_IN_SEMAPHORE.release()
         
         self.Machine_String = ''
+        self._reinitVars()
 
 
 
@@ -518,6 +533,8 @@ class ThreadClass(threading.Thread):
                     machine._machineInfoSolicitation()
                 elif(dict['type'] == 'machineSensor'):
                     machine._machineSensorSolicitation()
+                elif(dict['type'] == 'machineMotor'):
+                    machine._machineMotorAdjustment(dict['command'])
                 elif(dict['type'] == 'connect'):
                     conn._sendSYN()
                 elif(dict['type'] == 'disconnect'):
