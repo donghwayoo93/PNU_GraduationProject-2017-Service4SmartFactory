@@ -62,7 +62,7 @@ class SensorResource(coapResource.coapResource):
         # initialize parent class
         coapResource.coapResource.__init__(
             self,
-            path = 'ex',
+            path = 'gpio',
         )
     
     def GET(self,options=[]):
@@ -79,9 +79,6 @@ class SensorResource(coapResource.coapResource):
         # In case Server Receives Sensor Value Packet
         if(unichr(payload[0]) == 'S'):
             payload = payload[2:]
-            payload_str   = ''
-            json_str      = ''
-            sensor_value  = ''
 
             my_suffix_1 = format(payload[0], 'x')
             my_suffix_2 = format(payload[1], 'x')
@@ -92,27 +89,37 @@ class SensorResource(coapResource.coapResource):
             if(len(my_suffix_2) == 1):
                 my_suffix_2 = '0' + my_suffix_2
 
-            for i in payload:
-                str_i = str(i)
-                if(str_i == '32'):
-                    payload_str += ' '
-                elif(str_i == '0'):
-                    payload_str += ''
-                else:
-                    payload_str += str_i
+            print payload
 
-            sensor_arr = payload_str.split(' ')
-            sensor_arr[0] = str(my_suffix_1) + str(my_suffix_2)
+            payload = payload[3:]
 
-            if(sensor_arr[1] != ''):
-                sensor_arr[1] = (int)(2.5 * (float(sensor_arr[1]) / 4096) * 6250)
-            if(sensor_arr[2] != ''):
-                sensor_arr[2] = (int)(1.5 * (float(sensor_arr[2]) / 4096) * 1000)
+            solar_1          = payload[0]
+            solar_2          = payload[1]
 
-            updateSensor(str(sensor_arr[0]), str(sensor_arr[1]), 'solar')
-            updateSensor(str(sensor_arr[0]), str(sensor_arr[2]), 'photosynthetic')
+            solar            = (int(solar_1) * 256) + int(solar_2)
 
-           # print json_str
+            photosynthetic_1 = payload[3]
+            photosynthetic_2 = payload[4]
+
+            photosynthetic   = (int(photosynthetic_1) * 256) + int(photosynthetic_2)
+
+            motor            = payload[6]
+
+            DAO_LED          = payload[8]
+
+            ipv6_suffix = str(my_suffix_1) + str(my_suffix_2)
+
+            if(solar != 0):
+                solar = (int)(2.5 * (float(solar) / 4096) * 6250)
+            if(photosynthetic != 0):
+                photosynthetic = (int)(1.5 * (float(photosynthetic) / 4096) * 1000)
+
+            print ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED)
+
+            updateSensor(str(ipv6_suffix), str(solar), 'solar')
+            updateSensor(str(ipv6_suffix), str(photosynthetic), 'photosynthetic')
+
+
         # In case Server Receives Connection Packet
         elif(unichr(payload[0]) == 'C'):
             print 'error : Sensor coap server received Connection Packet\n'
@@ -278,6 +285,54 @@ class machineClass:
         elif(payload_str[0] == 'machineSensor'):
             logger.info('Received machineSensor Solicitation Message')
             self._sendMachineSensor(payload_str[1])
+        elif(payload_str[0] == 'machineMotor'):
+            logger.info('Received machineMotor Adjustment Message')
+            self._adjustMachineMotor(payload_str[1])
+
+
+    def _adjustMachineMotor(self, workerID, command):
+        global c_ROUTE
+
+        link = 'coap://[bbbb::' + str(CURRENT_PARENT) + ']:5683/gpio'
+        payload_str = str(command)+'x'
+
+        c_ROUTE.PUT(
+                link,
+                payload=[ord(b) for b in payload_str]
+        )
+
+        time.sleep(1)
+
+        response = c_ROUTE.GET(
+                link
+        )
+
+        self._sendMacheinMotor(chr(response[0]))
+
+
+    def _sendMacheinMotor(self, status):
+        global c_INST, COAP_5685_SEMAPHORE, data_tag
+
+        if(status == '1'):
+            data_str = 'TRUE'
+        else:
+            data_str = 'FALSE'
+
+        tag_sem.acquire()
+        data_tag += 1
+        tag_sem.release()
+
+        data_len_upper, data_len_lower = divmod(len(data_str), 256)
+        payload_str  = 'M'
+        payload_str += str(chr(self.FRAG_1)) + str(chr(data_len_upper)) + str(chr(data_len_lower)) +  str(chr(data_tag))
+        payload_str += data_str
+
+        COAP_5685_SEMAPHORE.acquire()
+        c_INST.PUT(
+            self.link,
+            payload=[ord(b) for b in str(payload_str)]
+        )
+        COAP_5685_SEMAPHORE.release()
 
 
     def _sendMachineInfo(self, workerID):
@@ -518,7 +573,7 @@ class ConnectionClass:
     FIN_dict = {
                 'FIN_1' : 0,
                 'FIN_2' : 0,
-                'ACK' : 0,
+                'ACK'   : 0,
     }
 
     link      = 'coap://[bbbb::2]:5685/inst'
@@ -782,6 +837,19 @@ class RPLClass:
             for r in response:
                 print_str += chr(r)
             print 'response : ' + print_str
+
+            logger.info('Server sends LED adjust message Destination : ' + str(Dest))
+            link        = 'coap://[bbbb::' + str(Dest) + ']:5683/gpio'
+            if(int(period) > 10):
+                payload_str = 'x0'        # turn off LED
+            else:
+                payload_str = 'x1'        # turn on  LED
+
+            c_ROUTE.PUT(
+                    link,
+                    payload=[ord(b) for b in payload_str]
+            )
+
         else:
             logger.info('No parrent node to send DIO')
 

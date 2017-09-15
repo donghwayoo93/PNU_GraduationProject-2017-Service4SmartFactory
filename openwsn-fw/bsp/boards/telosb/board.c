@@ -9,6 +9,7 @@
 // bsp modules
 #include "debugpins.h"
 #include "leds.h"
+#include "gpios.h"
 #include "uart.h"
 #include "spi.h"
 #include "bsp_timer.h"
@@ -54,6 +55,7 @@ void board_init() {
    // initialize bsp modules
    debugpins_init();
    leds_init();
+   gpios_init();
    uart_init();
    spi_init();
    bsp_timer_init();
