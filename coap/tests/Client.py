@@ -285,6 +285,7 @@ class MachineClass:
         self.machine_List     = []
         self.FRAG_1           = 24
         self.FRAG_N           = 28
+        self.machine_timer    = timerClass()
 
     def _machineInfoSolicitation(self):
         global workerID
@@ -330,7 +331,6 @@ class MachineClass:
         if(self.Machine_Timer_flag == False):
             self.Machine_Timer_flag = True
 
-            self.machine_timer = timerClass()
             self.machine_timer.setHandler(self._reinitVars)
             self.machine_timer.setDelay(60)
             self.machine_timer.start()
