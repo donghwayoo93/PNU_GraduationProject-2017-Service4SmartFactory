@@ -7,15 +7,8 @@
             <h2>Operator Support System</h2>
         </ion-title>
     </ion-navbar>
-
 </ion-header>
-
 <ion-content padding>
-    <!--
-    <button ion-button block class="refresh-button" (click)="refreshMachineInfo()">machine info</button>
-    <button ion-button block class="refresh-button" (click)="refreshSensorStatus()">sensor</button>
-    <button ion-button block class="refresh-button" (click)="refreshMachineManual()">manual</button>
-    -->
     <ion-card>
         <ion-card-header icon-left>
             <ion-icon name="bookmark"></ion-icon>Machine Information
@@ -38,6 +31,23 @@
                 <ion-item *ngFor="let sensorData of sensorDatas">
                     <span item-start>{{sensorData.title}}</span>
                     <span item-end>{{sensorData.content}}</span>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
+    <ion-card>
+        <ion-card-header icon-left>
+            <ion-icon name="build"></ion-icon>Contorl
+        </ion-card-header>
+        <ion-card-content>
+            <ion-list>
+                <ion-item>
+                    <span item-start icon-left><ion-icon name="power"></ion-icon>Motor</span>
+                    <span item-end><button ion-button (click)="controlMotor('on')">On</button></span>
+                </ion-item>
+                <ion-item>
+                    <span item-start icon-left><ion-icon icon-left name="power"></ion-icon>Motor</span>
+                    <span item-end><button ion-button (click)="controlMotor('off')" color="danger">Off</button></span>
                 </ion-item>
             </ion-list>
         </ion-card-content>

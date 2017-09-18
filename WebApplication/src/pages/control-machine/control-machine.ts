@@ -115,6 +115,34 @@ export class ControlMachinePage {
 		});
 	}
 
+	controlMotor(type) {
+		this.showLoader("loading...");
+		this.loading.dismiss();
+		if (type == "on") {
+			this.machineService.turnOnMotor().then((result) => {
+				console.log(result);
+				if (result[0] == 'TRUE') {
+					this.presentToast("success turning on");
+				} else {
+					this.presentToast("Failed to turn on");
+				}
+			}, (err) => {
+				this.presentToast("Failed to turn on");
+			})
+		} else if (type == "off") {
+			this.machineService.turnOffMotor().then((result) => {
+				console.log(result);
+				if (result[0] == 'TRUE') {
+					this.presentToast("success turning off");
+				} else {
+					this.presentToast("Failed to turn off");
+				}
+			}, (err) => {
+				this.presentToast("Failed to turn off");
+			})
+		}
+	}
+
 	disconnect() {
 		this.showLoader("disconnect...");
 		this.ConnectionService.tryDisconnect().then((result) => {
@@ -189,7 +217,7 @@ export class ControlMachinePage {
 						this.refreshMachineManual();
 					}
 				}, {
-					text: 'Disconnect from machine',
+					text: 'Disconnect',
 					role: 'destructive',
 					icon: 'exit',
 					handler: () => {

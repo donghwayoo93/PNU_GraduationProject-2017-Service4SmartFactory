@@ -13,6 +13,7 @@ app.use(bodyParser.json()); // Send JSON responses
 app.use(logger('dev')); // Log requests to API using morgan
 app.use(cors());
 
+const FILENAME = "localSocket.py";
 // Routes
 
 app.post('/api/requestLogin', function(req, res) {
@@ -24,7 +25,7 @@ app.post('/api/requestLogin', function(req, res) {
         scriptPath: '',
         args: ['login', req.body.email, req.body.password]
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');
@@ -49,7 +50,7 @@ app.get('/api/machines/info', function(req, res) {
         scriptPath: '',
         args: ['machineInfo']
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');
@@ -74,7 +75,7 @@ app.get('/api/machines/sensor', function(req, res) {
         scriptPath: '',
         args: ['machineSensor']
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');
@@ -99,7 +100,53 @@ app.get('/api/machines/manual', function(req, res) {
         scriptPath: '',
         args: ['machineManual']
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
+        if (err) throw err;
+        if (results == 'Unauthorized') {
+            //console.log('Unauthorized 확인');
+            //console.log(results);
+            res.status(401).send(results);
+        } else {
+            results = JSON.parse(results);
+            //console.log('results: %j', results);
+            res.send(results);
+        }
+    });
+});
+
+app.get('/api/machines/motorOn', function(req, res) {
+    //console.log(req.body);
+    var options = {
+        mode: 'text',
+        pythonPath: '',
+        pythonOptions: ['-u'],
+        scriptPath: '',
+        args: ['machineMotor', 'ON']
+    };
+    pythonShell.run(FILENAME, options, function(err, results) {
+        if (err) throw err;
+        if (results == 'Unauthorized') {
+            //console.log('Unauthorized 확인');
+            //console.log(results);
+            res.status(401).send(results);
+        } else {
+            results = JSON.parse(results);
+            //console.log('results: %j', results);
+            res.send(results);
+        }
+    });
+});
+
+app.get('/api/machines/motorOff', function(req, res) {
+    //console.log(req.body);
+    var options = {
+        mode: 'text',
+        pythonPath: '',
+        pythonOptions: ['-u'],
+        scriptPath: '',
+        args: ['machineMotor', 'OFF']
+    };
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');
@@ -122,7 +169,7 @@ app.get('/api/connect', function(req, res) {
         scriptPath: '',
         args: ['connect']
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');
@@ -143,7 +190,7 @@ app.get('/api/disconnect', function(req, res) {
         scriptPath: '',
         args: ['disconnect']
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');
@@ -164,7 +211,7 @@ app.get('/api/rssi', function(req, res) {
         scriptPath: '',
         args: ['rssi']
     };
-    pythonShell.run('test.py', options, function(err, results) {
+    pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
             //console.log('Unauthorized 확인');

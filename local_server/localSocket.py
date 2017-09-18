@@ -32,6 +32,12 @@ elif(sys.argv[1] == 'rssi'):
     jsonData = {
         "type": sys.argv[1]
     }
+elif(sys.argv[1] == 'machineMotor'):
+    jsonData = {
+        "type": sys.argv[1],
+        "command": sys.argv[2]  # ON / OFF
+    }
+
 import socket
 import json
 

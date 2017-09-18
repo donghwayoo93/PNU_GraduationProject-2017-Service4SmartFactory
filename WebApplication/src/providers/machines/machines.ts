@@ -45,4 +45,26 @@ export class MachinesProvider {
         });
     });
   }
+  turnOnMotor() {
+    return new Promise((resolve, reject) => {
+      this.http.get('http://localhost:9999/api/machines/motorOn')
+        .map(res => res.json())
+        .subscribe(data => {
+          resolve(data);
+        }, (err) => {
+          reject(err);
+        });
+    });
+  }
+  turnOffMotor() {
+    return new Promise((resolve, reject) => {
+      this.http.get('http://localhost:9999/api/machines/motorOff')
+        .map(res => res.json())
+        .subscribe(data => {
+          resolve(data);
+        }, (err) => {
+          reject(err);
+        });
+    });
+  }
 }
