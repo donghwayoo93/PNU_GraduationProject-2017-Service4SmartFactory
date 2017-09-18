@@ -48,7 +48,7 @@ void     cgpio_sendDone(
 
 void cgpio_init() {
    
-   // prepare the resource descriptor for the /l path
+   // prepare the resource descriptor for the /gpio path
    cgpio_vars.desc.path0len            = sizeof(cgpio_path0)-1;
    cgpio_vars.desc.path0val            = (uint8_t*)(&cgpio_path0);
    cgpio_vars.desc.path1len            = 0;

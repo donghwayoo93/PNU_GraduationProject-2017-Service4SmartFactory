@@ -294,26 +294,24 @@ class machineClass:
         global c_ROUTE
 
         link = 'coap://[bbbb::' + str(CURRENT_PARENT) + ']:5683/gpio'
-        payload_str = str(command)+'x'
+
+        if(command == 'ON'):
+            payload_str = '1x'
+        else:
+            payload_str = '0x'
 
         c_ROUTE.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
 
-        time.sleep(1)
-
-        response = c_ROUTE.GET(
-                link
-        )
-
-        self._sendMacheinMotor(chr(response[0]))
+        self._sendMacheinMotor(command)
 
 
     def _sendMacheinMotor(self, status):
         global c_INST, COAP_5685_SEMAPHORE, data_tag
 
-        if(status == '1'):
+        if(status == 'ON'):
             data_str = 'TRUE'
         else:
             data_str = 'FALSE'
@@ -753,9 +751,9 @@ class ThreadClass(threading.Thread):
             os.kill(os.getpid(), signal.SIGTERM)
 
         elif(self.thread_index == THREAD_RENEW_CONN):
-            global CONNECTION_FIN, CONNECTION_SYN, CONN_SEMAPHORE, COAP_RECV_PAYLOAD
-            global CURRENT_PARENT, PARENT_SEMAPHORE, PAYLOAD_SEMAPHORE
-            global inst, conn, login, machine, data_tag, tag_sem
+            global CONNECTION_FIN, CONNECTION_SYN, CONN_SEMAPHORE
+            global CURRENT_PARENT, PARENT_SEMAPHORE
+            global conn, data_tag, tag_sem
 
             time.sleep(1)
             
@@ -767,10 +765,6 @@ class ThreadClass(threading.Thread):
                     CONNECTION_SYN = False
                     CONNECTION_FIN = False
                     CONN_SEMAPHORE.release()
-                    # initialize Global Payload variable
-                    PAYLOAD_SEMAPHORE.acquire()
-                    COAP_RECV_PAYLOAD = [0]
-                    PAYLOAD_SEMAPHORE.release()
                     # initialize Current Parent
                     PARENT_SEMAPHORE.acquire()
                     CURRENT_PARENT = ''
@@ -841,9 +835,9 @@ class RPLClass:
             logger.info('Server sends LED adjust message Destination : ' + str(Dest))
             link        = 'coap://[bbbb::' + str(Dest) + ']:5683/gpio'
             if(int(period) > 10):
-                payload_str = 'x0'        # turn off LED
+                payload_str = 'x1'        # turn on LED
             else:
-                payload_str = 'x1'        # turn on  LED
+                payload_str = 'x0'        # turn off  LED
 
             c_ROUTE.PUT(
                     link,
