@@ -94,19 +94,25 @@ export class ControlMachinePage {
 			var manualNum = result[0].manual[0].num;
 			console.log(manual);
 
-			var photoNum = [];
-			if (manualNum == 1) {
-				photoNum = [4, 3, 2, 1, 3];
+			var photoNum: Array<String>;
+			if (manualNum == 0) {
+				photoNum = ["0.gif"];
+			} else if (manualNum == 1) {
+				photoNum = ["1.jpg", "1.jpg", "1.jpg", "1.jpg", "1.jpg"];
 			} else if (manualNum == 2) {
-				photoNum = [1, 2, 3, 4];
+				photoNum = ["2.jpg", "1.jpg", "1.jpg", "1.jpg", "1.jpg"];
+			} else if (manualNum == 3) {
+				photoNum = ["3.jpg", "3.jpg", "3.jpg", "3.jpg", "3.jpg"];
+			} else if (manualNum == 4) {
+				photoNum = ["4.jpg", "4.jpg", "4.jpg", "4.jpg", "4.jpg"];
 			} else {
-				photoNum = [3, 3, 3, 4];
+				photoNum = ["0.gif"];
 			}
 			this.manuals = [];
 			for (var idx2 in manual) {
 				this.manuals.push({
 					"instruction": manual[idx2],
-					"photoNum": "../../assets/images/" + photoNum[idx2] + ".png"
+					"photoNum": "../../assets/images/" + photoNum[idx2]
 				});
 			}
 		}, (err) => {
@@ -173,22 +179,6 @@ export class ControlMachinePage {
 		}, (err) => {
 			console.log('failed to get RSSI');
 		});
-	}
-
-	showLoader(content) {
-		this.loading = this.loadingCtrl.create({
-			content: content
-		});
-		this.loading.present();
-	}
-
-	presentToast(message) {
-		let toast = this.toastCtrl.create({
-			message: message,
-			duration: 3000,
-			position: 'top'
-		});
-		toast.present();
 	}
 
 	openMenu() {
@@ -259,6 +249,23 @@ export class ControlMachinePage {
 		});
 		confirm.present();
 	}
+
+	showLoader(content) {
+		this.loading = this.loadingCtrl.create({
+			content: content
+		});
+		this.loading.present();
+	}
+
+	presentToast(message) {
+		let toast = this.toastCtrl.create({
+			message: message,
+			duration: 3000,
+			position: 'top'
+		});
+		toast.present();
+	}
+
 	showDistanceAlert() {
 		let alert = this.alertCtrl.create({
 			title: "distance alert",
