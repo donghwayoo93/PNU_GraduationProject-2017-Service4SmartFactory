@@ -136,6 +136,7 @@ export class ControlMachinePage {
 			console.log(result[0]);
 			if (0 < result[0] && result[0] < 50) {
 				console.log("0~50");
+				this.showDistanceAlert();
 			} else if (result[0] < 0) {
 				console.log("0 이하");
 			} else {
@@ -229,5 +230,13 @@ export class ControlMachinePage {
 			]
 		});
 		confirm.present();
+	}
+	showDistanceAlert() {
+		let alert = this.alertCtrl.create({
+			title: "distance alert",
+			message: "You're far from mahcine.\nhold nearby position",
+			buttons: ['OK']
+		});
+		alert.present();
 	}
 }
