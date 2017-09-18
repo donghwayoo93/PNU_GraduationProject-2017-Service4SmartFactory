@@ -6,8 +6,6 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 var queue = require('express-queue');
 
-
-
 var databaseConfig = require('./config/database');
 var router = require('./app/routes');
 

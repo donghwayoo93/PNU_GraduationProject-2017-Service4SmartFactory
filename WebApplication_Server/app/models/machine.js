@@ -14,11 +14,11 @@ var machineSchema = new mongoose.Schema({
         enum: ['1', '2', '3'],
         default: '1'
     },
-    accessLevel: {
+    nearWorkerID: {
         type: String
     },
     sensorState: {
-        type: Array
+        type: Object
     },
     manual: {
         type: Array
