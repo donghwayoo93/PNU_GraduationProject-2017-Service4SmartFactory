@@ -62,6 +62,8 @@ class RPL(eventBusClient.eventBusClient):
     # leaf movement check
     CURRENT_PARENT_ADDR                = ''
     FORMER_PARENT_ADDR                 = ''
+    parent_suffix_ipv6                 = ''
+    source_suffix_ipv6                 = ''
     
     def __init__(self):
         
@@ -219,7 +221,6 @@ class RPL(eventBusClient.eventBusClient):
             return False
 
     def _checkParentChanged(self):
-        global source_suffix_ipv6
         if(self.CURRENT_PARENT_ADDR == self.FORMER_PARENT_ADDR):
             return False
         else:
@@ -228,7 +229,8 @@ class RPL(eventBusClient.eventBusClient):
             print 'Current parent : ' + self.CURRENT_PARENT_ADDR + '\n'
             if(self.FORMER_PARENT_ADDR != ''):
                 # to current leaf node's ex-parent : reset dio period to default
-                self._adjust_DIO_Period(source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'ex', 10)
+                print 'in checkParentChanged DIO adjust'
+                self._adjust_DIO_Period(self.source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'ex', 10)
             self.FORMER_PARENT_ADDR = self.CURRENT_PARENT_ADDR
             return True
     
@@ -264,8 +266,7 @@ class RPL(eventBusClient.eventBusClient):
 
 
         # to compare DAO source addr and Worker device ipv6 addr
-        source_suffix_ipv6 = '{0}'.format(u.formatIPv6Addr(source))
-        print source_suffix_ipv6
+        self.source_suffix_ipv6 = '{0}'.format(u.formatIPv6Addr(source))
 
 
         # DAO example
@@ -328,9 +329,9 @@ class RPL(eventBusClient.eventBusClient):
         
 
         # DAO Parent Information
-        parent_suffix_ipv6 = ''
+        self.parent_suffix_ipv6 = ''
         for p in parents:
-            parent_suffix_ipv6 += '{0}'.format(u.formatIPv6Addr(p))    
+            self.parent_suffix_ipv6 += '{0}'.format(u.formatIPv6Addr(p))    
         # print parent_suffix_ipv6
 
         
@@ -363,13 +364,14 @@ class RPL(eventBusClient.eventBusClient):
         # if you get here, the DAO was parsed correctly
 
         # 
-        if(self._compareIpv6Addr(source_suffix_ipv6, parent_suffix_ipv6) == True):
-            self.CURRENT_PARENT_ADDR = parent_suffix_ipv6
+        if(self._compareIpv6Addr(self.source_suffix_ipv6, self.parent_suffix_ipv6) == True):
+            self.CURRENT_PARENT_ADDR = self.parent_suffix_ipv6
             if(self._checkParentChanged()):
+                print 'PRL.py IN If clause _checkParentChanged'
                 # to current leaf node : set dao period loosely
-                self._adjust_DAO_Period(source_suffix_ipv6, 'ex', 60)
+                self._adjust_DAO_Period(self.source_suffix_ipv6, 'ex', 60)
                 # to current leaf node's parent : set dio period loosely
-                self._adjust_DIO_Period(source_suffix_ipv6, parent_suffix_ipv6, 'ex', 20)
+                self._adjust_DIO_Period(self.source_suffix_ipv6, self.parent_suffix_ipv6, 'ex', 20)
                 
         
         # update parents information with parents collected -- calls topology module.

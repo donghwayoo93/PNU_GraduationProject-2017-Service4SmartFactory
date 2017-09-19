@@ -89,7 +89,7 @@ class SensorResource(coapResource.coapResource):
             if(len(my_suffix_2) == 1):
                 my_suffix_2 = '0' + my_suffix_2
 
-            print payload
+            #print payload
 
             payload = payload[3:]
 
@@ -801,6 +801,8 @@ class UDP_DODAG_IPC(SocketServer.BaseRequestHandler):
             print 'error : no match type for the handler'
             print 'pkt_type : ' + pkt_type
 
+        socket.sendto(data.upper(), self.client_address)
+
 
 class RPLClass:
 
@@ -822,6 +824,9 @@ class RPLClass:
 
         if(str(Dest) != ''):
             logger.info('Server sends DIO adjust message Destination : ' + str(Dest))
+            print str(link)
+            print str(payload_str)
+
             response = c_ROUTE.PUT(
                     link,
                     payload=[ord(b) for b in payload_str]
@@ -832,7 +837,6 @@ class RPLClass:
                 print_str += chr(r)
             print 'response : ' + print_str
 
-            logger.info('Server sends LED adjust message Destination : ' + str(Dest))
             link        = 'coap://[bbbb::' + str(Dest) + ']:5683/gpio'
             if(int(period) > 10):
                 payload_str = 'x1'        # turn on LED
@@ -843,6 +847,7 @@ class RPLClass:
                     link,
                     payload=[ord(b) for b in payload_str]
             )
+            logger.info('Server sent LED adjust message Destination : ' + str(Dest))
 
         else:
             logger.info('No parrent node to send DIO')
@@ -850,10 +855,15 @@ class RPLClass:
     def DAO_Adjust(self, Dest, uri, period):
         global c_ROUTE
 
+        if(Dest == '0:0:0:2'):
+            Dest = '2'
+
         link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '2=' + str(period) + '!'
 
         logger.info('Server sends DAO adjust message Destination : ' + str(Dest))  
+        print str(link)
+        print str(payload_str)
 
         response = c_ROUTE.PUT(
                 link,
