@@ -8,8 +8,9 @@
 
 // CoAP
 #include "c6t.h"
+//#include "cinfo.h"
+//#include "cleds.h"
 #include "cinfo.h"
-#include "cleds.h"
 #include "cexample.h"
 #include "cstorm.h"
 #include "cwellknown.h"
@@ -29,10 +30,11 @@
 void openapps_init(void) {
    // CoAP
    c6t_init();
-   cinfo_init();
+   //cinfo_init();
    cexample_init(); // add initial funtcion cexample
-   cleds__init();
+   //cleds__init();
    cstorm_init();
+	cinst_init()
    cwellknown_init();
    rrt_init();
    // UDP
