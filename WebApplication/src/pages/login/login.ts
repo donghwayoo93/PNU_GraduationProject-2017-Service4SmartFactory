@@ -57,6 +57,7 @@ export class LoginPage {
         });
         */
         this.navCtrl.setRoot(MenuPage);
+        this.loading.dismiss();
       });
     }, (err) => {
       this.loading.dismiss();

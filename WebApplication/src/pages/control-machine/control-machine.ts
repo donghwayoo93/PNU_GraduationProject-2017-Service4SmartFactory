@@ -170,11 +170,11 @@ export class ControlMachinePage {
 			console.log(result[0]);
 			if (0 < result[0] && result[0] < 50) {
 				console.log("0~50");
-				this.showDistanceAlert();
 			} else if (result[0] < 0) {
 				console.log("0 이하");
 			} else {
 				console.log("50 이상");
+				this.showDistanceAlert();
 			}
 		}, (err) => {
 			console.log('failed to get RSSI');
