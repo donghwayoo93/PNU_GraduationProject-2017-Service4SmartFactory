@@ -68,7 +68,7 @@ export class ControlMachinePage {
 		// 센서 데이터
 		this.machineService.getMachineSensorData(credentials).then((result) => {
 			this.loading.dismiss();
-			var SensorState = result[0].sensorState[0];
+			var SensorState = result[0].sensorState;
 			this.sensorDatas = [];
 			for (var idx in SensorState) {
 				this.sensorDatas.push({

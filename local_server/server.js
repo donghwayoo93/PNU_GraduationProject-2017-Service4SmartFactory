@@ -36,9 +36,7 @@ app.post('/api/requestLogin', function(req, res) {
             //console.log('results: %j', results);
             res.send(results);
         }
-
     });
-
 });
 
 app.get('/api/machines/info', function(req, res) {
