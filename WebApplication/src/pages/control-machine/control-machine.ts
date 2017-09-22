@@ -18,6 +18,7 @@ export class ControlMachinePage {
 	machineDatas: Array<{ title: string, content: string }>;
 	sensorDatas: Array<{ title: string, content: string }>;
 	manuals: Array<{ instruction: string, photoNum: string }>;
+	interval: any;
 
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
@@ -28,9 +29,9 @@ export class ControlMachinePage {
 	}
 
 	ionViewDidLoad() {
-		setInterval(() => {
+		this.interval = setInterval(() => {
 			this.getRSSI();
-		}, 30000)
+		}, 30000);
 	}
 
 	refreshMachineInfo() {
@@ -72,7 +73,7 @@ export class ControlMachinePage {
 			this.sensorDatas = [];
 			for (var idx in SensorState) {
 				this.sensorDatas.push({
-					"title": "Sensor Name : " + idx,
+					"title": "Name : " + idx,
 					"content": SensorState[idx]
 				});
 			}
@@ -98,13 +99,13 @@ export class ControlMachinePage {
 			if (manualNum == 0) {
 				photoNum = ["0.gif"];
 			} else if (manualNum == 1) {
-				photoNum = ["1.jpg", "1.jpg", "1.jpg", "1.jpg", "1.jpg"];
+				photoNum = ["1.png", "1.png", "1.png", "1.png", "1.png"];
 			} else if (manualNum == 2) {
-				photoNum = ["2.jpg", "1.jpg", "1.jpg", "1.jpg", "1.jpg"];
+				photoNum = ["2.png", "1.png", "1.png", "1.png", "1.png"];
 			} else if (manualNum == 3) {
-				photoNum = ["3.jpg", "3.jpg", "3.jpg", "3.jpg", "3.jpg"];
+				photoNum = ["3.png", "3.png", "3.png", "3.png", "3.png"];
 			} else if (manualNum == 4) {
-				photoNum = ["4.jpg", "4.jpg", "4.jpg", "4.jpg", "4.jpg"];
+				photoNum = ["4.png", "4.png", "4.png", "4.png", "4.png"];
 			} else {
 				photoNum = ["0.gif"];
 			}
@@ -112,7 +113,7 @@ export class ControlMachinePage {
 			for (var idx2 in manual) {
 				this.manuals.push({
 					"instruction": manual[idx2],
-					"photoNum": "../../assets/images/" + photoNum[idx2]
+					"photoNum": "/www/assets/images/" + photoNum[idx2]
 				});
 			}
 		}, (err) => {
@@ -157,6 +158,7 @@ export class ControlMachinePage {
 				this.presentToast("Success disconnecting");
 				this.loading.dismiss();
 				this.navCtrl.setRoot(LoginPage);
+				clearInterval(this.interval);
 			}
 		}, (err) => {
 			this.presentToast("Failed to disconnect");
@@ -166,14 +168,13 @@ export class ControlMachinePage {
 
 	getRSSI() {
 		this.ConnectionService.getRSSI().then((result) => {
-			console.log(result);
-			console.log(result[0]);
+			console.log("rss: " + result[0]);
 			if (0 < result[0] && result[0] < 50) {
-				console.log("0~50");
+				//console.log("0~50");
 			} else if (result[0] < 0) {
-				console.log("0 이하");
+				//console.log("0 이하");
 			} else {
-				console.log("50 이상");
+				//console.log("50 이상");
 				this.showDistanceAlert();
 			}
 		}, (err) => {
