@@ -48,7 +48,7 @@ data = json.dumps(jsonData)
 
 # Create a socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.settimeout(30)
+sock.settimeout(50)
 # Define the port on which you want to connect
 sock.bind((HOST, CLIENTPORT))
 

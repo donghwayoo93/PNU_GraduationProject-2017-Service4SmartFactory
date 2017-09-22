@@ -128,8 +128,6 @@ app.get('/api/machines/motorOn', function(req, res) {
             //console.log(results);
             res.status(401).send(results);
         } else {
-            results = JSON.parse(results);
-            //console.log('results: %j', results);
             res.send(results);
         }
     });
@@ -151,8 +149,6 @@ app.get('/api/machines/motorOff', function(req, res) {
             //console.log(results);
             res.status(401).send(results);
         } else {
-            results = JSON.parse(results);
-            //console.log('results: %j', results);
             res.send(results);
         }
     });
@@ -223,5 +219,5 @@ app.get('/api/rssi', function(req, res) {
 
 // listen
 var server = app.listen(9999);
-server.setTimeout(31000);
+server.setTimeout(51000);
 console.log("App listening on port 9999");
