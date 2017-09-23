@@ -62,8 +62,8 @@ void cgpio_init() {
    // register with the CoAP module
    opencoap_register(&cgpio_vars.desc);
    cgpio_vars.timerId = opentimers_start(CGPIOPERIOD,
-                                                TIMER_PERIODIC,TIME_MS,
-                                                cgpio_timer_cb);
+                                          TIMER_PERIODIC,TIME_MS,
+                                          cgpio_timer_cb);
 }
 
 //=========================== private =========================================
@@ -126,9 +126,24 @@ owerror_t cgpio_receive(
          // reset packet payload
          msg->payload                     = &(msg->packet[127]);
          msg->length                      = 0;
+
+         packetfunctions_reserveHeaderSize(msg, 3);
+         msg->payload[0] = COAP_PAYLOAD_MARKER;
+
+         if (gpios_GIO0_isOn()==1) {
+            msg->payload[1]               = ON;
+         } else {
+            msg->payload[1]               = OFF;
+         }
+
+         if (gpios_GIO1_isOn()==1) {
+            msg->payload[2]               = ON;
+         } else {
+            msg->payload[2]               = OFF;
+         }
          
          // set the CoAP header
-         coap_header->Code                = COAP_CODE_RESP_CHANGED;
+         coap_header->Code                = COAP_CODE_RESP_CONTENT;
          
          outcome                          = E_SUCCESS;
          break;

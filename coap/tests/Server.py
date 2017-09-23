@@ -10,7 +10,7 @@ from   coap   import    coap,                    \
                         coapDefines as d
 #import logging_setup
 import json
-import SocketServer
+import socket
 import time
 import requests
 import pymongo
@@ -48,12 +48,13 @@ CONNECTION_FIN        = False
 
 CONN_SEMAPHORE        = threading.Semaphore(1)
 COAP_5685_SEMAPHORE   = threading.Semaphore(1)
+COAP_5683_SEMAPHORE   = threading.Semaphore(1)
 PAYLOAD_SEMAPHORE     = threading.Semaphore(1)
 PARENT_SEMAPHORE      = threading.Semaphore(1)
 
 COAP_RECV_PAYLOAD     = [0]
 OPENSERIAL_MTU        = 32
-CURRENT_PARENT        = ''
+CURRENT_PARENT        = '1415:9200:1862:cbd'
 
 
 class SensorResource(coapResource.coapResource):
@@ -114,7 +115,7 @@ class SensorResource(coapResource.coapResource):
             if(photosynthetic != 0):
                 photosynthetic = (int)(1.5 * (float(photosynthetic) / 4096) * 1000)
 
-            print ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED)
+            #print ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED)
 
             updateSensor(str(ipv6_suffix), str(solar), 'solar')
             updateSensor(str(ipv6_suffix), str(photosynthetic), 'photosynthetic')
@@ -290,28 +291,34 @@ class machineClass:
             self._adjustMachineMotor(payload_str[1])
 
 
-    def _adjustMachineMotor(self, workerID, command):
-        global c_ROUTE
+    def _adjustMachineMotor(self, command):
+        global c_ROUTE, COAP_5683_SEMAPHORE
 
         link = 'coap://[bbbb::' + str(CURRENT_PARENT) + ']:5683/gpio'
 
         if(command == 'ON'):
-            payload_str = '1x'
+            payload_str = '1x'     # turn on  motor
         else:
-            payload_str = '0x'
+            payload_str = '0x'     # turn off motor
 
-        c_ROUTE.PUT(
+        COAP_5683_SEMAPHORE.acquire()
+        response = c_ROUTE.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
+        print_str = ''
+        for r in response:
+            print_str += chr(r)
+        print 'response : ' + print_str
 
-        self._sendMacheinMotor(command)
+        COAP_5683_SEMAPHORE.release()
+        self._sendMacheinMotor(str(print_str[0]))
 
 
     def _sendMacheinMotor(self, status):
         global c_INST, COAP_5685_SEMAPHORE, data_tag
 
-        if(status == 'ON'):
+        if((status == '1') | (status == '0')):
             data_str = 'TRUE'
         else:
             data_str = 'FALSE'
@@ -592,10 +599,6 @@ class ConnectionClass:
         global COAP_5685_SEMAPHORE
         global rpl
 
-        print str(payload)
-        print 'FIN_1 : ' + str(self.FIN_dict['FIN_1'])
-        print 'FIN_2 : ' + str(self.FIN_dict['FIN_2'])
-
         # Server Received SYN pkt from Client
         # 3-handshake ------------------------------- 1
         if((payload[0] == self.SYN) &
@@ -639,9 +642,9 @@ class ConnectionClass:
             self.FIN_dict['FIN_1'] = 1
             self.FIN_dict['FIN_2'] = 1
 
-            rpl.DAO_Adjust('0:0:0:2', 'ex', 30)
+            rpl.DAO_Adjust('0:0:0:2', 'route', 30)
 
-            rpl.DIO_Adjust(CURRENT_PARENT, 'ex', 10)
+            rpl.DIO_Adjust(CURRENT_PARENT, 'route', 10)
 
             COAP_5685_SEMAPHORE.acquire()
 
@@ -735,8 +738,20 @@ class ThreadClass(threading.Thread):
 
             print ' UDP server created with HOST : ' + IPC_HOST + ' PORT : ' + str(IPC_PORT)
 
-            server = SocketServer.UDPServer((IPC_HOST, IPC_PORT), UDP_DODAG_IPC)
-            server.serve_forever()
+            server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            server.bind((IPC_HOST, IPC_PORT))
+
+            while True:
+                data, addr = server.recvfrom(1024)
+
+                print str(data)
+                print str(addr)
+                logger.info('DODAG time check')
+                handle_DODAG_IPC(data)
+                data = ''
+
+            #server = SocketServer.UDPServer((IPC_HOST, IPC_PORT), UDP_DODAG_IPC)
+            #server.serve_forever()
 
         elif(self.thread_index == THREAD_SYSKILL):
             raw_input('\n\nServer running. Press Enter to close.\n\n')
@@ -779,29 +794,27 @@ class ThreadClass(threading.Thread):
                     data_tag = 1
                     tag_sem.release()
 
-class UDP_DODAG_IPC(SocketServer.BaseRequestHandler):
-    def handle(self):
-        global rpl
-        data   = self.request[0]
-        socket = self.request[1]
+def handle_DODAG_IPC(data):
+    global rpl
 
-        dict = json.loads(data)
+    print 'handle DODAG_IPC : ' + str(data)
 
-        pkt_type = dict['type']
-        src_addr = dict['src_addr']
-        dst_addr = dict['dst_addr']
-        uri      = dict['uri']
-        period   = dict['period']
+    dict = json.loads(data)
 
-        if(pkt_type == 'DIO'):
-            rpl.DIO_Adjust(dst_addr, uri, period)
-        elif(pkt_type == 'DAO'):
-            rpl.DAO_Adjust(dst_addr, uri, period)
-        else:
-            print 'error : no match type for the handler'
-            print 'pkt_type : ' + pkt_type
+    pkt_type = dict['type']
+    src_addr = dict['src_addr']
+    dst_addr = dict['dst_addr']
+    uri      = dict['uri']
+    period   = dict['period']
 
-        socket.sendto(data.upper(), self.client_address)
+    if(pkt_type == 'DIO'):
+        rpl.DIO_Adjust(dst_addr, uri, period)
+    elif(pkt_type == 'DAO'):
+        rpl.DAO_Adjust(dst_addr, uri, period)
+    else:
+        print 'error : no match type for the handler'
+        print 'pkt_type : ' + pkt_type
+
 
 
 class RPLClass:
@@ -827,10 +840,13 @@ class RPLClass:
             print str(link)
             print str(payload_str)
 
+
+            COAP_5683_SEMAPHORE.acquire()
             response = c_ROUTE.PUT(
                     link,
                     payload=[ord(b) for b in payload_str]
             )
+            COAP_5683_SEMAPHORE.release()
             
             print_str = ''
             for r in response:
@@ -843,10 +859,17 @@ class RPLClass:
             else:
                 payload_str = 'x0'        # turn off  LED
 
-            c_ROUTE.PUT(
+            COAP_5683_SEMAPHORE.acquire()
+            response = c_ROUTE.PUT(
                     link,
                     payload=[ord(b) for b in payload_str]
             )
+            COAP_5683_SEMAPHORE.release()
+            print_str = ''
+            for r in response:
+                print_str += chr(r)
+            print 'response : ' + print_str
+
             logger.info('Server sent LED adjust message Destination : ' + str(Dest))
 
         else:
@@ -855,8 +878,7 @@ class RPLClass:
     def DAO_Adjust(self, Dest, uri, period):
         global c_ROUTE
 
-        if(Dest == '0:0:0:2'):
-            Dest = '2'
+        Dest = self.shorterIpv6addr(Dest)
 
         link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '2=' + str(period) + '!'
@@ -865,16 +887,29 @@ class RPLClass:
         print str(link)
         print str(payload_str)
 
+        COAP_5683_SEMAPHORE.acquire()
         response = c_ROUTE.PUT(
                 link,
                 payload=[ord(b) for b in payload_str]
         )
+        COAP_5683_SEMAPHORE.release()
 
         print_str = ''
         for r in response:
             print_str += chr(r)
         print 'response : ' + print_str
 
+    def shorterIpv6addr(self, addr):
+        addr_arr   = addr.split(':')
+        total_sum  = 0
+        index      = len(addr_arr)
+        
+        for i in range(index):
+            if(int(addr_arr[0]) == 0):
+                addr_arr.pop(0)
+            else:
+                return ':'.join(addr_arr)
+                
 
 thread_index = 0
 server       = 0

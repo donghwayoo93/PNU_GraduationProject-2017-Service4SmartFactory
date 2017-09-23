@@ -229,8 +229,8 @@ class RPL(eventBusClient.eventBusClient):
             print 'Current parent : ' + self.CURRENT_PARENT_ADDR + '\n'
             if(self.FORMER_PARENT_ADDR != ''):
                 # to current leaf node's ex-parent : reset dio period to default
-                print 'in checkParentChanged DIO adjust'
-                self._adjust_DIO_Period(self.source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'ex', 10)
+                print 'Parent Changed'
+                #self._adjust_DIO_Period(self.source_suffix_ipv6, self.FORMER_PARENT_ADDR, 'route', 10)
             self.FORMER_PARENT_ADDR = self.CURRENT_PARENT_ADDR
             return True
     
@@ -369,9 +369,9 @@ class RPL(eventBusClient.eventBusClient):
             if(self._checkParentChanged()):
                 print 'PRL.py IN If clause _checkParentChanged'
                 # to current leaf node : set dao period loosely
-                self._adjust_DAO_Period(self.source_suffix_ipv6, 'ex', 60)
+                self._adjust_DAO_Period(self.source_suffix_ipv6, 'route', 60)
                 # to current leaf node's parent : set dio period loosely
-                self._adjust_DIO_Period(self.source_suffix_ipv6, self.parent_suffix_ipv6, 'ex', 20)
+                self._adjust_DIO_Period(self.source_suffix_ipv6, self.parent_suffix_ipv6, 'route', 20)
                 
         
         # update parents information with parents collected -- calls topology module.

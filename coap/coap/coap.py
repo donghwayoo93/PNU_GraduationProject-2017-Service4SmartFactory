@@ -313,10 +313,6 @@ class coap(object):
                         # try matching
                         #print str(u.ipv6AddrString2Bytes(msgkey[0]))
                         #print str(u.ipv6AddrString2Bytes(k[0]))
-
-                        #if(u.ipv6AddrString2Bytes(msgkey[0]) == u.ipv6AddrString2Bytes(k[0])):
-                        #    print 'same' 
-
                         if (
                                 u.ipv6AddrString2Bytes(msgkey[0]) == u.ipv6AddrString2Bytes(k[0]) and
                                 msgkey[1]==k[1] and
