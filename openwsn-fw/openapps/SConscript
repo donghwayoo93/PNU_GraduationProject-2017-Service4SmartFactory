@@ -9,7 +9,7 @@ localEnv      = env.Clone()
 # apps which should always be built
 defaultApps   = [
     'c6t',
-	'cexample',
+	#'cexample',
     #'cinfo',
     #'cleds',
     'cwellknown',
@@ -20,14 +20,14 @@ defaultApps   = [
 ]
 if localEnv['board']=='python':
     defaultApps  += [
-        'cexample',
+        #'cexample',
         'cstorm',
     ]
 
 # apps which should always be present
 defaultAppsInit   = [
     'c6t',
-	'cexample',
+	#'cexample',
     #'cinfo',
     #'cleds',
     'cwellknown',
@@ -39,7 +39,7 @@ defaultAppsInit   = [
 if localEnv['apps']:
     userApps  = localEnv['apps'].split(',')
 else:
-    userApps  = ['cinst']
+    userApps  = ['cinst', 'croute']
 
 # union of default and additional apps (without duplicates)
 apps = sorted(list(set(defaultApps+userApps)))

@@ -171,6 +171,7 @@ class InstructionClass:
     Instruction_size      = 0
     Instruction_tag       = 0
     Instruction_String    = ''
+    Instruction_timer     = ''
 
     FRAG_1                = 0
     FRAG_N                = 0
@@ -181,6 +182,7 @@ class InstructionClass:
         self.Instruction_List = []
         self.FRAG_1           = 24
         self.FRAG_N           = 28
+        self.Instruction_timer= timerClass()
 
     def _instructionSolicitation(self):
         global workerID
@@ -199,15 +201,15 @@ class InstructionClass:
         self.Instruction_tag        = 0
         self.Instruction_String     = ''
         self.Instruction_Timer_flag = False
+        self.Instruction_timer= timerClass()
 
     def _timerStart(self):
         if(self.Instruction_Timer_flag == False):
             self.Instruction_Timer_flag = True
 
-            Instruction_timer = timerClass()
-            Instruction_timer.setHandler(self._reinitVars)
-            Instruction_timer.setDelay(60)
-            Instruction_timer.start()
+            self.Instruction_timer.setHandler(self._reinitVars)
+            self.Instruction_timer.setDelay(60)
+            self.Instruction_timer.start()
         
 
     def _recvInstructionData(self, payload):
@@ -264,6 +266,8 @@ class InstructionClass:
         SEND_IN_SEMAPHORE.acquire()
         sock_internal.sendto(str(self.Instruction_String), (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
+        
+        self._reinitVars()
         
         self.Instruction_String = ''
         self.Instruction_List = []
@@ -326,6 +330,7 @@ class MachineClass:
         self.machine_tag       = 0
         self.Machine_String    = ''
         self.Machine_Timer_flag= False
+        self.machine_timer     = timerClass()
 
     def _timerStart(self):
         if(self.Machine_Timer_flag == False):
@@ -355,6 +360,10 @@ class MachineClass:
             self.machine_List[0]   = payload[4:]
             
             print 'machine data size : ' + str(self.machine_size)
+            
+            if(self._checkList() == True):
+                self._makeString()
+                self.machine_List = []
 
         elif(payload[0] == self.FRAG_N):
             print 'client received machine FRAG_N : ' + str(payload[4]) + 'th'

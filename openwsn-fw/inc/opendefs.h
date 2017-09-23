@@ -169,6 +169,7 @@ enum {
    COMPONENT_SECURITY                  = 0x26,
    COMPONENT_USERIALBRIDGE             = 0x27,
    COMPONENT_CINST                     = 0x28, ////custom app identifier
+   COMPONENT_CROUTE                    = 0x2A,
 };
 
 /**
@@ -358,7 +359,7 @@ END_PACK
 enum{
    DIO_PERIOD         = 0x31, // ascii code 0x31 = int 1
    DAO_PERIOD         = 0x32, // ascii code 0x32 = int 2
-   CEXAMPLE_SEPERATOR = 0x3D, // ascii code 0x3D = '='
+   CROUTE_SEPERATOR   = 0x3D, // ascii code 0x3D = '='
    MARKER_END         = 0x21, // ascii code 0x21 = '!'
 };
 
