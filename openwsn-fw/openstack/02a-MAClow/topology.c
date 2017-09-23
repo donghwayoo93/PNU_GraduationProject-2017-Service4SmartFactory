@@ -118,28 +118,7 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
                returnVal=FALSE;
          }
          break;
-      case 0xdf:
-         if (
-               ieee802514_header->src.addr_64b[7]==0x66
-            ) {
-            returnVal=TRUE;
-         }
-         break;
-      case 0x66:
-         if (
-               ieee802514_header->src.addr_64b[7]==0xdf ||
-               ieee802514_header->src.addr_64b[7]==0x4f
-            ) {
-            returnVal=TRUE;
-         }
-         break;
-      case 0x4f:
-         if (
-               ieee802514_header->src.addr_64b[7]==0x66
-            ) {
-            returnVal=TRUE;
-         }
-         break;
+     
       default:
          returnVal=TRUE;
          break;
