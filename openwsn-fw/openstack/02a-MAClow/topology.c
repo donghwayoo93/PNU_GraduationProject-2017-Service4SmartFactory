@@ -84,7 +84,8 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
             returnVal=TRUE;
          }
          else if(
-               ieee802514_header->src.addr_64b[7]==0x3c
+               ieee802514_header->src.addr_64b[7]==0x3c ||
+               ieee802514_header->src.addr_64b[7]==0x79
             ){
             returnVal = FALSE;
          }
@@ -97,7 +98,22 @@ bool topology_isAcceptablePacket(ieee802154_header_iht* ieee802514_header) {
             returnVal=TRUE;
          }
          else if(
-                  ieee802514_header->src.addr_64b[7]==0xbd
+                  ieee802514_header->src.addr_64b[7]==0xbd ||
+                  ieee802514_header->src.addr_64b[7]==0x79
+            ){
+               returnVal=FALSE;
+         }
+         break;
+      case 0x79:
+         if (
+               ieee802514_header->src.addr_64b[7]==0xec ||
+               ieee802514_header->src.addr_64b[7]==0x02
+            ){
+            returnVal=TRUE;
+         }
+         else if(
+                  ieee802514_header->src.addr_64b[7]==0xbd ||
+                  ieee802514_header->src.addr_64b[7]==0x3c
             ){
                returnVal=FALSE;
          }
