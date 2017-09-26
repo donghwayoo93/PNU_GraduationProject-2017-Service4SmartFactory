@@ -45,7 +45,7 @@ sock                 = ''
 sock_internal        = ''
 sock_rssi            = ''
 
-workerID             = '0EB2'
+workerID             = '0002'
 
 class ConnectionClass:
     SYN_dict = {

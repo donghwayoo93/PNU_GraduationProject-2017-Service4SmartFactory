@@ -397,9 +397,24 @@ uint16_t neighbors_getLinkMetric(uint8_t index) {
       //6TiSCH minimal draft using OF0 for rank computation: ((3*numTx/numTxAck)-2)*minHopRankIncrease
       // numTx is on 8 bits, so scaling up 10 bits won't lead to saturation
       // but this <<10 followed by >>10 does not provide any benefit either. Result is the same.
+      //rankIncreaseIntermediary = (((uint32_t)neighbors_vars.neighbors[index].numTx) << 10);
+      //rankIncreaseIntermediary = (3*rankIncreaseIntermediary * MINHOPRANKINCREASE) / ((uint32_t)neighbors_vars.neighbors[index].numTxACK);
+      //rankIncreaseIntermediary = rankIncreaseIntermediary - ((uint32_t)(2 * MINHOPRANKINCREASE)<<10);
+
       rankIncreaseIntermediary = (((uint32_t)neighbors_vars.neighbors[index].numTx) << 10);
-      rankIncreaseIntermediary = (3*rankIncreaseIntermediary * MINHOPRANKINCREASE) / ((uint32_t)neighbors_vars.neighbors[index].numTxACK);
-      rankIncreaseIntermediary = rankIncreaseIntermediary - ((uint32_t)(2 * MINHOPRANKINCREASE)<<10);
+      rankIncreaseIntermediary = (3*rankIncreaseIntermediary) / ((uint32_t)neighbors_vars.neighbors[index].numTxACK);
+      rankIncreaseIntermediary = rankIncreaseIntermediary - ((uint32_t)2<<10);
+
+      if(neighbors_vars.neighbors[index].rssi > 30){
+          rankIncreaseIntermediary = rankIncreaseIntermediary + ((3 - (neighbors_vars.neighbors[index].rssi/10))<<10);
+             }
+      else{
+          rankIncreaseIntermediary = rankIncreaseIntermediary + (((neighbors_vars.neighbors[index].rssi/10) - 3)<<10);
+             }
+
+      //rankIncreaseIntermediary = rankIncreaseIntermediary - (((uint32_t)neighbors_vars.neighbors[index].rssi)<<10);
+      //rankIncreaseIntermediary = rankIncreaseIntermediary / (10<<10);
+      rankIncreaseIntermediary = rankIncreaseIntermediary * MINHOPRANKINCREASE;
       // this could still overflow for numTx large and numTxAck small, Casting to 16 bits will yiel the least significant bits
       if (rankIncreaseIntermediary >= (65536<<10)) {
          rankIncrease = 65535;
