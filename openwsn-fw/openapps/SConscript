@@ -39,7 +39,7 @@ defaultAppsInit   = [
 if localEnv['apps']:
     userApps  = localEnv['apps'].split(',')
 else:
-    userApps  = ['cinst', 'croute']
+    userApps  = ['cinst', 'croute', 'cgpio']
 
 # union of default and additional apps (without duplicates)
 apps = sorted(list(set(defaultApps+userApps)))

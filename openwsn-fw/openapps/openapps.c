@@ -15,6 +15,7 @@
 #include "croute.h"
 #include "cstorm.h"
 #include "cwellknown.h"
+#include "cgpio.h"
 #include "rrt.h"
 // UDP
 #include "uecho.h"
@@ -39,6 +40,7 @@ void openapps_init(void) {
 	cinst_init()
    cwellknown_init();
    rrt_init();
+   cgpio_init();
    // UDP
 //   uecho_init();
 }

@@ -11,6 +11,7 @@
 #include "leds.h"
 #include "uart.h"
 #include "spi.h"
+#include "gpio.h"
 #include "bsp_timer.h"
 #include "radio.h"
 #include "radiotimer.h"
@@ -59,7 +60,8 @@ void board_init() {
    bsp_timer_init();
    radio_init();
    radiotimer_init();
-   
+   gpio_init();
+
    // enable interrupts
    __bis_SR_register(GIE);
 }
