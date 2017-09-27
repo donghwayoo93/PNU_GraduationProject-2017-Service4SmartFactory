@@ -96,7 +96,7 @@ void radio_reset(void) {
    );
    
    // speed up time to TX
-   cc2420_TXCTRL_reg.PA_LEVEL               = 3;// max. TX power (~0dBm)
+   cc2420_TXCTRL_reg.PA_LEVEL               = 31;// max. TX power (~0dBm)
    cc2420_TXCTRL_reg.reserved_w1            = 1;
    cc2420_TXCTRL_reg.PA_CURRENT             = 3;
    cc2420_TXCTRL_reg.TXMIX_CURRENT          = 0;

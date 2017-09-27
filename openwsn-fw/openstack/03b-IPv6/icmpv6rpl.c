@@ -399,9 +399,8 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
             // if not low enough to justify switch, pass (i.e. hysterisis)
             if (
                  //(neighbors_getRssi(i) > 35) ||
-                 (previousDAGrank<tentativeDAGrank)
-                                 // ||
-                //(previousDAGrank-tentativeDAGrank < 2*MINHOPRANKINCREASE)
+                 (previousDAGrank<tentativeDAGrank) ||
+                (previousDAGrank-tentativeDAGrank < 2*MINHOPRANKINCREASE)
             ) {
                   continue;
             }
@@ -529,7 +528,7 @@ void icmpv6rpl_timer_DIO_cb(opentimer_id_t id) {
 void icmpv6rpl_timer_DIO_task() {
    uint32_t        dioPeriod;
    // send DIO
-   sendDIO();
+   //sendDIO();
    
    // arm the DIO timer with this new value
    /*
