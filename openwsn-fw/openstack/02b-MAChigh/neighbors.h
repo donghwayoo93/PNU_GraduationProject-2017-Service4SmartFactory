@@ -13,9 +13,9 @@
 //=========================== define ==========================================
 
 #define MAXPREFERENCE             2
-#define BADNEIGHBORMAXRSSI        -25 //dBm
-#define GOODNEIGHBORMINRSSI       -25 //dBm
-#define SWITCHSTABILITYTHRESHOLD  2
+#define BADNEIGHBORMAXRSSI        -30 //dBm
+#define GOODNEIGHBORMINRSSI       -30 //dBm
+#define SWITCHSTABILITYTHRESHOLD  1
 #define DEFAULTLINKCOST           15
 
 #define MAXDAGRANK                0xffff
@@ -64,6 +64,7 @@ bool          neighbors_getNeighborNoResource(uint8_t index);
 void          neighbors_setNeighborRank(uint8_t index, dagrank_t rank);
 void          neighbors_setNeighborNoResource(open_addr_t* address);
 void          neighbors_setPreferredParent(uint8_t index, bool isPreferred);
+uint16_t      neighbors_getRssi(uint8_t index);
 
 // interrogators
 bool          neighbors_isStableNeighbor(open_addr_t* address);

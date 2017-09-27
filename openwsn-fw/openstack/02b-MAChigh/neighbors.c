@@ -425,6 +425,10 @@ uint16_t neighbors_getLinkMetric(uint8_t index) {
    return rankIncrease;
 }
 
+uint16_t neighbors_getRssi(uint8_t index){
+	return neighbors_vars.neighbors[index].rssi;
+}
+
 //===== maintenance
 
 void  neighbors_removeOld() {
