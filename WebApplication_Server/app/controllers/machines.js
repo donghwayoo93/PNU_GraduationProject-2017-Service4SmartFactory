@@ -1,17 +1,5 @@
 var Machine = require('../models/machine');
 
-exports.getMachineAllData = function(req, res, next) {
-    Machine.find(function(err, machines) {
-        if (err) {
-            res.send(err);
-        }
-        if (!machines.length) return res.status(404).send({ err: "Machine not found" });
-        res.send("User find successfully:\n" + machines);
-        //res.json(machines);
-
-    });
-}
-
 exports.getMachineInfo = function(req, res) {
     Machine.find({
         nearWorkerID: req.query.workerID
@@ -24,7 +12,9 @@ exports.getMachineInfo = function(req, res) {
         if (err) {
             res.send(err);
         }
-        if (!machineData) return res.status(404).send({ err: "User not Found" });
+        if (!machineData) return res.status(404).send({
+            err: "User not Found"
+        });
         res.json(machineData);
     });
 }
@@ -39,7 +29,9 @@ exports.getSensorData = function(req, res) {
         if (err) {
             res.send(err);
         }
-        if (!sensorData) return res.status(404).send({ err: "Sensor data not Found" });
+        if (!sensorData) return res.status(404).send({
+            err: "Sensor data not Found"
+        });
         res.json(sensorData);
     });
 }
@@ -59,17 +51,17 @@ exports.getManual = function(req, res) {
     }, (err, sensorData) => {
         var solar = sensorData[0].sensorState.solar;
         var photosynthetic = sensorData[0].sensorState.photosynthetic;
-        if (solar > 100) {
+        if (solar > 1000) {
             //너무 밝다
             manualNum = 1;
-        } else if (solar < 0) {
+        } else if (solar < 200) {
             //너무 어둡다
             manualNum = 2;
         }
         if (photosynthetic > 100) {
             //너무 밝다
             manualNum = 3;
-        } else if (photosynthetic < 0) {
+        } else if (photosynthetic < 20) {
             //너무 어둡다
             manualNum = 4;
         }
@@ -81,7 +73,9 @@ exports.getManual = function(req, res) {
             num: 0,
             accessLevel: 0,
             manual: {
-                $elemMatch: { num: String(manualNum) }
+                $elemMatch: {
+                    num: String(manualNum)
+                }
             }
         }, (err, manualData) => {
             if (err) {
@@ -90,7 +84,9 @@ exports.getManual = function(req, res) {
             if (!manualData) {
                 console.log("아무것도 찾지 못함");
                 //a = [{ "manual": [{ "instruction": ["현재 할당된 지시사항이 없습니다."] }] }]
-                return res.status(404).send({ err: "manual data not Found" });
+                return res.status(404).send({
+                    err: "manual data not Found"
+                });
                 //res.json(a);
             }
             res.json(manualData);
