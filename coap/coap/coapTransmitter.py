@@ -181,12 +181,14 @@ class coapTransmitter(threading.Thread):
         with self.dataLock:
             if self.coapError:
                 assert not self.coapResponse
+                #self.coapResponse['payload'] = 'err occured at transmit'
+                #return self.coapResponse
                 raise self.coapError #pylint: disable=E0702
             if self.coapResponse:
                 assert not self.coapError
                 return self.coapResponse
 
-        raise SystemError('neither an error, nor a response')
+        #raise SystemError('neither an error, nor a response')
 
     def getState(self):
         with self.stateLock:

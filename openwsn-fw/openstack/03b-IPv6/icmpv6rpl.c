@@ -403,7 +403,11 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
             ) {
                   continue;
             }
+            if(banLoop(i)==TRUE){
+                  continue;
+            }
             // remember that we have at least one valid candidate parent
+            debugPrint_neighbors();
             foundBetterParent=TRUE;
             // select best candidate so far
             if (icmpv6rpl_vars.myDAGrank>tentativeDAGrank) {

@@ -54,7 +54,7 @@ PARENT_SEMAPHORE      = threading.Semaphore(1)
 
 COAP_RECV_PAYLOAD     = [0]
 OPENSERIAL_MTU        = 32
-CURRENT_PARENT        = '1415:9200:1862:cbd'
+CURRENT_PARENT        = ''
 
 
 class SensorResource(coapResource.coapResource):
@@ -609,6 +609,10 @@ class ConnectionClass:
             # Response with PUT methd
             # reply : SYN + ACK
             # 3-handshake --------------------------- 2
+            CONN_SEMAPHORE.acquire()
+            CONNECTION_SYN = True
+            CONN_SEMAPHORE.release()
+            logger.info('Connection SYN flag status => True')
             COAP_5685_SEMAPHORE.acquire()
             c_INST.PUT(
                 self.link,
@@ -626,10 +630,6 @@ class ConnectionClass:
              (self.SYN_dict['ACK'] == 0)):
             logger.info('Received ACK from Client')
             self.SYN_dict['ACK'] = 1
-            CONN_SEMAPHORE.acquire()
-            CONNECTION_SYN = True
-            CONN_SEMAPHORE.release()
-            logger.info('Connection SYN flag status => True')
 
         # Server Received FIN pkt from Client
         # FIN pkt Arrived 
@@ -642,7 +642,7 @@ class ConnectionClass:
             self.FIN_dict['FIN_1'] = 1
             self.FIN_dict['FIN_2'] = 1
 
-            rpl.DAO_Adjust('0:0:0:2', 'route', 30)
+            #rpl.DAO_Adjust('0:0:0:2', 'route', 20)
 
             rpl.DIO_Adjust(CURRENT_PARENT, 'route', 10)
 
@@ -810,7 +810,8 @@ def handle_DODAG_IPC(data):
     if(pkt_type == 'DIO'):
         rpl.DIO_Adjust(dst_addr, uri, period)
     elif(pkt_type == 'DAO'):
-        rpl.DAO_Adjust(dst_addr, uri, period)
+        print 'DAO blocked'
+        #rpl.DAO_Adjust(dst_addr, uri, period)
     else:
         print 'error : no match type for the handler'
         print 'pkt_type : ' + pkt_type

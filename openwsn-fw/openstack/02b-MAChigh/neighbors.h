@@ -92,6 +92,7 @@ bool          neighbors_getNeighborEui64(open_addr_t* address,uint8_t addr_type,
 void          neighbors_removeOld(void);
 // debug
 bool          debugPrint_neighbors(void);
+bool          banLoop(uint8_t index);
 
 /**
 \}

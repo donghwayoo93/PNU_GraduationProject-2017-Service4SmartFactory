@@ -371,7 +371,7 @@ class RPL(eventBusClient.eventBusClient):
                 # to current leaf node : set dao period loosely
                 self._adjust_DAO_Period(self.source_suffix_ipv6, 'route', 60)
                 # to current leaf node's parent : set dio period loosely
-                self._adjust_DIO_Period(self.source_suffix_ipv6, self.parent_suffix_ipv6, 'route', 20)
+                self._adjust_DIO_Period(self.source_suffix_ipv6, self.parent_suffix_ipv6, 'route', 30)
                 
         
         # update parents information with parents collected -- calls topology module.

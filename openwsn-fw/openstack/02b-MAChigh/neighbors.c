@@ -395,7 +395,7 @@ uint16_t neighbors_getLinkMetric(uint8_t index) {
       rankIncrease = DEFAULTLINKCOST*2*MINHOPRANKINCREASE;
    } else {
       //6TiSCH minimal draft using OF0 for rank computation: ((3*numTx/numTxAck)-2)*minHopRankIncrease
-      // numTx is on 8 bits, so scaling up 10 bits won't lead to saturation
+      // numTx is on 8 bits, so scaling up 10 bits won't lead to saturations
       // but this <<10 followed by >>10 does not provide any benefit either. Result is the same.
       rankIncreaseIntermediary = (((uint32_t)neighbors_vars.neighbors[index].numTx) << 10);
       rankIncreaseIntermediary = (3*rankIncreaseIntermediary * MINHOPRANKINCREASE) / ((uint32_t)neighbors_vars.neighbors[index].numTxACK);
@@ -632,4 +632,17 @@ bool isThisRowMatching(open_addr_t* address, uint8_t rowNumber) {
                                (errorparameter_t)3);
          return FALSE;
    }
+}
+
+
+bool banLoop(uint8_t index) {
+  open_addr_t temp;
+  temp = neighbors_vars.neighbors[index].addr_64b;
+  if(temp.addr_64b[7] == 0x02){
+    return TRUE;
+  }
+  else{
+    return FALSE;
+  }
+  
 }
