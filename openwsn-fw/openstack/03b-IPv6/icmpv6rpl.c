@@ -376,7 +376,8 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
             icmpv6rpl_vars.myDAGrank = (uint16_t)tentativeDAGrank;
         }
     }
-    previousDAGrank      = icmpv6rpl_vars.myDAGrank;
+    //previousDAGrank      = icmpv6rpl_vars.myDAGrank;
+    previousDAGrank      = 65535;
     foundBetterParent    = FALSE;
     icmpv6rpl_vars.haveParent = FALSE;
     
@@ -408,7 +409,8 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
             foundBetterParent=TRUE;
             // select best candidate so far
             if (icmpv6rpl_vars.myDAGrank>tentativeDAGrank) {
-                icmpv6rpl_vars.myDAGrank    = (uint16_t)tentativeDAGrank;
+                //icmpv6rpl_vars.myDAGrank    = (uint16_t)tentativeDAGrank;
+                icmpv6rpl_vars.myDAGrank    = (uint16_t)65535;
                 icmpv6rpl_vars.ParentIndex  = i;
                 icmpv6rpl_vars.rankIncrease = rankIncrease;
             }
@@ -438,7 +440,8 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
       }
    } else {
       // restore routing table as we found it on entry
-      icmpv6rpl_vars.myDAGrank   = previousDAGrank;
+      //icmpv6rpl_vars.myDAGrank   = previousDAGrank
+      icmpv6rpl_vars.myDAGrank   = 65535;
       icmpv6rpl_vars.ParentIndex = prevParentIndex;
       icmpv6rpl_vars.haveParent  = prevHadParent;
       icmpv6rpl_vars.rankIncrease= prevRankIncrease;
