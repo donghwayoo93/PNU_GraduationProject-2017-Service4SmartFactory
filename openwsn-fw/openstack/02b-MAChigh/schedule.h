@@ -39,7 +39,7 @@ The superframe repears over time and can be arbitrarly long.
   for seiral port to tranmit data to dagroot. 
 */
 
-#define NUMSLOTSOFF          5
+#define NUMSLOTSOFF          6
 
 /**
 \brief Maximum number of active slots in a superframe.
@@ -60,14 +60,14 @@ Backoff is used only in slots that are marked as shared in the schedule. When
 not shared, the mote assumes that schedule is collision-free, and therefore
 does not use any backoff mechanism when a transmission fails.
 */
-#define MINBE                2
+#define MINBE                1
 
 /**
 \brief Maximum backoff exponent.
 
 See MINBE for an explanation of backoff.
 */
-#define MAXBE                4
+#define MAXBE                3
 
 /**
 \brief a threshold used for triggering the maintaining process.uint: percent

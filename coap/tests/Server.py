@@ -115,10 +115,12 @@ class SensorResource(coapResource.coapResource):
             if(photosynthetic != 0):
                 photosynthetic = (int)(1.5 * (float(photosynthetic) / 4096) * 1000)
 
-            #print ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED)
+            print ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED)
 
-            updateSensor(str(ipv6_suffix), str(solar), 'solar')
-            updateSensor(str(ipv6_suffix), str(photosynthetic), 'photosynthetic')
+            logger.info(ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED))
+
+            #updateSensor(str(ipv6_suffix), str(solar), 'solar')
+            #updateSensor(str(ipv6_suffix), str(photosynthetic), 'photosynthetic')
 
 
         # In case Server Receives Connection Packet

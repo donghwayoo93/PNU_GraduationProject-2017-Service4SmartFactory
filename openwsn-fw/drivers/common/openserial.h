@@ -24,8 +24,9 @@
 
 \warning should be exactly 256 so wrap-around on the index does not require
          the use of a slow modulo operator.
-*/
-#define SERIAL_OUTPUT_BUFFER_SIZE 256 // leave at 256!
+*/ 
+#define SERIAL_OUTPUT_BUFFER_SIZE 256 // leave at 256!   original one
+//#define SERIAL_OUTPUT_BUFFER_SIZE 128 // leave at 256!
 
 /**
 \brief Number of bytes of the serial input buffer, in bytes.
@@ -33,7 +34,9 @@
 \warning Do not pick a number greater than 255, since its filling level is
          encoded by a single byte in the code.
 */
-#define SERIAL_INPUT_BUFFER_SIZE  200
+
+#define SERIAL_INPUT_BUFFER_SIZE  200 // original one
+//#define SERIAL_INPUT_BUFFER_SIZE  128
 
 /// Modes of the openserial module.
 enum {

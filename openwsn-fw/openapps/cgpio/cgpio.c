@@ -19,7 +19,7 @@
 #define OFF '0'
 #define TOG '2'
 
-#define CGPIOPERIOD  20000
+#define CGPIOPERIOD  10000
 #define PAYLOADLEN      14
 
 const uint8_t cgpio_path0[] = "gpio";
