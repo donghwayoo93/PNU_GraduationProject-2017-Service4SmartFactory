@@ -55,6 +55,7 @@ PARENT_SEMAPHORE      = threading.Semaphore(1)
 COAP_RECV_PAYLOAD     = [0]
 OPENSERIAL_MTU        = 32
 CURRENT_PARENT        = ''
+EX_PARENT             = ''
 
 
 class SensorResource(coapResource.coapResource):
@@ -90,7 +91,6 @@ class SensorResource(coapResource.coapResource):
             if(len(my_suffix_2) == 1):
                 my_suffix_2 = '0' + my_suffix_2
 
-            #print payload
 
             payload = payload[3:]
 
@@ -288,6 +288,7 @@ class machineClass:
         elif(payload_str[0] == 'machineSensor'):
             logger.info('Received machineSensor Solicitation Message')
             self._sendMachineSensor(payload_str[1])
+
         elif(payload_str[0] == 'machineMotor'):
             logger.info('Received machineMotor Adjustment Message')
             self._adjustMachineMotor(payload_str[1])
@@ -296,25 +297,31 @@ class machineClass:
     def _adjustMachineMotor(self, command):
         global c_ROUTE, COAP_5683_SEMAPHORE
 
-        link = 'coap://[bbbb::' + str(CURRENT_PARENT) + ']:5683/gpio'
-
         if(command == 'ON'):
             payload_str = '1x'     # turn on  motor
         else:
             payload_str = '0x'     # turn off motor
 
-        COAP_5683_SEMAPHORE.acquire()
-        response = c_ROUTE.PUT(
-                link,
-                payload=[ord(b) for b in payload_str]
-        )
-        print_str = ''
-        for r in response:
-            print_str += chr(r)
-        print 'response : ' + print_str
+        if(str(CURRENT_PARENT) != ''):
+            link = 'coap://[bbbb::' + str(CURRENT_PARENT) + ']:5683/gpio'
 
-        COAP_5683_SEMAPHORE.release()
-        self._sendMacheinMotor(str(print_str[0]))
+            COAP_5683_SEMAPHORE.acquire()
+            response = c_ROUTE.PUT(
+                    link,
+                    payload=[ord(b) for b in payload_str]
+            )
+            print_str = ''
+            for r in response:
+                print_str += chr(r)
+            print 'response : ' + print_str
+
+            COAP_5683_SEMAPHORE.release()
+
+            # nofity Motor sucessfully turned on
+            self._sendMacheinMotor(str(print_str[0]))
+        else:
+            # nofity Motor failed to turn on Motor
+            self._sendMacheinMotor('0')
 
 
     def _sendMacheinMotor(self, status):
@@ -822,18 +829,49 @@ def handle_DODAG_IPC(data):
 
 class RPLClass:
 
+    def adjust_syncLED(self, Dest, period):
+        global COAP_5683_SEMAPHORE
+        global c_ROUTE
+
+        link        = 'coap://[bbbb::' + str(Dest) + ']:5683/gpio'
+        if(int(period) > 10):
+            payload_str = 'x1'        # turn on LED
+        else:
+            payload_str = 'x0'        # turn off  LED
+
+        COAP_5683_SEMAPHORE.acquire()
+        response = c_ROUTE.PUT(
+                link,
+                payload=[ord(b) for b in payload_str]
+        )
+        COAP_5683_SEMAPHORE.release()
+        print_str = ''
+        for r in response:
+            print_str += chr(r)
+        print 'response : ' + print_str
+
+        logger.info('Server sent LED adjust message Destination : ' + str(Dest))
+
+
     def DIO_Adjust(self, Dest, uri, period):
         global CURRENT_PARENT
+        global EX_PARENT
         global PARENT_SEMAPHORE
+        global COAP_5683_SEMAPHORE
         global c_ROUTE
 
         # save Current parent's ipv6 address
         PARENT_SEMAPHORE.acquire()
+        EX_PARENT      = CURRENT_PARENT
         CURRENT_PARENT = str(Dest)
         PARENT_SEMAPHORE.release()
 
-        print 'Parent addr       : ' + Dest
+        print 'EX_PARENT         : ' + EX_PARENT
         print 'CURRENT_PARENT    : ' + CURRENT_PARENT
+
+        # turn off ex-parent's sync led
+        if(EX_PARENT != ''):
+            self.adjust_syncLED(EX_PARENT, 0)
 
         link        = 'coap://[bbbb::' + str(Dest) + ']:5683/' + str(uri)
         payload_str = '1=' + str(period) + '!'
@@ -856,24 +894,7 @@ class RPLClass:
                 print_str += chr(r)
             print 'response : ' + print_str
 
-            link        = 'coap://[bbbb::' + str(Dest) + ']:5683/gpio'
-            if(int(period) > 10):
-                payload_str = 'x1'        # turn on LED
-            else:
-                payload_str = 'x0'        # turn off  LED
-
-            COAP_5683_SEMAPHORE.acquire()
-            response = c_ROUTE.PUT(
-                    link,
-                    payload=[ord(b) for b in payload_str]
-            )
-            COAP_5683_SEMAPHORE.release()
-            print_str = ''
-            for r in response:
-                print_str += chr(r)
-            print 'response : ' + print_str
-
-            logger.info('Server sent LED adjust message Destination : ' + str(Dest))
+            self.adjust_syncLED(CURRENT_PARENT, period)
 
         else:
             logger.info('No parrent node to send DIO')

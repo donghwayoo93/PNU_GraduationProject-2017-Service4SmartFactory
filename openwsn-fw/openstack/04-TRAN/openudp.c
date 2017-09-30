@@ -130,7 +130,7 @@ void openudp_sendDone(OpenQueueEntry_t* msg, owerror_t error) {
       case WKP_UDP_COAP_ROUTE:                      // coap:5683
          opencoap_sendDone(msg,error);
          break;
-      case WKP_UDP_COAP_INST:
+      case WKP_UDP_COAP_INST:                       // coap::5685
          opencoap_sendDone(msg,error);
          break;
       case WKP_UDP_ECHO:
@@ -203,6 +203,9 @@ void openudp_receive(OpenQueueEntry_t* msg) {
          opencoap_receive(msg);
          break;
       case WKP_UDP_COAP_ROUTE:        // coap:5683
+          opencoap_receive(msg);
+          break;
+      case WKP_UDP_COAP_INST:        // coap:5685
           opencoap_receive(msg);
           break;
       case WKP_UDP_RINGMASTER:
