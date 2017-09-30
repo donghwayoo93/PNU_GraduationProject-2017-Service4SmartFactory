@@ -1,3 +1,4 @@
+'''
 from coap import coap
 
 import signal
@@ -24,3 +25,8 @@ while True:
             print 'bye bye.'
             #c.close()
             os.kill(os.getpid(), signal.SIGTERM)
+            '''
+this = ' 123456'
+
+print this
+print this[1:]

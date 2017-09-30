@@ -373,7 +373,8 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
         if (tentativeDAGrank>65535) {
             icmpv6rpl_vars.myDAGrank = 65535;
         } else {
-            icmpv6rpl_vars.myDAGrank = (uint16_t)tentativeDAGrank;
+            //icmpv6rpl_vars.myDAGrank = (uint16_t)tentativeDAGrank;
+            icmpv6rpl_vars.myDAGrank = (uint16_t)65535;
         }
     }
     //previousDAGrank      = icmpv6rpl_vars.myDAGrank;
@@ -397,16 +398,27 @@ void icmpv6rpl_updateMyDAGrankAndParentSelection() {
             // compute tentative cost of full path to root through this neighbor
             tentativeDAGrank = (uint32_t)neighborRank+rankIncrease;
             if (tentativeDAGrank > 65535) {tentativeDAGrank = 65535;}
+            //if (tentativeDAGrank > 65535) {tentativeDAGrank = 65535;}
             // if not low enough to justify switch, pass (i.e. hysterisis)
             if (
                  //(neighbors_getRssi(i) > 35) ||
                  (previousDAGrank<tentativeDAGrank) ||
-                (previousDAGrank-tentativeDAGrank < 2*MINHOPRANKINCREASE)
+                (previousDAGrank-tentativeDAGrank < MINHOPRANKINCREASE)
             ) {
                   continue;
             }
             // remember that we have at least one valid candidate parent
             foundBetterParent=TRUE;
+
+            if(foundBetterParent){
+              openserial_printError(COMPONENT_ICMPv6RPL,ERR_NO_FREE_PACKET_BUFFER,
+              (errorparameter_t)1,
+              (errorparameter_t)0);
+
+              openserial_printError(COMPONENT_ICMPv6RPL,ERR_NO_FREE_PACKET_BUFFER,
+              (errorparameter_t)tentativeDAGrank,
+              (errorparameter_t)0);
+            }
             // select best candidate so far
             if (icmpv6rpl_vars.myDAGrank>tentativeDAGrank) {
                 //icmpv6rpl_vars.myDAGrank    = (uint16_t)tentativeDAGrank;
@@ -528,7 +540,11 @@ void icmpv6rpl_timer_DIO_cb(opentimer_id_t id) {
 
 \note This function is executed in task context, called by the scheduler.
 */
+/*
+    Leaf Node do not send DIO message
+*/
 void icmpv6rpl_timer_DIO_task() {
+
    uint32_t        dioPeriod;
    // send DIO
    //sendDIO();
@@ -690,9 +706,11 @@ void sendDAO() {
    }
    
    // dont' send a DAO if you did not acquire a DAGrank
+   /*
    if (icmpv6rpl_getMyDAGrank()==DEFAULTDAGRANK) {
        return;
    }
+   */
    
    // dont' send a DAO if you're still busy sending the previous one
    if (icmpv6rpl_vars.busySendingDAO==TRUE) {

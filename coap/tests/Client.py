@@ -441,6 +441,47 @@ class LoginClass:
         sock_internal.sendto(self.msg, (UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
 
+
+class SensorClass:
+    realtime_sensor_len = 0
+
+    def __init__(self):
+        self.realtime_sensor_len = 14
+
+
+    def _handleSensorData(seld, payload):
+        payload = [int(i) for i in payload]
+
+        # for here, payload is int type
+        # after here, payload is string to payload_str
+
+        payload_str = ''
+
+        for i in range(len(payload)):
+            payload_str += chr(payload[i])
+
+        # because we trim out the first S
+        if(len(payload_str) == self.realtime_sensor_len - 1):
+            # incase real time sensor data from synced mote
+            self._handleRealtimeData(payload_str[1:])
+
+
+    def _handleRealtimeData(self, payload):
+        sensor_arr = payload.split(' ')
+        '''
+        sensor_arr[0] => ipv6 suffix
+        sensor_arr[1] => solar
+        sensor_arr[2] => photosynthetic
+        sensor_arr[3] => motor
+        sensor_arr[4] => sync led
+        '''
+
+
+
+    def _handleDBData():
+
+
+
 class rssiClass:
     rssi = 0
     
@@ -523,6 +564,12 @@ class ThreadClass(threading.Thread):
                     # trim Packet label 'L' and Toss to LoginClass to handle
                     print 'handling Machine Data'
                     machine._recvMachineData(data[1:])
+
+                elif(int(data[0]) == ord('S')):
+                    # send this result to internal
+                    # trim Packet label 'S' and Toss to SensorClass to handle
+                    print 'handling Sensor Data'
+                    #machine._recvMachineData(data[1:])
 
                     
 

@@ -170,6 +170,7 @@ enum {
    COMPONENT_USERIALBRIDGE             = 0x27,
    COMPONENT_CINST                     = 0x28, ////custom app identifier
    COMPONENT_CROUTE                    = 0x2A,
+   COMPONENT_CGPIO                    = 0x2B,
 };
 
 /**

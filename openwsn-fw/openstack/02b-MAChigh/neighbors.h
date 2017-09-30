@@ -15,7 +15,7 @@
 #define MAXPREFERENCE             2
 #define BADNEIGHBORMAXRSSI        -30 //dBm
 #define GOODNEIGHBORMINRSSI       -30 //dBm
-#define SWITCHSTABILITYTHRESHOLD  1
+#define SWITCHSTABILITYTHRESHOLD  2
 #define DEFAULTLINKCOST           15
 
 #define MAXDAGRANK                0xffff
