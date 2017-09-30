@@ -444,43 +444,49 @@ class LoginClass:
 
 class SensorClass:
     realtime_sensor_len = 0
+    photosynthetic      = 0
+    solar               = 0
+    motor               = 0
 
     def __init__(self):
         self.realtime_sensor_len = 14
+        self.photosynthetic      = 0
+        self.solar               = 0
+        self.motor               = 0
 
 
     def _handleSensorData(seld, payload):
         payload = [int(i) for i in payload]
 
         # for here, payload is int type
-        # after here, payload is string to payload_str
-
-        payload_str = ''
-
-        for i in range(len(payload)):
-            payload_str += chr(payload[i])
-
         # because we trim out the first S
-        if(len(payload_str) == self.realtime_sensor_len - 1):
-            # incase real time sensor data from synced mote
-            self._handleRealtimeData(payload_str[1:])
+        if(len(payload) == self.realtime_sensor_len - 1):
+            # in case real time sensor data from synced mote
+            self._handleRealtimeData(payload)
 
 
     def _handleRealtimeData(self, payload):
-        sensor_arr = payload.split(' ')
+
+        payload              = payload[4:]
+
+        solar_upper          = payload[0]
+        solar_lower          = payload[1]
+
+        photosynthetic_upper = payload[3]
+        photosynthetic_lower = payload[4]
+
+        self.motor           = payload[6]
+        
+        self.solar           = (solar_upper * 256) + solar_lower
+        self.photosynthetic  = (photosynthetic_upper * 256) + photosynthetic_lower
+
+        print 'solar : ' + str(self.solar) + ' photosynthetic : ' + str(self.photosynthetic) + ' motor : ' + str(self.motor)
+
+    def returnRealtimeData(self):
+        print 'return realtime data'
         '''
-        sensor_arr[0] => ipv6 suffix
-        sensor_arr[1] => solar
-        sensor_arr[2] => photosynthetic
-        sensor_arr[3] => motor
-        sensor_arr[4] => sync led
+        with send internal socket, sends realtime data to client web application
         '''
-
-
-
-    def _handleDBData():
-
-
 
 class rssiClass:
     rssi = 0
@@ -569,7 +575,7 @@ class ThreadClass(threading.Thread):
                     # send this result to internal
                     # trim Packet label 'S' and Toss to SensorClass to handle
                     print 'handling Sensor Data'
-                    #machine._recvMachineData(data[1:])
+                    sensor._handleSensorData(data[1:])
 
                     
 
@@ -597,6 +603,8 @@ class ThreadClass(threading.Thread):
                     conn._sendFIN()
                 elif(dict['type'] == 'rssi'):
                     rssi._returnRssiToWeb()
+                elif(dict['type'] == 'realtime_sensor'):
+                    sensor.returnRealtimeData()
                     
                     
         elif(self.thread_index == THREAD_RENEW_CONN):
@@ -632,7 +640,8 @@ rssi                 = rssiClass()
 if __name__ == '__main__':
     inst                 = InstructionClass()
     login                = LoginClass()
-    machine              = MachineClass() 
+    machine              = MachineClass()
+    sensor               = SensorClass()
     # receive Server Data from Openvisualizer & TUN Interface
     sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     sock.bind((UDP_OV_IP, UDP_OV_PORT))
