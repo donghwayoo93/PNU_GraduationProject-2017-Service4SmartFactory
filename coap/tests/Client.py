@@ -455,12 +455,12 @@ class SensorClass:
         self.motor               = 0
 
 
-    def _handleSensorData(seld, payload):
+    def _handleSensorData(self, payload):
         payload = [int(i) for i in payload]
 
         # for here, payload is int type
         # because we trim out the first S
-        if(len(payload) == self.realtime_sensor_len - 1):
+        if(len(payload) == (self.realtime_sensor_len - 1)):
             # in case real time sensor data from synced mote
             self._handleRealtimeData(payload)
 
@@ -471,14 +471,21 @@ class SensorClass:
 
         solar_upper          = payload[0]
         solar_lower          = payload[1]
+        
+        print 'solar : ' + str(solar_upper) + ' ' + str(solar_lower)
 
         photosynthetic_upper = payload[3]
         photosynthetic_lower = payload[4]
+        
+        print 'photosynthetic : ' + str(photosynthetic_upper) + ' ' + str(photosynthetic_lower)
 
         self.motor           = payload[6]
         
-        self.solar           = (solar_upper * 256) + solar_lower
-        self.photosynthetic  = (photosynthetic_upper * 256) + photosynthetic_lower
+        solar_temp           = (int(solar_upper) * 256) + solar_lower
+        photosynthetic_temp  = (int(photosynthetic_upper) * 256) + photosynthetic_lower
+        
+        self.solar           = (int)(2.5 * (float(solar_temp) / 4096) * 6250)
+        self.photosynthetic  = (int)(1.5 * (float(photosynthetic_temp) / 4096) * 1000)
 
         print 'solar : ' + str(self.solar) + ' photosynthetic : ' + str(self.photosynthetic) + ' motor : ' + str(self.motor)
 
