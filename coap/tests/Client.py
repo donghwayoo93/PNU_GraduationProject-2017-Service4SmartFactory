@@ -40,6 +40,7 @@ SEND_IN_SEMAPHORE    = threading.Semaphore(1)
 CONN_SEMAPHORE       = threading.Semaphore(1)
 INST_SEMAPHORE       = threading.Semaphore(1)
 RSSI_SEMAPHORE       = threading.Semaphore(1)
+SENSOR_SEMAPHORE     = threading.Semaphore(1)
 
 sock                 = ''
 sock_internal        = ''
@@ -466,34 +467,38 @@ class SensorClass:
 
 
     def _handleRealtimeData(self, payload):
+        global SENSOR_SEMAPHORE
 
         payload              = payload[4:]
 
         solar_upper          = payload[0]
         solar_lower          = payload[1]
-        
-        print 'solar : ' + str(solar_upper) + ' ' + str(solar_lower)
 
         photosynthetic_upper = payload[3]
         photosynthetic_lower = payload[4]
-        
-        print 'photosynthetic : ' + str(photosynthetic_upper) + ' ' + str(photosynthetic_lower)
 
-        self.motor           = payload[6]
-        
         solar_temp           = (int(solar_upper) * 256) + solar_lower
         photosynthetic_temp  = (int(photosynthetic_upper) * 256) + photosynthetic_lower
-        
+
+        SENSOR_SEMAPHORE.acquire()
+        self.motor           = payload[6]
         self.solar           = (int)(2.5 * (float(solar_temp) / 4096) * 6250)
         self.photosynthetic  = (int)(1.5 * (float(photosynthetic_temp) / 4096) * 1000)
+        SENSOR_SEMAPHORE.release()
 
         print 'solar : ' + str(self.solar) + ' photosynthetic : ' + str(self.photosynthetic) + ' motor : ' + str(self.motor)
 
     def returnRealtimeData(self):
-        print 'return realtime data'
-        '''
-        with send internal socket, sends realtime data to client web application
-        '''
+        global SENSOR_SEMAPHORE, SEND_IN_SEMAPHORE
+
+        json_str = {"solar" : str(self.solar), "photosynthetic" : str(self.photosynthetic), "motor" : str(self.motor)}
+        msg = json.dumps(json_str)
+
+        SENSOR_SEMAPHORE.acquire()
+        SEND_IN_SEMAPHORE.acquire()
+        sock_internal.sendto(str(msg),(UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        SEND_IN_SEMAPHORE.release()
+        SENSOR_SEMAPHORE.release()
 
 class rssiClass:
     rssi = 0

@@ -408,7 +408,10 @@ uint16_t neighbors_getLinkMetric(uint8_t index) {
     rankIncreaseIntermediary = rankIncreaseIntermediary - ((uint32_t)(2 * MINHOPRANKINCREASE)<<10);
 
     if(neighbors_vars.neighbors[index].rssi >= 30){
-      rankIncreaseIntermediary = rankIncreaseIntermediary + ((neighbors_vars.neighbors[index].rssi - 20)/10) * ((uint32_t)MINHOPRANKINCREASE)<<10;
+       openserial_printError(COMPONENT_NEIGHBORS,ERR_NEIGHBORS_FULL,
+                       (errorparameter_t)neighbors_vars.neighbors[index].rssi,
+                       (errorparameter_t)0);
+      rankIncreaseIntermediary = rankIncreaseIntermediary + ((neighbors_vars.neighbors[index].rssi - 20)/10) * ((uint32_t)MINHOPRANKINCREASE<<10);
     }
       //rankIncreaseIntermediary = (((uint32_t)neighbors_vars.neighbors[index].numTx) << 10);
       //rankIncreaseIntermediary = (3*rankIncreaseIntermediary) / ((uint32_t)neighbors_vars.neighbors[index].numTxACK);

@@ -1,73 +1,201 @@
-      google.charts.load('current', {'packages':['gauge']});
-      google.charts.setOnLoadCallback(drawChart);
 
-      function drawChart() {
+Highcharts.chart('chart_solar', {
+    chart: {
+        type: 'gauge',
+        plotBackgroundColor: null,
+        plotBackgroundImage: null,
+        plotBorderWidth: 0,
+        plotShadow: false
+    },
+    title: {
+        text: 'Solar'
+    },
+    pane: {
+        startAngle: -180,
+        endAngle: 150,
+        background: []
+    },
+    // the value axis
+    yAxis: {
+        min: 0,
+        max: 5000,
 
-        var data_solar = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Solar', 350]
-        ]);
-        
-        var data_photo = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Photosynthetic', 30]
-        ]);
-        
-        var data_motor = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Motor', 0]
-        ]);
-        
-       
-        var options_solar = {
-          width: 500, height: 150,
-          redFrom: 4000, redTo: 5000,
-          yellowFrom:3500, yellowTo: 4000,
-          greenFrom:300, greenTo:3500,
-          minorTicks: 5, max: 5000,
-          greenColor:'#99FF33',
-          yellowColor:'#FFE333'
-        };
-        
-        var options_photo = {
-          width: 500, height: 150,
-          redFrom: 400, redTo: 500,
-          yellowFrom:350, yellowTo: 400,
-          greenFrom:30, greenTo:350,
-          minorTicks: 5, max: 500,
-          greenColor:'#99FF33',
-          yellowColor:'#FFE333'
-        };
-        
-        var options_motor = {
-          width: 500, height: 150,
-          redFrom: 0.5, redTo: 1,
-          greenFrom:0, greenTo:1,
-          minorTicks: 0.5, max: 1,
-          greenColor:'#99FF33'
-        };
-        
-        
+        minorTickInterval: 'auto',
+        minorTickWidth: 1,
+        minorTickLength: 10,
+        minorTickPosition: 'inside',
+        minorTickColor: '#666',
 
-        var chart_solar = new google.visualization.Gauge(document.getElementById('chart_div_solar'));
-        var chart_photo = new google.visualization.Gauge(document.getElementById('chart_div_photo'));
-        var chart_motor = new google.visualization.Gauge(document.getElementById('chart_div_motor'));
+        tickPixelInterval: 30,
+        tickWidth: 2,
+        tickPosition: 'inside',
+        tickLength: 10,
+        tickColor: '#666',
+        labels: {
+            step: 4,
+            rotation: 'auto'
+        },
+        title: {
+            text: 'lux'
+        },
+        plotBands: [{
+            from: 300,
+            to: 3500,
+            color: '#55BF3B' // green
+        }, {
+            from: 3500,
+            to: 4000,
+            color: '#DDDF0D' // yellow
+        }, {
+            from: 4000,
+            to: 5000,
+            color: '#DF5353' // red
+        }]
+    },
 
-        chart_solar.draw(data_solar, options_solar);
-        chart_photo.draw(data_photo, options_photo);
-        chart_motor.draw(data_motor, options_motor);
-        
-        setInterval(function() {
-          data_solar.setValue(0, 1, 300 + Math.round(30 * Math.random()));
-          chart_solar.draw(data_solar, options_solar);
+    series: [{
+        name: 'Solar',
+        data: [300],
+        tooltip: {
+            valueSuffix: ' lux'
+        }
+    }]
+},
+
+function (chart) {
+    if (!chart.renderer.forExport) {
+        setInterval(function () {
+            var point = chart.series[0].points[0],
+                newVal,
+                inc = 300 + Math.round((Math.random()) * 30);
+            point.update(inc);
         }, 1000);
-        setInterval(function() {
-          data_photo.setValue(0, 1, 30 + Math.round(3 * Math.random()));
-          chart_photo.draw(data_photo, options_photo);
-        }, 1000);
-        setInterval(function() {
-          data_motor.setValue(0, 1, 0 + Math.round(1 * Math.random()));
-          chart_motor.draw(data_motor, options_motor);
-        }, 1000);
+    }
+});
 
-      }
+Highcharts.chart('chart_photo', {
+    chart: {
+        type: 'gauge'
+    },
+    title: {
+        text: 'Photosynthetic'
+    },
+    pane: {
+        startAngle: -150,
+        endAngle: 150,
+        background: []
+    },
+    // the value axis
+    yAxis: {
+        min: 0,
+        max: 500,
+
+        minorTickInterval: 'auto',
+        minorTickWidth: 1,
+        minorTickLength: 10,
+        minorTickPosition: 'inside',
+        minorTickColor: '#666',
+
+        tickPixelInterval: 30,
+        tickWidth: 2,
+        tickPosition: 'inside',
+        tickLength: 10,
+        tickColor: '#666',
+        labels: {
+            step: 4,
+            rotation: 'auto'
+        },
+        title: {
+            text: 'lux'
+        },
+        plotBands: [{
+            from: 30,
+            to: 350,
+            color: '#55BF3B' // green
+        }, {
+            from: 350,
+            to: 400,
+            color: '#DDDF0D' // yellow
+        }, {
+            from: 400,
+            to: 500,
+            color: '#DF5353' // red
+        }]
+    },
+
+    series: [{
+        name: 'Photosynthetic',
+        data: [30],
+        tooltip: {
+            valueSuffix: ' lux'
+        }
+    }]
+},
+// Add some life
+function (chart) {
+    if (!chart.renderer.forExport) {
+        setInterval(function () {
+            var point = chart.series[0].points[0],
+                newVal,
+                inc = 30 + Math.round((Math.random()) * 30);
+            point.update(inc);
+        }, 1000);
+    }
+});
+
+Highcharts.chart('chart_motor', {
+    chart: {
+        type: 'gauge'
+    },
+    title: {
+        text: 'Motor'
+    },
+    pane: {
+        startAngle: -90,
+        endAngle: 90,
+        background: []
+    },
+    // the value axis
+    yAxis: {
+        min: 0,
+        max: 1,
+
+        tickPixelInterval: 30,
+        tickWidth: 2,
+        tickPosition: 'inside',
+        tickLength: 10,
+        tickColor: '#666',
+        labels: {
+            step: 10,
+            rotation: 'auto'
+        },
+        title: {
+            text: 'OFF / ON'
+        },
+        plotBands: [{
+            from: 0.5,
+            to: 1,
+            color: '#55BF3B' // green
+        },{
+            from: 0,
+            to: 0.5,
+            color: '#DF5353' // red
+        }]
+    },
+
+    series: [{
+        name: 'Motor',
+        data: [0]
+    }]
+},
+// Add some life
+function (chart) {
+    if (!chart.renderer.forExport) {
+        setInterval(function () {
+            var point = chart.series[0].points[0],
+                newVal,
+                inc = 0 + Math.round((Math.random()) * 1);
+            point.update(inc);
+        }, 1000);
+    }
+});
