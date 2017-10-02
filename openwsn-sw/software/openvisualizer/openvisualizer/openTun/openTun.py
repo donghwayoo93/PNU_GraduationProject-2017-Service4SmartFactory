@@ -144,8 +144,8 @@ class OpenTun(eventBusClient.eventBusClient):
         This function forwards the data to the the EventBus.
         Read from 6lowPAN and forward to tun interface
         '''
-        print 'IN openTun v6 to mesh'
-        print str(data)
+        #print 'IN openTun v6 to mesh'
+        #print str(data)
         
         # dispatch to EventBus
         # self.dispatch(
