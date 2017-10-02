@@ -99,8 +99,12 @@ class SensorResource(coapResource.coapResource):
 
             solar            = (int(solar_1) * 256) + int(solar_2)
 
+            print 'solar : ' + str(solar_1) + ' ' + str(solar_2)
+
             photosynthetic_1 = payload[3]
             photosynthetic_2 = payload[4]
+
+            print 'photosynthetic : ' + str(photosynthetic_1) + ' ' + str(photosynthetic_2)
 
             photosynthetic   = (int(photosynthetic_1) * 256) + int(photosynthetic_2)
 
