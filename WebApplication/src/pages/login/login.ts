@@ -40,7 +40,7 @@ export class LoginPage {
     };
     this.authService.requestLogin(credentials).then((result) => {
       this.storage.get('accessLevel').then(userAccessLevel => {
-        /*
+
         this.machineService.getMachineInformation(credentials).then((result) => {
           this.loading.dismiss();
           var machineAccessLevel = result[0].accessLevel;
@@ -55,8 +55,6 @@ export class LoginPage {
           this.loading.dismiss();
           console.log(err);
         });
-        */
-        this.navCtrl.setRoot(MenuPage);
         this.loading.dismiss();
       });
     }, (err) => {

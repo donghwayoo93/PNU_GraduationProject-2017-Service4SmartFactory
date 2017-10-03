@@ -37,7 +37,33 @@
     </ion-card>
     <ion-card>
         <ion-card-header icon-left>
-            <ion-icon name="build"></ion-icon>Contorl
+            <ion-icon name="stats"></ion-icon>Sensor Status
+        </ion-card-header>
+        <ion-card-content>
+            <ion-list>
+                <ion-item>
+                    <div id="chartSolar" style="display: block; width: 190px; height: 250px; float:left;"></div>
+                    <div id="chartPhoto" style="display: block; width: 190px; height: 250px; float:left;"></div>
+                    <div id="chartMotor" style="display: block; width: 190px; height: 250px; float:left;"></div>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
+    <ion-card>
+        <ion-card-header icon-left>
+            <ion-icon name="stats"></ion-icon>Sensor Status
+        </ion-card-header>
+        <ion-card-content>
+            <ion-list>
+                <ion-item>
+                    <div id="chartBasic" style="display: block;"></div>
+                </ion-item>
+            </ion-list>
+        </ion-card-content>
+    </ion-card>
+    <ion-card>
+        <ion-card-header icon-left>
+            <ion-icon name="build"></ion-icon>Control
         </ion-card-header>
         <ion-card-content>
             <ion-list>

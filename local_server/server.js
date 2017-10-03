@@ -84,9 +84,7 @@ app.get('/api/machines/sensor', function(req, res) {
             //console.log('results: %j', results);
             res.send(results);
         }
-
     });
-
 });
 
 app.get('/api/machines/manual', function(req, res) {
@@ -216,6 +214,28 @@ app.get('/api/rssi', function(req, res) {
         }
     });
 });
+
+app.get('/api/sensorGauge', function(req, res) {
+    //console.log(req.body);
+    var options = {
+        mode: 'text',
+        pythonPath: '',
+        pythonOptions: ['-u'],
+        scriptPath: '',
+        args: ['sensorGauge']
+    };
+    pythonShell.run(FILENAME, options, function(err, results) {
+        if (err) throw err;
+        if (results == 'Unauthorized') {
+            //console.log('Unauthorized 확인');
+            //console.log(results);
+            res.status(401).send(results);
+        } else {
+            res.send(results);
+        }
+    });
+});
+
 
 // listen
 var server = app.listen(9999);

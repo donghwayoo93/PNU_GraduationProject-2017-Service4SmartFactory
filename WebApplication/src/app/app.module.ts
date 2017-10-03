@@ -16,7 +16,6 @@ import { AuthProvider } from '../providers/auth/auth';
 import { MachinesProvider } from '../providers/machines/machines';
 import { ConnectionProvider } from '../providers/connection/connection';
 
-
 @NgModule({
   declarations: [
     MyApp,

@@ -22,9 +22,9 @@ export class MachinesProvider {
     });
   }
 
-  getMachineSensorData(credentials) {
+  getMachineSensorData() {
     return new Promise((resolve, reject) => {
-      this.http.get('http://localhost:9999/api/machines/sensor', JSON.stringify(credentials))
+      this.http.get('http://localhost:9999/api/machines/sensor')
         .map(res => res.json())
         .subscribe(data => {
           resolve(data);
@@ -59,6 +59,18 @@ export class MachinesProvider {
   turnOffMotor() {
     return new Promise((resolve, reject) => {
       this.http.get('http://localhost:9999/api/machines/motorOff')
+        .map(res => res.json())
+        .subscribe(data => {
+          resolve(data);
+        }, (err) => {
+          reject(err);
+        });
+    });
+  }
+
+  refreshGauge() {
+    return new Promise((resolve, reject) => {
+      this.http.get('http://localhost:9999/api/sensorGauge')
         .map(res => res.json())
         .subscribe(data => {
           resolve(data);

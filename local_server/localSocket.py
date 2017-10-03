@@ -37,6 +37,10 @@ elif(sys.argv[1] == 'machineMotor'):
         "type": sys.argv[1],
         "command": sys.argv[2]  # ON / OFF
     }
+elif(sys.argv[1] == 'sensorGauge'):
+    jsonData = {
+        "type": sys.argv[1]
+    }
 
 import socket
 import json
