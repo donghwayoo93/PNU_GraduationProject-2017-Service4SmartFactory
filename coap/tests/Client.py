@@ -496,7 +496,7 @@ class SensorClass:
 
         SENSOR_SEMAPHORE.acquire()
         SEND_IN_SEMAPHORE.acquire()
-        sock_internal.sendto(str(msg),(UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
+        sock_internal.sendto(msg,(UDP_WEB_APP_IP, UDP_WEB_APP_PORT))
         SEND_IN_SEMAPHORE.release()
         SENSOR_SEMAPHORE.release()
 
@@ -615,7 +615,7 @@ class ThreadClass(threading.Thread):
                     conn._sendFIN()
                 elif(dict['type'] == 'rssi'):
                     rssi._returnRssiToWeb()
-                elif(dict['type'] == 'realtime_sensor'):
+                elif(dict['type'] == 'sensorGauge'):
                     sensor.returnRealtimeData()
                     
                     
