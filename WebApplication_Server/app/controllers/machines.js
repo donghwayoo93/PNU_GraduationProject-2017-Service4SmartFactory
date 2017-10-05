@@ -1,4 +1,5 @@
 var Machine = require('../models/machine');
+var Sensor = require('../models/sensor');
 
 exports.getMachineInfo = function(req, res) {
     Machine.find({
@@ -19,20 +20,76 @@ exports.getMachineInfo = function(req, res) {
     });
 }
 
-exports.getSensorData = function(req, res) {
-    Machine.find({
-        nearWorkerID: req.query.workerID
-    }, {
-        _id: 0,
-        sensorState: 1
-    }, (err, sensorData) => {
-        if (err) {
-            res.send(err);
-        }
-        if (!sensorData) return res.status(404).send({
-            err: "Sensor data not Found"
+function finding(startHour, endHour, machineID, sensorName) {
+    return new Promise(function(resolve, reject) {
+        console.log(startHour.toISOString() + " / " + endHour.toISOString());
+        Sensor.aggregate({
+            $match: {
+                machineID: machineID
+                    //machineID: req.query.machineID
+            }
+        }, {
+            $unwind: "$sensorState"
+        }, {
+            $match: {
+                "sensorState.sensor": sensorName
+            }
+        }, {
+            $match: {
+                "sensorState.time": {
+                    $gte: new Date(endHour.toISOString()),
+                    $lt: new Date(startHour.toISOString())
+                }
+            }
+        }, {
+            $group: {
+                _id: null,
+                A: {
+                    $avg: "$sensorState.data"
+                }
+            }
+        }, {
+            $project: {
+                _id: 0,
+                A: 1
+            }
+        }, (err, sensorData) => {
+            if (err) {
+                reject(err);
+            }
+            if (!sensorData) reject(err);
+            resolve(sensorData);
         });
-        res.json(sensorData);
+    })
+}
+
+exports.getSensorData = function(req, res) {
+    //var machineID = req.query.machineID;
+    var machineID = "1111";
+    var hourList = [],
+        valueHistory = [];
+    for (var i = 1; i <= 12; i++) {
+        hourList.push(new Date(new Date().setHours(new Date().getHours() - i + 9)));
+    }
+
+    for (var j = 0; j < 2; j++) {
+        if (j == 0) {
+            for (var i = 0; i < hourList.length - 1; i++) {
+                valueHistory.push(finding(hourList[i], hourList[i + 1], machineID, "solar"));
+            }
+        } else if (j == 1) {
+            for (var i = 0; i < hourList.length - 1; i++) {
+                valueHistory.push(finding(hourList[i], hourList[i + 1], machineID, "photosynthetic"));
+            }
+        }
+    }
+
+    Promise.all(valueHistory).then(function(results) {
+        console.log(results);
+        res.send(results);
+    }).catch(function(err) {
+        //console.log(err);
+        res.send(err);
     });
 }
 
