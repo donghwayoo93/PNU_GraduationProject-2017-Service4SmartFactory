@@ -64,8 +64,7 @@ function finding(startHour, endHour, machineID, sensorName) {
 }
 
 exports.getSensorData = function(req, res) {
-    //var machineID = req.query.machineID;
-    var machineID = "1111";
+    var machineID = req.query.machineID;
     var hourList = [],
         valueHistory = [];
     for (var i = 1; i <= 12; i++) {
