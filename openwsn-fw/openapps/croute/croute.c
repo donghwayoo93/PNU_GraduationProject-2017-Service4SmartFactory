@@ -59,6 +59,7 @@ owerror_t croute_receive(OpenQueueEntry_t* msg,
    uint8_t changed_type = 'N';
 
 	switch (coap_header->Code) {
+      /*
 		case COAP_CODE_REQ_GET:
 			msg->payload = &(msg->packet[127]);
 			msg->length = 0;
@@ -73,7 +74,7 @@ owerror_t croute_receive(OpenQueueEntry_t* msg,
 			coap_header->Code = COAP_CODE_RESP_CONTENT;
 
 			outcome = E_SUCCESS;
-			break;
+			break;*/
       //------------------------------------------case GET
 		case COAP_CODE_REQ_PUT:
          if(msg->l4_destination_port == WKP_UDP_COAP_ROUTE){    // Destination UDP Port #5683

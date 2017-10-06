@@ -99,12 +99,8 @@ class SensorResource(coapResource.coapResource):
 
             solar            = (int(solar_1) * 256) + int(solar_2)
 
-            #print 'solar : ' + str(solar_1) + ' ' + str(solar_2)
-
             photosynthetic_1 = payload[3]
             photosynthetic_2 = payload[4]
-
-            #print 'photosynthetic : ' + str(photosynthetic_1) + ' ' + str(photosynthetic_2)
 
             photosynthetic   = (int(photosynthetic_1) * 256) + int(photosynthetic_2)
 
@@ -123,8 +119,8 @@ class SensorResource(coapResource.coapResource):
 
             logger.info(ipv6_suffix + ' ' + str(solar) + ' ' + str(photosynthetic) + ' ' + str(motor) + ' ' + str(DAO_LED))
 
-            #updateSensor(str(ipv6_suffix), str(solar), 'solar')
-            #updateSensor(str(ipv6_suffix), str(photosynthetic), 'photosynthetic')
+            updateSensor(str(ipv6_suffix), str(solar), 'solar')
+            updateSensor(str(ipv6_suffix), str(photosynthetic), 'photosynthetic')
 
 
         # In case Server Receives Connection Packet
@@ -154,17 +150,17 @@ def updateSensor(machineID, sensorData, sensorName):
         "machineID":str(machineID)
     },{
         '$set': {
-            "sensorState." + sensorName : str(sensorData)
+            "sensorState." + sensorName : int(sensorData)
         }
     }, upsert=True)
 
-    DB.sensorDB.update({
+    DB.sensors.update({
         "machineID":str(machineID)
     },{
         '$push' : {"sensorState":
             {"time":datetime.datetime.now(),
              "sensor":sensorName,
-             "data":sensorData}
+             "data":int(sensorData)}
         }
     }, upsert=True)
 
@@ -413,10 +409,21 @@ class machineClass:
 
 
     def _sendMachineSensor(self, workerID):
-        global c_INST, COAP_5685_SEMAPHORE, data_tag, OPENSERIAL_MTU
+        global c_INST, COAP_5685_SEMAPHORE, data_tag, OPENSERIAL_MTU, PARENT_SEMAPHORE, CURRENT_PARENT
+
+        machineID = ''
+
+        PARENT_SEMAPHORE.acquire()
+        if(CURRENT_PARENT == '1415:9200:1862:cbd'):
+            machineID = '0cbd'
+        elif(CURRENT_PARENT == '1415:9200:13e1:b83c'):
+            machineID = 'b83c'
+        elif(CURRENT_PARENT == '1415:9200:16bf:8b79'):
+            machineID = '8b79'
+        PARENT_SEMAPHORE.release()
 
         json_data = {
-                     "workerID"  : str(workerID)
+                     "machineID"  : str(machineID)
         }
 
         res = requests.get('http://localhost:8088/api/machines/sensor',
@@ -864,8 +871,22 @@ class RPLClass:
         global COAP_5683_SEMAPHORE
         global c_ROUTE
 
+
+        print Dest
         # save Current parent's ipv6 address
         PARENT_SEMAPHORE.acquire()
+        if(Dest == '1415:9200:1862:cbd'):
+            updateNearWorkerID('0cbd', '0002')
+            updateNearWorkerID('b83c', '')
+            updateNearWorkerID('8b79', '')
+        if(Dest == '1415:9200:13e1:b83c'):
+            updateNearWorkerID('b83c', '0002')
+            updateNearWorkerID('0cbd', '')
+            updateNearWorkerID('8b79', '')
+        if(Dest == '1415:9200:16bf:8b79'):
+            updateNearWorkerID('8b79', '0002')
+            updateNearWorkerID('0cbd', '')
+            updateNearWorkerID('b83c', '')
         EX_PARENT      = CURRENT_PARENT
         CURRENT_PARENT = str(Dest)
         PARENT_SEMAPHORE.release()
