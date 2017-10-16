@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NavController, NavParams, LoadingController, ToastController, ActionSheetController, AlertController } from 'ionic-angular';
+import { Storage } from '@ionic/storage';
 
 import { LoginPage } from '../login/login';
 
@@ -28,14 +29,17 @@ export class ControlMachinePage {
 	chartMotor: any;
 	chartSolar: any;
 	chartBasic: any;
+	alert: any;
 
 	constructor(public navCtrl: NavController, public navParams: NavParams,
 		public machineService: MachinesProvider, public loadingCtrl: LoadingController,
 		private toastCtrl: ToastController, public ConnectionService: ConnectionProvider,
-		private actionSheetCtrl: ActionSheetController, private alertCtrl: AlertController) {
+		private actionSheetCtrl: ActionSheetController, private alertCtrl: AlertController,
+		public storage: Storage, ) {
 	}
 
 	ionViewDidLoad() {
+		this.refreshMachineInfo();
 		this.makeSolarGauge();
 		this.makePhotoGauge();
 		this.makeMotorGauge();
@@ -45,51 +49,38 @@ export class ControlMachinePage {
 		}, 30000);
 		this.intervalGauge = setInterval(() => {
 			this.refreshGauge();
-		}, 10000);
+		}, 5000);
 	}
 
 	refreshMachineInfo() {
 		this.showLoader("Bringing machine information...");
-		let credentials = {};
+		//let credentials = {};
 
-		// 기기 정보
-		this.machineService.getMachineInformation(credentials).then((result) => {
-			this.loading.dismiss();
-			var machineID = result[0].machineID;
-			var accessLevel = result[0].accessLevel;
-			var machineName = result[0].name;
-			this.machineDatas = [
-				{
-					"title": "ID",
-					"content": machineID
-				}, {
-					"title": "Name",
-					"content": machineName
-				}, {
-					"title": "Access Level",
-					"content": accessLevel
-				}
-			];
-		}, (err) => {
-			this.loading.dismiss();
-			console.log(err);
-		});
-	}
-
-	refreshSensorStatus() {
-		this.showLoader("Bringing sensor status...");
-
-		// 센서 데이터
-		this.machineService.getMachineSensorData().then((result) => {
-			this.loading.dismiss();
-			var SensorState = result[0].sensorState;
-			this.sensorDatas = [];
-			for (var idx in SensorState) {
-				this.sensorDatas.push({
-					"title": "Name : " + idx,
-					"content": SensorState[idx]
+		this.storage.get('accessLevel').then(userAccessLevel => {
+			this.storage.get('machineID').then(machineID => {
+				this.storage.get('machineName').then(machineName => {
+					console.log(userAccessLevel + " / " + machineID + " / " + machineName);
+					this.machineDatas = [
+						{
+							"title": "ID",
+							"content": machineID
+						}, {
+							"title": "Name",
+							"content": machineName
+						}, {
+							"title": "Access Level",
+							"content": userAccessLevel
+						}
+					];
+					this.loading.dismiss();
+				}, (err) => {
+					this.loading.dismiss();
+					console.log(err);
 				});
-			}
+			}, (err) => {
+				this.loading.dismiss();
+				console.log(err);
+			});
 		}, (err) => {
 			this.loading.dismiss();
 			console.log(err);
@@ -111,9 +102,9 @@ export class ControlMachinePage {
 			if (manualNum == 0) {
 				photoNum = ["0.gif"];
 			} else if (manualNum == 1) {
-				photoNum = ["1.png", "1.png", "1.png", "1.png", "1.png"];
+				photoNum = ["non.png", "non.png", "switch_1.png", "non.png", "non.png"];
 			} else if (manualNum == 2) {
-				photoNum = ["2.png", "1.png", "1.png", "1.png", "1.png"];
+				photoNum = ["non.png", "non.png", "switch_2.png", "non.png", "non.png"];
 			} else if (manualNum == 3) {
 				photoNum = ["3.png", "3.png", "3.png", "3.png", "3.png"];
 			} else if (manualNum == 4) {
@@ -182,7 +173,7 @@ export class ControlMachinePage {
 	getRSSI() {
 		this.ConnectionService.getRSSI().then((result) => {
 			console.log("rss: " + result[0]);
-			if (0 < result[0] && result[0] < 50) {
+			if (0 < result[0] && result[0] < 60) {
 				//console.log("0~50");
 			} else if (result[0] < 0) {
 				//console.log("0 이하");
@@ -205,13 +196,6 @@ export class ControlMachinePage {
 					handler: () => {
 						console.log('Machine info clicked');
 						this.refreshMachineInfo();
-					}
-				}, {
-					text: 'Sensor Status',
-					icon: 'refresh',
-					handler: () => {
-						console.log('Sensor clicked');
-						this.refreshSensorStatus();
 					}
 				}, {
 					text: 'Instructions',
@@ -281,24 +265,21 @@ export class ControlMachinePage {
 	}
 
 	showDistanceAlert() {
-		let alert = this.alertCtrl.create({
+		this.alert = this.alertCtrl.create({
 			title: "distance alert",
 			message: "You're far from mahcine.\nhold nearby position",
 			buttons: ['OK']
 		});
-		alert.present();
+		this.alert.present();
 	}
 
 	refreshGauge() {
-		this.chartSolar.series[0].points[0].update(2000);
-		this.chartPhoto.series[0].points[0].update(400);
-		this.chartMotor.series[0].points[0].update(3);
 		this.machineService.refreshGauge().then((result) => {
-			console.log(result);
-
-			//this.solarValue = result[0].sensorState.solar;
-			//this.photoValue = result[0].sensorState.photosynthetic;
-			//this.motorValue = result[0].sensorState.motor;
+			var a = JSON.parse(result[0]);
+			console.log(a);
+			this.chartSolar.series[0].points[0].update(parseInt(a.solar));
+			this.chartPhoto.series[0].points[0].update(parseInt(a.photosynthetic));
+			this.chartMotor.series[0].points[0].update((parseInt(a.motor) == 0) ? 1 : 3);
 		}, (err) => {
 			console.log(err);
 		});
@@ -496,62 +477,74 @@ export class ControlMachinePage {
 	}
 
 	makeBasicChart() {
-		this.chartBasic = highchart.chart('chartBasic', {
-			title: {
-				text: 'backword chart'
-			},
-			subtitle: {
-				//text: 'Source: thesolarfoundation.com'
-			},
-			yAxis: {
-				title: {
-					//text: 'Number of Employees'
+		this.machineService.getMachineSensorData().then((result) => {
+			console.log(result);
+
+			var solarValueArray = [], photoValueArray = [];
+
+			for (var i = 0; i < 11; i++) {
+				if (result[i].length != 0) {
+					solarValueArray.push(result[i][0].A);
+				} else {
+					solarValueArray.push(null);
 				}
-			},
-			legend: {
-				layout: 'vertical',
-				align: 'center',
-				verticalAlign: 'bottom'
-			},
-
-			plotOptions: {
-				series: {
-					pointStart: Date.UTC(2010, 0, 1),
-					pointInternal: 24 * 3600 * 1000
+				if (result[(i + 11)].length != 0) {
+					photoValueArray.push(result[(i + 11)][0].A);
+				} else {
+					photoValueArray.push(null);
 				}
-			},
-
-			series: [{
-				name: 'Installation',
-				data: [43934, 52503, 57177, 69658, 97031, 119931, 137133, 154175]
-			}, {
-				name: 'Manufacturing',
-				data: [24916, 24064, 29742, 29851, 32490, 30282, 38121, 40434]
-			}, {
-				name: 'Sales & Distribution',
-				data: [11744, 17722, 16005, 19771, 20185, 24377, 32147, 39387]
-			}, {
-				name: 'Project Development',
-				data: [null, null, 7988, 12169, 15112, 22452, 34400, 34227]
-			}, {
-				name: 'Other',
-				data: [12908, 5948, 8105, 11248, 8989, 11816, 18274, 18111]
-			}],
-
-			responsive: {
-				rules: [{
-					condition: {
-						maxWidth: 500
-					},
-					chartOptions: {
-						legend: {
-							layout: 'horizontal',
-							align: 'center',
-							verticalAlign: 'bottom'
-						}
-					}
-				}]
 			}
+
+			console.log(solarValueArray);
+			console.log(photoValueArray);
+
+			this.chartBasic = highchart.chart('chartBasic', {
+				title: {
+					text: 'sensor history'
+				},
+				xAxis: {
+					type: 'datetime'
+				},
+				legend: {
+					layout: 'horizontal',
+					align: 'center',
+					verticalAlign: 'bottom'
+				},
+
+				plotOptions: {
+					series: {
+						// 1시간 단위로 하루치
+						pointStart: Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate(), new Date().getHours() - 12),
+						pointInterval: 3600 * 1000
+					}
+				},
+
+				series: [{
+					name: 'solar',
+					data: solarValueArray
+				}, {
+					name: 'photosynthetic',
+					data: photoValueArray
+				}],
+
+				responsive: {
+					rules: [{
+						condition: {
+							maxWidth: 500
+						},
+						chartOptions: {
+							legend: {
+								layout: 'horizontal',
+								align: 'center',
+								verticalAlign: 'bottom'
+							}
+						}
+					}]
+				}
+			});
+		}, (err) => {
+			console.log(err);
 		});
+
 	}
 }

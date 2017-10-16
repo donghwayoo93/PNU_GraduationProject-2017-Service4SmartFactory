@@ -17,7 +17,6 @@ const FILENAME = "localSocket.py";
 // Routes
 
 app.post('/api/requestLogin', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -28,12 +27,9 @@ app.post('/api/requestLogin', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             results = JSON.parse(results);
-            //console.log('results: %j', results);
             res.send(results);
         }
     });
@@ -51,12 +47,9 @@ app.get('/api/machines/info', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             results = JSON.parse(results);
-            //console.log('results: %j', results);
             res.send(results);
         }
 
@@ -65,7 +58,6 @@ app.get('/api/machines/info', function(req, res) {
 });
 
 app.get('/api/machines/sensor', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -76,19 +68,14 @@ app.get('/api/machines/sensor', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
-            results = JSON.parse(results);
-            //console.log('results: %j', results);
             res.send(results);
         }
     });
 });
 
 app.get('/api/machines/manual', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -99,19 +86,15 @@ app.get('/api/machines/manual', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             results = JSON.parse(results);
-            //console.log('results: %j', results);
             res.send(results);
         }
     });
 });
 
 app.get('/api/machines/motorOn', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -122,8 +105,6 @@ app.get('/api/machines/motorOn', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             res.send(results);
@@ -132,7 +113,6 @@ app.get('/api/machines/motorOn', function(req, res) {
 });
 
 app.get('/api/machines/motorOff', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -143,8 +123,6 @@ app.get('/api/machines/motorOff', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             res.send(results);
@@ -153,7 +131,6 @@ app.get('/api/machines/motorOff', function(req, res) {
 });
 
 app.get('/api/connect', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -164,8 +141,6 @@ app.get('/api/connect', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             res.send(results);
@@ -174,7 +149,6 @@ app.get('/api/connect', function(req, res) {
 });
 
 app.get('/api/disconnect', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -185,8 +159,6 @@ app.get('/api/disconnect', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             res.send(results);
@@ -195,7 +167,6 @@ app.get('/api/disconnect', function(req, res) {
 });
 
 app.get('/api/rssi', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -206,8 +177,6 @@ app.get('/api/rssi', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             res.send(results);
@@ -216,7 +185,6 @@ app.get('/api/rssi', function(req, res) {
 });
 
 app.get('/api/sensorGauge', function(req, res) {
-    //console.log(req.body);
     var options = {
         mode: 'text',
         pythonPath: '',
@@ -227,15 +195,12 @@ app.get('/api/sensorGauge', function(req, res) {
     pythonShell.run(FILENAME, options, function(err, results) {
         if (err) throw err;
         if (results == 'Unauthorized') {
-            //console.log('Unauthorized 확인');
-            //console.log(results);
             res.status(401).send(results);
         } else {
             res.send(results);
         }
     });
 });
-
 
 // listen
 var server = app.listen(9999);

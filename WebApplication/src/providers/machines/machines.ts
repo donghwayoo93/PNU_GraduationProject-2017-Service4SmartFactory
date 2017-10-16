@@ -7,7 +7,6 @@ import 'rxjs/add/operator/map';
 export class MachinesProvider {
 
   constructor(public http: Http, public authService: AuthProvider) {
-    //console.log('Hello MachinesProvider Provider');
   }
 
   getMachineInformation(credentials) {
@@ -27,7 +26,7 @@ export class MachinesProvider {
       this.http.get('http://localhost:9999/api/machines/sensor')
         .map(res => res.json())
         .subscribe(data => {
-          resolve(data);
+          resolve(JSON.parse(data));
         }, (err) => {
           reject(err);
         });

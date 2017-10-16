@@ -28,19 +28,6 @@
         </ion-card-header>
         <ion-card-content>
             <ion-list>
-                <ion-item *ngFor="let sensorData of sensorDatas">
-                    <span item-start>{{sensorData.title}}</span>
-                    <span item-end>{{sensorData.content}}</span>
-                </ion-item>
-            </ion-list>
-        </ion-card-content>
-    </ion-card>
-    <ion-card>
-        <ion-card-header icon-left>
-            <ion-icon name="stats"></ion-icon>Sensor Status
-        </ion-card-header>
-        <ion-card-content>
-            <ion-list>
                 <ion-item>
                     <div id="chartSolar" style="display: block; width: 190px; height: 250px; float:left;"></div>
                     <div id="chartPhoto" style="display: block; width: 190px; height: 250px; float:left;"></div>

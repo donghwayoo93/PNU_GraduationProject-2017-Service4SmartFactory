@@ -40,10 +40,14 @@ export class LoginPage {
     };
     this.authService.requestLogin(credentials).then((result) => {
       this.storage.get('accessLevel').then(userAccessLevel => {
-
         this.machineService.getMachineInformation(credentials).then((result) => {
           this.loading.dismiss();
           var machineAccessLevel = result[0].accessLevel;
+          var machineID = result[0].machineID;
+          var machineName = result[0].name;
+          this.storage.set('machineID', machineID);
+          this.storage.set('machineName', machineName);
+
           if (userAccessLevel <= machineAccessLevel) {//숫자가 높으면 낮은 보안등급
             // 가능
             this.navCtrl.setRoot(MenuPage);
