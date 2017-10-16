@@ -110,16 +110,11 @@ exports.getManual = function(req, res) {
         if (solar > 1000) {
             //너무 밝다
             manualNum = 1;
-        } else if (solar < 200) {
+        } else if (solar < 400) {
             //너무 어둡다
             manualNum = 2;
-        }
-        if (photosynthetic > 100) {
-            //너무 밝다
-            manualNum = 3;
-        } else if (photosynthetic < 20) {
-            //너무 어둡다
-            manualNum = 4;
+        } else {
+            manualNum = 0;
         }
         Machine.find({
             nearWorkerID: req.query.workerID
